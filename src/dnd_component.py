@@ -1,0 +1,1649 @@
+import os
+import streamlit.components.v1 as components
+
+_dnd_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dnd_frontend_v2")
+os.makedirs(_dnd_dir, exist_ok=True)
+_html_path = os.path.join(_dnd_dir, "index.html")
+
+_HTML_CONTENT = r"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.3.1/DragDropTouch.min.js"></script>
+
+    <script>
+        const Streamlit = {
+            setComponentReady: function() {
+                window.parent.postMessage({isStreamlitMessage: true, type: "streamlit:componentReady", apiVersion: 1}, "*");
+            },
+            setFrameHeight: function(height) {
+                window.parent.postMessage({isStreamlitMessage: true, type: "streamlit:setFrameHeight", height: height}, "*");
+            },
+            setComponentValue: function(value) {
+                window.parent.postMessage({isStreamlitMessage: true, type: "streamlit:setComponentValue", value: value}, "*");
+            },
+            RENDER_EVENT: "streamlit:render",
+            events: {
+                addEventListener: function(type, callback) {
+                    window.addEventListener("message", function(event) {
+                        if (event.data.type === type) {
+                            event.detail = event.data;
+                            callback(event);
+                        }
+                    });
+                }
+            }
+        };
+    </script>
+
+    <style>
+        :root {
+            --primary: #3867f6;
+            --primary-soft: rgba(56, 103, 246, .10);
+            --primary-border: rgba(56, 103, 246, .28);
+            --bg: #f8fbff;
+            --panel: rgba(255,255,255,.92);
+            --panel-strong: #ffffff;
+            --surface: #f8fafc;
+            --surface-2: #eef4ff;
+            --border: rgba(148,163,184,.32);
+            --border-strong: rgba(100,116,139,.34);
+            --text: #0f172a;
+            --muted: #64748b;
+            --muted-2: #94a3b8;
+            --danger: #ef4444;
+            --danger-soft: #fef2f2;
+            --success: #16a34a;
+            --success-soft: #ecfdf5;
+            --warning: #f59e0b;
+            --shadow: 0 14px 34px rgba(15,23,42,.075);
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        body {
+            height: 100vh;
+            padding: 8px 4px 8px 0;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        .board {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .planner-shell {
+            height: 100%;
+            display: grid;
+            grid-template-columns: minmax(230px, 280px) minmax(520px, 1fr);
+            gap: 16px;
+            overflow: hidden;
+        }
+
+        .rail {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow: hidden;
+        }
+
+        .rail-panel,
+        .semester-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        .rail-panel {
+            padding: 14px;
+        }
+
+        .rail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .rail-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--text);
+            letter-spacing: .01em;
+        }
+
+        .count-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 24px;
+            padding: 0 9px;
+            border-radius: 999px;
+            color: var(--primary);
+            background: var(--primary-soft);
+            border: 1px solid var(--primary-border);
+            font-weight: 900;
+            font-size: 12px;
+        }
+
+        .rail-caption {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+            margin-bottom: 12px;
+        }
+
+        .staging-area {
+            min-height: 220px;
+            max-height: calc(100vh - 178px);
+            overflow-y: auto;
+            padding: 3px 2px 3px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .staging-area.zone {
+            border-radius: var(--radius-md);
+        }
+
+        .empty-staging {
+            min-height: 150px;
+            border: 1px dashed var(--border-strong);
+            background: rgba(248,250,252,.72);
+            border-radius: var(--radius-md);
+            display: grid;
+            place-items: center;
+            text-align: center;
+            color: var(--muted);
+            padding: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .trash-zone {
+            min-height: 72px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            padding: 14px;
+            border-radius: var(--radius-lg);
+            border: 1.5px dashed rgba(239,68,68,.38);
+            background: linear-gradient(180deg, rgba(254,242,242,.9), rgba(255,255,255,.76));
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 900;
+            transition: transform .18s ease, background .18s ease, border .18s ease;
+        }
+
+        .trash-zone.drag-over,
+        .trash-zone.highlight-zone {
+            transform: translateY(-1px);
+            background: #fee2e2;
+            border-color: var(--danger);
+        }
+
+        .workspace {
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .workspace-top {
+            flex: 0 0 auto;
+            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(248,251,255,.88));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .workspace-title {
+            font-size: 18px;
+            font-weight: 950;
+            color: var(--text);
+            margin-bottom: 3px;
+        }
+
+        .workspace-subtitle {
+            color: var(--muted);
+            font-size: 12.5px;
+            line-height: 1.45;
+        }
+
+        .workspace-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .meta-chip {
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: #334155;
+            font-size: 12px;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+
+        .semester-scroll {
+            height: 100%;
+            overflow-y: auto;
+            padding: 2px 4px 8px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+            align-content: start;
+            gap: 14px;
+        }
+
+        .semester-panel {
+            padding: 14px;
+            overflow: hidden;
+            transition: border .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .semester-panel.drag-over,
+        .semester-panel.highlight-zone {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-border), var(--shadow);
+        }
+
+        .semester-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .semester-name {
+            font-size: 17px;
+            font-weight: 950;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .semester-name::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-soft);
+        }
+
+        .semester-stats {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .stat {
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .stat.conflict {
+            color: var(--danger);
+            background: var(--danger-soft);
+            border-color: rgba(239,68,68,.24);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .icon-btn {
+            height: 32px;
+            padding: 0 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 850;
+            cursor: pointer;
+            transition: all .16s ease;
+        }
+
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            border-color: var(--primary-border);
+            color: var(--primary);
+            background: var(--primary-soft);
+        }
+
+        .icon-btn.danger:hover {
+            color: var(--danger);
+            background: var(--danger-soft);
+            border-color: rgba(239,68,68,.28);
+        }
+
+        .course-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 22px rgba(15,23,42,.055);
+            padding: 11px 12px 10px 12px;
+            cursor: grab;
+            transition: transform .16s ease, box-shadow .16s ease, border .16s ease, opacity .16s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .course-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(15,23,42,.10);
+            border-color: rgba(56,103,246,.34);
+            z-index: 5;
+        }
+
+        .course-card:active { cursor: grabbing; }
+
+        .course-card.status-passed {
+            border-left-color: var(--success);
+            background: linear-gradient(180deg, #fff, var(--success-soft));
+        }
+
+        .course-card.status-failed {
+            border-left-color: var(--danger);
+            background: linear-gradient(180deg, #fff, var(--danger-soft));
+            opacity: .66;
+        }
+
+        .course-card.status-failed .course-name {
+            text-decoration: line-through;
+        }
+
+        .course-card.conflict {
+            border-color: rgba(239,68,68,.36) !important;
+            border-left-color: var(--danger) !important;
+            background: var(--danger-soft) !important;
+        }
+
+        .course-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .course-name {
+            font-size: 13.5px;
+            font-weight: 950;
+            line-height: 1.35;
+            color: var(--text);
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .status-btn {
+            flex: 0 0 auto;
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            display: grid;
+            place-items: center;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: transform .15s ease, border .15s ease;
+        }
+
+        .status-btn:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-border);
+        }
+
+        .course-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag {
+            max-width: 100%;
+            padding: 3px 7px;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tag.required { color: #315efb; background: #eaf1ff; border-color: rgba(49,94,251,.20); }
+        .tag.elective { color: #7c3aed; background: #f4edff; border-color: rgba(124,58,237,.20); }
+        .tag.general { color: #159957; background: #eafaf1; border-color: rgba(21,153,87,.20); }
+        .tag.warning { color: #b45309; background: #fffbeb; border-color: rgba(245,158,11,.24); }
+
+        .course-meta {
+            color: var(--muted);
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+
+        .timetable-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,.56);
+        }
+
+        .timetable {
+            width: 100%;
+            min-width: 520px;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+            font-size: 12px;
+        }
+
+        .timetable th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: linear-gradient(180deg, rgba(248,250,252,.98), rgba(241,245,249,.96));
+            color: #334155;
+            font-size: 12px;
+            font-weight: 950;
+            padding: 9px 6px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        .timetable th:first-child {
+            width: 62px;
+        }
+
+        .timetable td {
+            background: rgba(255,255,255,.82);
+            color: var(--text);
+            height: 58px;
+            padding: 5px;
+            vertical-align: top;
+            border-bottom: 1px solid rgba(148,163,184,.22);
+            border-right: 1px solid rgba(148,163,184,.22);
+            position: relative;
+        }
+
+        .timetable tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .timetable th:last-child,
+        .timetable td:last-child {
+            border-right: 0;
+        }
+
+        .period-cell {
+            background: rgba(248,250,252,.95) !important;
+            text-align: center;
+            vertical-align: middle !important;
+            color: var(--muted);
+            padding: 6px 4px !important;
+        }
+
+        .period-num {
+            font-size: 13px;
+            font-weight: 950;
+            color: var(--text);
+        }
+
+        .period-time {
+            margin-top: 3px;
+            font-size: 10px;
+            line-height: 1.15;
+            color: var(--muted-2);
+        }
+
+        .empty-slot {
+            cursor: crosshair;
+            transition: background .15s ease, box-shadow .15s ease;
+        }
+
+        .empty-slot:hover {
+            background: var(--primary-soft) !important;
+            box-shadow: inset 0 0 0 1px var(--primary-border);
+        }
+
+        .table-course {
+            position: relative;
+            border-radius: 12px;
+            border: 1px solid var(--primary-border);
+            border-left: 4px solid var(--primary);
+            background: var(--primary-soft);
+            padding: 7px 7px 7px 8px;
+            min-height: 45px;
+            cursor: grab;
+            box-shadow: 0 5px 13px rgba(15,23,42,.05);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+        }
+
+        .table-course:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 18px rgba(15,23,42,.10);
+            z-index: 4;
+        }
+
+        .table-course.status-passed {
+            border-color: rgba(22,163,74,.28);
+            border-left-color: var(--success);
+            background: var(--success-soft);
+        }
+
+        .table-course.status-failed {
+            border-color: rgba(239,68,68,.28);
+            border-left-color: var(--danger);
+            background: var(--danger-soft);
+            opacity: .62;
+        }
+
+        .table-course.status-failed .table-course-title {
+            text-decoration: line-through;
+        }
+
+        .table-course.conflict {
+            border-color: rgba(239,68,68,.48) !important;
+            border-left-color: var(--danger) !important;
+            background: var(--danger-soft) !important;
+        }
+
+        .table-course-title {
+            font-size: 11.5px;
+            font-weight: 950;
+            color: var(--text);
+            line-height: 1.28;
+        }
+
+        .table-course-sub {
+            color: var(--muted);
+            font-size: 10.5px;
+            line-height: 1.25;
+        }
+
+        .table-status-btn {
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            background: #fff;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            font-size: 11px;
+            opacity: .32;
+            transition: opacity .15s ease, transform .15s ease;
+        }
+
+        .table-course:hover .table-status-btn,
+        .table-course.status-passed .table-status-btn,
+        .table-course.status-failed .table-status-btn {
+            opacity: 1;
+        }
+
+        .table-status-btn:hover {
+            transform: scale(1.06);
+        }
+
+        .selected-for-move {
+            border-color: var(--warning) !important;
+            box-shadow: 0 0 0 3px rgba(245,158,11,.28), 0 14px 28px rgba(15,23,42,.10) !important;
+            transform: translateY(-1px);
+            z-index: 10;
+        }
+
+        .highlight-zone {
+            outline: 2px dashed rgba(20,184,166,.58);
+            outline-offset: 3px;
+        }
+
+        .empty-slot.highlight-zone {
+            background: rgba(20,184,166,.12) !important;
+        }
+
+        .mobile-action-panel {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-top: 8px;
+            margin-top: 4px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .selected-for-move .mobile-action-panel {
+            display: flex;
+        }
+
+        .action-btn {
+            flex: 1 1 auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            color: #475569;
+            padding: 7px 8px;
+            font-weight: 850;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .action-btn.primary {
+            color: var(--primary);
+            background: var(--primary-soft);
+            border-color: var(--primary-border);
+        }
+
+        .action-btn.danger {
+            color: var(--danger);
+            background: var(--danger-soft);
+            border-color: rgba(239,68,68,.28);
+        }
+
+        .tooltip {
+            display: none;
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: calc(100% + 8px);
+            background: #0f172a;
+            color: #fff;
+            padding: 9px 10px;
+            border-radius: 12px;
+            font-size: 11.5px;
+            line-height: 1.45;
+            z-index: 99;
+            box-shadow: 0 12px 28px rgba(15,23,42,.20);
+            pointer-events: none;
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 20px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #0f172a transparent transparent transparent;
+        }
+
+        .course-card:hover .tooltip {
+            display: block;
+        }
+
+        .cell-separator {
+            border: 0;
+            border-top: 1px dashed rgba(148,163,184,.40);
+            margin: 5px 0;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(148,163,184,.55); border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,.70); }
+
+
+        :root[data-theme="dark"] {
+            --bg: #0b1120;
+            --panel: rgba(17,24,39,.94);
+            --panel-strong: #111827;
+            --surface: #182235;
+            --surface-2: #1f2937;
+            --border: rgba(148,163,184,.22);
+            --border-strong: rgba(148,163,184,.34);
+            --text: #f8fafc;
+            --muted: #a7b3c6;
+            --muted-2: #7d8aa1;
+            --danger-soft: rgba(239,68,68,.12);
+            --success-soft: rgba(34,197,94,.14);
+            --shadow: 0 14px 34px rgba(0,0,0,.20);
+        }
+        :root[data-theme="dark"] .workspace-top,
+        :root[data-theme="dark"] .rail-panel,
+        :root[data-theme="dark"] .semester-panel {
+            background: var(--panel);
+            border-color: var(--border);
+        }
+        :root[data-theme="dark"] .icon-btn,
+        :root[data-theme="dark"] .status-btn,
+        :root[data-theme="dark"] .table-status-btn,
+        :root[data-theme="dark"] .action-btn,
+        :root[data-theme="dark"] .course-card {
+            background: #111827;
+            color: var(--text);
+            border-color: var(--border);
+        }
+        :root[data-theme="dark"] .timetable-wrap {
+            background: rgba(15,23,42,.72);
+        }
+        :root[data-theme="dark"] .timetable th {
+            background: linear-gradient(180deg, rgba(30,41,59,.98), rgba(15,23,42,.96));
+            color: #e2e8f0;
+        }
+        :root[data-theme="dark"] .timetable td {
+            background: rgba(17,24,39,.76);
+            border-color: rgba(148,163,184,.16);
+        }
+        :root[data-theme="dark"] .period-cell {
+            background: rgba(15,23,42,.92) !important;
+        }
+        :root[data-theme="dark"] .empty-staging {
+            background: rgba(15,23,42,.55);
+        }
+        :root[data-theme="dark"] .trash-zone {
+            background: rgba(127,29,29,.18);
+        }
+        :root[data-theme="dark"] .table-course {
+            background: rgba(79,124,255,.16);
+        }
+        :root[data-theme="dark"] .course-card.status-passed,
+        :root[data-theme="dark"] .table-course.status-passed {
+            background: rgba(34,197,94,.14);
+        }
+        :root[data-theme="dark"] .course-card.status-failed,
+        :root[data-theme="dark"] .table-course.status-failed,
+        :root[data-theme="dark"] .table-course.conflict,
+        :root[data-theme="dark"] .course-card.conflict {
+            background: rgba(239,68,68,.14) !important;
+        }
+
+        @media (max-width: 980px) {
+            html, body {
+                overflow: visible;
+                height: auto;
+            }
+
+            body {
+                padding: 4px 0;
+            }
+
+            .board {
+                height: auto;
+                overflow: visible;
+            }
+
+            .planner-shell {
+                height: auto;
+                display: flex;
+                flex-direction: column;
+                overflow: visible;
+            }
+
+            .rail,
+            .workspace,
+            .semester-scroll,
+            .staging-area {
+                height: auto;
+                max-height: none;
+                overflow: visible;
+            }
+
+            .workspace-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .workspace-meta {
+                justify-content: flex-start;
+            }
+
+            .semester-scroll {
+                grid-template-columns: 1fr;
+                padding-right: 0;
+            }
+
+            .course-card,
+            .table-course {
+                cursor: pointer;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root" class="board"></div>
+
+    <script>
+        let scheduleData = null;
+        let selectedCourseSerial = null;
+        let selectedCourseSource = null;
+
+        const dayNames = {1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六", 7: "日"};
+        const periodTimes = {
+            1: "08:10<br>09:00", 2: "09:10<br>10:00", 3: "10:10<br>11:00",
+            4: "11:10<br>12:00", 5: "12:10<br>13:00", 6: "13:10<br>14:00",
+            7: "14:10<br>15:00", 8: "15:10<br>16:00", 9: "16:10<br>17:00",
+            10: "17:10<br>18:00", 11: "18:10<br>19:00", 12: "19:10<br>20:00",
+            13: "20:10<br>21:00", 14: "21:10<br>22:00"
+        };
+
+        const resizeObserver = new ResizeObserver(() => {
+            clearTimeout(window.__resizeTimer);
+            window.__resizeTimer = setTimeout(syncHeight, 80);
+        });
+
+        window.addEventListener("DOMContentLoaded", () => {
+            resizeObserver.observe(document.body);
+        });
+
+        window.addEventListener("resize", () => {
+            clearTimeout(window.__resizeTimer);
+            window.__resizeTimer = setTimeout(() => {
+                render();
+                syncHeight();
+            }, 120);
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest(".course-card") && !e.target.closest(".table-course") && !e.target.closest(".zone")) {
+                clearSelection();
+            }
+        });
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape" || event.key === "Esc") {
+                if (selectedCourseSerial) {
+                    clearSelection();
+                } else {
+                    Streamlit.setComponentValue({action: "close", ts: Date.now()});
+                }
+            }
+        });
+
+        function syncHeight() {
+            const root = document.getElementById("root");
+            if (!root) return;
+
+            if (window.innerWidth <= 980) {
+                Streamlit.setFrameHeight(root.scrollHeight + 32);
+            } else {
+                Streamlit.setFrameHeight(Math.max(640, Math.min(980, window.innerHeight || 660)));
+            }
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function cssHexToRgba(hex, alpha) {
+            const clean = String(hex || "#3867f6").replace("#", "");
+            const full = clean.length === 3 ? clean.split("").map(x => x + x).join("") : clean;
+            const bigint = parseInt(full, 16);
+            if (Number.isNaN(bigint)) return `rgba(56, 103, 246, ${alpha})`;
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function applySettings() {
+            if (!scheduleData || !scheduleData.settings) return;
+
+            const hex = scheduleData.settings.theme_color || "#3867f6";
+            document.documentElement.style.setProperty("--primary", hex);
+            document.documentElement.style.setProperty("--primary-soft", cssHexToRgba(hex, .10));
+            document.documentElement.style.setProperty("--primary-border", cssHexToRgba(hex, .28));
+
+            const mode = scheduleData.settings.ui_theme_mode || "自動";
+            const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            const useDark = mode === "深色" || (mode === "自動" && prefersDark);
+            document.documentElement.dataset.theme = useDark ? "dark" : "light";
+
+            if (scheduleData.settings.bg_opacity !== undefined) {
+                const op = Number(scheduleData.settings.bg_opacity);
+                if (!useDark) {
+                    document.documentElement.style.setProperty("--panel", `rgba(255,255,255,${Math.max(.58, Math.min(.98, op))})`);
+                }
+            }
+        }
+
+        function getCategoryClass(category) {
+            const text = String(category || "");
+            if (text.includes("必")) return "required";
+            if (text.includes("選")) return "elective";
+            if (text.includes("通") || text.includes("核心")) return "general";
+            return "";
+        }
+
+        function normalizeStatus(course) {
+            return course.status || "planned";
+        }
+
+        function getStatusMeta(status) {
+            if (status === "passed") return {icon: "✅", label: "已通過"};
+            if (status === "failed") return {icon: "❌", label: "未通過"};
+            return {icon: "⏳", label: "計畫中"};
+        }
+
+        function clearSelection() {
+            selectedCourseSerial = null;
+            selectedCourseSource = null;
+            document.querySelectorAll(".selected-for-move").forEach(el => el.classList.remove("selected-for-move"));
+            document.querySelectorAll(".highlight-zone").forEach(el => el.classList.remove("highlight-zone"));
+            document.querySelectorAll(".mobile-conflict-warn").forEach(el => el.remove());
+        }
+
+        function handleCourseClick(course, currentZone, event, cardEl) {
+            if (
+                event.target.tagName === "BUTTON" ||
+                event.target.closest(".status-btn") ||
+                event.target.closest(".table-status-btn")
+            ) return;
+
+            if (selectedCourseSerial === course.serial) {
+                clearSelection();
+                return;
+            }
+
+            clearSelection();
+            selectedCourseSerial = course.serial;
+            selectedCourseSource = currentZone;
+            cardEl.classList.add("selected-for-move");
+
+            if (currentZone === "staging") {
+                const conflicts = findConflicts(course);
+                const actionPanel = cardEl.querySelector(".mobile-action-panel");
+                if (actionPanel && conflicts.length > 0) {
+                    const warn = document.createElement("div");
+                    warn.className = "mobile-conflict-warn";
+                    warn.style.cssText = "width:100%; color:#ef4444; font-size:12px; font-weight:900; line-height:1.45;";
+                    warn.innerHTML = `⚠️ 可能衝堂：${escapeHTML(conflicts.join("、"))}`;
+                    actionPanel.prepend(warn);
+                }
+            }
+
+            document.querySelectorAll(".zone").forEach(zone => {
+                if (zone.dataset.zone !== currentZone) zone.classList.add("highlight-zone");
+            });
+
+            event.stopPropagation();
+        }
+
+        function handleZoneClick(targetZone, event) {
+            if (!selectedCourseSerial) return;
+            if (event.target.closest(".course-card") || event.target.closest(".table-course")) return;
+
+            const serial = selectedCourseSerial;
+            const sourceZone = selectedCourseSource;
+            clearSelection();
+
+            if (sourceZone && sourceZone !== targetZone) {
+                executeMove(serial, sourceZone, targetZone);
+            }
+        }
+
+        function executeMove(serial, sourceZone, targetZone) {
+            if (!scheduleData) return;
+
+            if (targetZone === "trash") {
+                if (sourceZone === "staging") {
+                    scheduleData.staging = scheduleData.staging.filter(c => c.serial !== serial);
+                } else if (scheduleData.schedule[sourceZone]) {
+                    scheduleData.schedule[sourceZone] = scheduleData.schedule[sourceZone].filter(c => c.serial !== serial);
+                }
+                render();
+                Streamlit.setComponentValue({action: "trash", serial, source: sourceZone, ts: Date.now()});
+                return;
+            }
+
+            let courseToMove = null;
+
+            if (sourceZone === "staging") {
+                courseToMove = scheduleData.staging.find(c => c.serial === serial);
+                if (courseToMove) {
+                    scheduleData.staging = scheduleData.staging.filter(c => c.serial !== serial);
+                }
+            } else if (scheduleData.schedule[sourceZone]) {
+                courseToMove = scheduleData.schedule[sourceZone].find(c => c.serial === serial);
+                if (courseToMove) {
+                    scheduleData.schedule[sourceZone] = scheduleData.schedule[sourceZone].filter(c => c.serial !== serial);
+                }
+            }
+
+            if (courseToMove) {
+                if (targetZone === "staging") {
+                    scheduleData.staging.push(courseToMove);
+                } else {
+                    if (!scheduleData.schedule[targetZone]) scheduleData.schedule[targetZone] = [];
+                    scheduleData.schedule[targetZone].push(courseToMove);
+                }
+                render();
+            }
+
+            Streamlit.setComponentValue({action: "move", serial, source: sourceZone, target: targetZone, ts: Date.now()});
+        }
+
+        function checkConflict(course, otherCourse) {
+            const a = course.time_slots || [];
+            const b = otherCourse.time_slots || [];
+            for (const t1 of a) {
+                for (const t2 of b) {
+                    if (t1[0] === t2[0] && t1[1] <= t2[2] && t2[1] <= t1[2]) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function findConflicts(course) {
+            const conflicts = [];
+            if (!scheduleData || !scheduleData.schedule) return conflicts;
+
+            for (const [sem, courses] of Object.entries(scheduleData.schedule)) {
+                for (const other of courses || []) {
+                    if (other.serial !== course.serial && checkConflict(course, other)) {
+                        conflicts.push(`[${sem}] ${other.name}`);
+                    }
+                }
+            }
+            return conflicts;
+        }
+
+        function getSemesterStats(courses) {
+            const list = courses || [];
+            const credits = list.reduce((sum, c) => sum + Number(c.credits || 0), 0);
+            let conflicts = 0;
+
+            for (let i = 0; i < list.length; i++) {
+                for (let j = i + 1; j < list.length; j++) {
+                    if (checkConflict(list[i], list[j])) conflicts += 1;
+                }
+            }
+
+            return {count: list.length, credits, conflicts};
+        }
+
+        function setDragHandlers(el, course, currentZone) {
+            const isTouch = window.innerWidth <= 980 || ("ontouchstart" in window);
+            el.draggable = !isTouch;
+
+            let touchStartY = 0;
+            let touchStartX = 0;
+
+            el.addEventListener("touchstart", e => {
+                touchStartY = e.changedTouches[0].screenY;
+                touchStartX = e.changedTouches[0].screenX;
+            }, {passive: true});
+
+            el.addEventListener("touchend", e => {
+                const y = e.changedTouches[0].screenY;
+                const x = e.changedTouches[0].screenX;
+                el.dataset.swiped = (Math.abs(y - touchStartY) > 10 || Math.abs(x - touchStartX) > 10) ? "true" : "false";
+            });
+
+            el.addEventListener("click", e => {
+                if (el.dataset.swiped === "true") {
+                    el.dataset.swiped = "false";
+                    return;
+                }
+                handleCourseClick(course, currentZone, e, el);
+            });
+
+            el.addEventListener("dragstart", e => {
+                e.dataTransfer.setData("text/plain", course.serial);
+                e.dataTransfer.setData("sourceZone", currentZone);
+            });
+        }
+
+        function createStatusButton(course, currentZone, isTable = false) {
+            const status = normalizeStatus(course);
+            const meta = getStatusMeta(status);
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = isTable ? "table-status-btn" : "status-btn";
+            btn.innerHTML = meta.icon;
+            btn.title = `目前狀態：${meta.label}，點擊切換`;
+
+            btn.onclick = e => {
+                e.stopPropagation();
+                if (!course.status || course.status === "planned") course.status = "passed";
+                else if (course.status === "passed") course.status = "failed";
+                else course.status = "planned";
+
+                render();
+                Streamlit.setComponentValue({action: "toggle_status", serial: course.serial, semester: currentZone, ts: Date.now()});
+            };
+
+            return btn;
+        }
+
+        function createMobilePanel(course, currentZone) {
+            const panel = document.createElement("div");
+            panel.className = "mobile-action-panel";
+
+            if (currentZone !== "staging") {
+                const stagingBtn = document.createElement("button");
+                stagingBtn.type = "button";
+                stagingBtn.className = "action-btn primary";
+                stagingBtn.innerHTML = "📥 暫存";
+                stagingBtn.onclick = e => {
+                    e.stopPropagation();
+                    executeMove(course.serial, currentZone, "staging");
+                };
+                panel.appendChild(stagingBtn);
+            }
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.className = "action-btn danger";
+            deleteBtn.innerHTML = "🗑️ 刪除";
+            deleteBtn.onclick = e => {
+                e.stopPropagation();
+                executeMove(course.serial, currentZone, "trash");
+            };
+            panel.appendChild(deleteBtn);
+
+            const cancelBtn = document.createElement("button");
+            cancelBtn.type = "button";
+            cancelBtn.className = "action-btn";
+            cancelBtn.innerHTML = "取消";
+            cancelBtn.onclick = e => {
+                e.stopPropagation();
+                clearSelection();
+            };
+            panel.appendChild(cancelBtn);
+
+            return panel;
+        }
+
+        function createCourseCard(course, currentZone) {
+            const status = normalizeStatus(course);
+            const card = document.createElement("div");
+            card.className = `course-card status-${status}`;
+            card.dataset.serial = course.serial;
+
+            const category = escapeHTML(course.category || "其他");
+            const categoryClass = getCategoryClass(course.category);
+
+            card.innerHTML = `
+                <div class="course-top">
+                    <div class="course-name" title="${escapeHTML(course.name)}">${escapeHTML(course.name || "未命名課程")}</div>
+                </div>
+                <div class="course-tags">
+                    <span class="tag ${categoryClass}">${category}</span>
+                    <span class="tag">${escapeHTML(course.credits ?? 0)} 學分</span>
+                    ${course.grade ? `<span class="tag">${escapeHTML(course.grade)}</span>` : ""}
+                </div>
+                <div class="course-meta">
+                    ${course.teacher ? `授課：${escapeHTML(course.teacher)}<br>` : ""}
+                    時間：${escapeHTML(course.time_info || "未定")}<br>
+                    教室：${escapeHTML(course.classroom || "未定")}
+                </div>
+            `;
+
+            card.querySelector(".course-top").appendChild(createStatusButton(course, currentZone, false));
+            card.appendChild(createMobilePanel(course, currentZone));
+
+            const tooltip = document.createElement("div");
+            tooltip.className = "tooltip";
+            card.appendChild(tooltip);
+
+            card.addEventListener("mouseenter", () => {
+                if (currentZone !== "staging") return;
+
+                const conflicts = findConflicts(course);
+                document.querySelectorAll(".course-card.conflict, .table-course.conflict-hover").forEach(el => {
+                    el.classList.remove("conflict");
+                    el.classList.remove("conflict-hover");
+                });
+
+                if (conflicts.length > 0) {
+                    tooltip.innerHTML = `⚠️ 可能衝堂<br>${conflicts.map(escapeHTML).join("<br>")}`;
+                    tooltip.style.display = "block";
+                } else {
+                    tooltip.innerHTML = "沒有偵測到時間衝突";
+                    tooltip.style.display = "block";
+                }
+            });
+
+            card.addEventListener("mouseleave", () => {
+                tooltip.style.display = "none";
+            });
+
+            setDragHandlers(card, course, currentZone);
+            return card;
+        }
+
+        function createTableCourse(course, semester, isConflict) {
+            const status = normalizeStatus(course);
+            const div = document.createElement("div");
+            div.className = `table-course status-${status}`;
+            if (isConflict) div.classList.add("conflict");
+            div.dataset.serial = course.serial;
+
+            div.innerHTML = `
+                <div class="table-course-title">${escapeHTML(course.name || "未命名課程")}</div>
+                <div class="table-course-sub">${escapeHTML(course.teacher || "教師未定")}｜${escapeHTML(course.classroom || "教室未定")}</div>
+            `;
+
+            div.appendChild(createStatusButton(course, semester, true));
+            div.appendChild(createMobilePanel(course, semester));
+            setDragHandlers(div, course, semester);
+            return div;
+        }
+
+        function createZoneHandlers(zone) {
+            zone.addEventListener("click", e => {
+                handleZoneClick(zone.dataset.zone, e);
+            });
+
+            zone.addEventListener("dragover", e => {
+                e.preventDefault();
+                zone.classList.add("drag-over");
+            });
+
+            zone.addEventListener("dragleave", () => {
+                zone.classList.remove("drag-over");
+            });
+
+            zone.addEventListener("drop", e => {
+                e.preventDefault();
+                zone.classList.remove("drag-over");
+
+                const targetZone = zone.dataset.zone;
+                const serial = e.dataTransfer.getData("text/plain");
+                const sourceZone = e.dataTransfer.getData("sourceZone");
+
+                if (serial && sourceZone && sourceZone !== targetZone) {
+                    executeMove(serial, sourceZone, targetZone);
+                }
+            });
+        }
+
+        function renderStaging() {
+            const panel = document.createElement("div");
+            panel.className = "rail-panel";
+
+            panel.innerHTML = `
+                <div class="rail-header">
+                    <div class="rail-title">候選課程</div>
+                    <div class="count-pill">${(scheduleData.staging || []).length}</div>
+                </div>
+                <div class="rail-caption">先把可能修習的課程放在這裡，再拖曳或點選移動到指定學期。</div>
+            `;
+
+            const area = document.createElement("div");
+            area.className = "staging-area zone";
+            area.dataset.zone = "staging";
+
+            if (!scheduleData.staging || scheduleData.staging.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "empty-staging";
+                empty.innerHTML = "目前沒有暫存課程<br>請從右側搜尋結果加入";
+                area.appendChild(empty);
+            } else {
+                scheduleData.staging.forEach(course => {
+                    area.appendChild(createCourseCard(course, "staging"));
+                });
+            }
+
+            panel.appendChild(area);
+            createZoneHandlers(area);
+            return panel;
+        }
+
+        function renderTrash() {
+            const trash = document.createElement("div");
+            trash.className = "trash-zone zone";
+            trash.dataset.zone = "trash";
+            trash.innerHTML = "🗑️ 拖曳或點選後移到這裡刪除";
+            createZoneHandlers(trash);
+            return trash;
+        }
+
+        function renderWorkspaceTop() {
+            const sems = scheduleData.semesters || [];
+            let courseCount = 0;
+            let creditCount = 0;
+            let conflictCount = 0;
+
+            sems.forEach(sem => {
+                const stats = getSemesterStats(scheduleData.schedule[sem] || []);
+                courseCount += stats.count;
+                creditCount += stats.credits;
+                conflictCount += stats.conflicts;
+            });
+
+            const top = document.createElement("div");
+            top.className = "workspace-top";
+            top.innerHTML = `
+                <div>
+                    <div class="workspace-title">學期排課工作區</div>
+                    <div class="workspace-subtitle">支援拖曳排課、點擊移動、狀態切換、空堂搜尋與單學期圖片匯出。</div>
+                </div>
+                <div class="workspace-meta">
+                    <span class="meta-chip">${sems.length} 個學期</span>
+                    <span class="meta-chip">${courseCount} 門課</span>
+                    <span class="meta-chip">${creditCount} 學分</span>
+                    <span class="meta-chip" style="${conflictCount ? "color:#ef4444;background:#fef2f2;border-color:rgba(239,68,68,.24);" : ""}">${conflictCount} 組衝堂</span>
+                </div>
+            `;
+            return top;
+        }
+
+        function renderTimetable(semester, courses) {
+            const list = courses || [];
+            const stats = getSemesterStats(list);
+
+            let hasSat = scheduleData.settings && scheduleData.settings.show_weekends ? true : false;
+            let hasSun = scheduleData.settings && scheduleData.settings.show_weekends ? true : false;
+            let maxPeriod = scheduleData.settings && scheduleData.settings.show_evening ? 14 : 10;
+
+            list.forEach(c => {
+                (c.time_slots || []).forEach(t => {
+                    if (t[0] === 6) hasSat = true;
+                    if (t[0] === 7) hasSun = true;
+                    if (t[2] > maxPeriod) maxPeriod = t[2];
+                });
+            });
+
+            const activeDays = [1,2,3,4,5];
+            if (hasSat) activeDays.push(6);
+            if (hasSun) activeDays.push(7);
+
+            const grid = {};
+            activeDays.forEach(day => {
+                grid[day] = {};
+                for (let p = 1; p <= 14; p++) grid[day][p] = [];
+            });
+
+            list.forEach(course => {
+                (course.time_slots || []).forEach(t => {
+                    const day = t[0];
+                    if (!activeDays.includes(day)) return;
+                    for (let p = t[1]; p <= t[2]; p++) {
+                        if (grid[day] && grid[day][p]) grid[day][p].push(course);
+                    }
+                });
+            });
+
+            const panel = document.createElement("div");
+            panel.className = "semester-panel zone";
+            panel.dataset.zone = semester;
+
+            if (scheduleData.settings && scheduleData.settings.bg_image) {
+                panel.style.backgroundImage = `linear-gradient(rgba(255,255,255,.86), rgba(255,255,255,.86)), url(${scheduleData.settings.bg_image})`;
+                panel.style.backgroundSize = "cover";
+                panel.style.backgroundPosition = "center";
+            }
+
+            const header = document.createElement("div");
+            header.className = "semester-header";
+
+            header.innerHTML = `
+                <div>
+                    <div class="semester-name">${escapeHTML(semester)}</div>
+                    <div class="semester-stats">
+                        <span class="stat">${stats.count} 門課</span>
+                        <span class="stat">${stats.credits} 學分</span>
+                        <span class="stat ${stats.conflicts ? "conflict" : ""}">${stats.conflicts} 組衝堂</span>
+                    </div>
+                </div>
+            `;
+
+            const buttons = document.createElement("div");
+            buttons.className = "header-buttons";
+
+            const exportBtn = document.createElement("button");
+            exportBtn.type = "button";
+            exportBtn.className = "icon-btn";
+            exportBtn.innerHTML = "📷 圖片";
+            exportBtn.title = "匯出此學期課表為 PNG";
+            exportBtn.onclick = e => {
+                e.stopPropagation();
+                buttons.style.display = "none";
+                panel.querySelectorAll(".table-status-btn").forEach(btn => btn.style.display = "none");
+
+                html2canvas(panel, {
+                    scale: 2,
+                    backgroundColor: "#ffffff",
+                    useCORS: true,
+                    logging: false
+                }).then(canvas => {
+                    const link = document.createElement("a");
+                    link.download = `${semester}課表.png`;
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+
+                    buttons.style.display = "flex";
+                    panel.querySelectorAll(".table-status-btn").forEach(btn => btn.style.display = "");
+                }).catch(() => {
+                    buttons.style.display = "flex";
+                    panel.querySelectorAll(".table-status-btn").forEach(btn => btn.style.display = "");
+                });
+            };
+            buttons.appendChild(exportBtn);
+
+            const clearBtn = document.createElement("button");
+            clearBtn.type = "button";
+            clearBtn.className = "icon-btn danger";
+            clearBtn.innerHTML = "清空";
+            clearBtn.title = "清空此學期，課程會回到暫存區";
+            clearBtn.onclick = e => {
+                e.stopPropagation();
+                if (!scheduleData.schedule[semester]) scheduleData.schedule[semester] = [];
+                scheduleData.schedule[semester].forEach(c => {
+                    if (!scheduleData.staging.find(x => x.serial === c.serial)) {
+                        scheduleData.staging.push(c);
+                    }
+                });
+                scheduleData.schedule[semester] = [];
+                render();
+                Streamlit.setComponentValue({action: "clear_semester", semester, ts: Date.now()});
+            };
+            buttons.appendChild(clearBtn);
+
+            header.appendChild(buttons);
+            panel.appendChild(header);
+
+            const wrap = document.createElement("div");
+            wrap.className = "timetable-wrap";
+
+            const table = document.createElement("table");
+            table.className = "timetable";
+
+            const thead = document.createElement("thead");
+            thead.innerHTML = `<tr><th>節次</th>${activeDays.map(d => `<th>星期${dayNames[d]}</th>`).join("")}</tr>`;
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+
+            for (let p = 1; p <= maxPeriod; p++) {
+                const tr = document.createElement("tr");
+                const first = document.createElement("td");
+                first.className = "period-cell";
+                first.innerHTML = `<div class="period-num">${p}</div><div class="period-time">${periodTimes[p] || ""}</div>`;
+                tr.appendChild(first);
+
+                activeDays.forEach(day => {
+                    const td = document.createElement("td");
+                    const cellCourses = grid[day][p] || [];
+
+                    if (cellCourses.length > 0) {
+                        const isConflict = cellCourses.length > 1;
+                        cellCourses.forEach((course, index) => {
+                            if (index > 0) {
+                                const sep = document.createElement("hr");
+                                sep.className = "cell-separator";
+                                td.appendChild(sep);
+                            }
+                            td.appendChild(createTableCourse(course, semester, isConflict));
+                        });
+                    } else {
+                        td.className = "empty-slot";
+                        td.title = "點擊此空堂以帶入搜尋條件";
+                        td.onclick = e => {
+                            if (selectedCourseSerial) {
+                                handleZoneClick(semester, e);
+                                e.stopPropagation();
+                            } else {
+                                Streamlit.setComponentValue({action: "search_empty", weekday: day, period: p, semester, ts: Date.now()});
+                            }
+                        };
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            }
+
+            table.appendChild(tbody);
+            wrap.appendChild(table);
+            panel.appendChild(wrap);
+
+            createZoneHandlers(panel);
+            return panel;
+        }
+
+        function render() {
+            if (!scheduleData) return;
+
+            applySettings();
+
+            const root = document.getElementById("root");
+            const oldStaging = document.querySelector(".staging-area");
+            const oldScroll = document.querySelector(".semester-scroll");
+            const stagingTop = oldStaging ? oldStaging.scrollTop : 0;
+            const scrollTop = oldScroll ? oldScroll.scrollTop : 0;
+
+            root.innerHTML = "";
+
+            const shell = document.createElement("div");
+            shell.className = "planner-shell";
+
+            const rail = document.createElement("div");
+            rail.className = "rail";
+            rail.appendChild(renderStaging());
+            rail.appendChild(renderTrash());
+
+            const workspace = document.createElement("div");
+            workspace.className = "workspace";
+            workspace.appendChild(renderWorkspaceTop());
+
+            const scroll = document.createElement("div");
+            scroll.className = "semester-scroll";
+            (scheduleData.semesters || []).forEach(sem => {
+                scroll.appendChild(renderTimetable(sem, scheduleData.schedule[sem] || []));
+            });
+
+            workspace.appendChild(scroll);
+            shell.appendChild(rail);
+            shell.appendChild(workspace);
+            root.appendChild(shell);
+
+            const newStaging = document.querySelector(".staging-area");
+            const newScroll = document.querySelector(".semester-scroll");
+            if (newStaging) newStaging.scrollTop = stagingTop;
+            if (newScroll) newScroll.scrollTop = scrollTop;
+
+            syncHeight();
+        }
+
+        function onRender(event) {
+            scheduleData = event.detail.args.data || {staging: [], schedule: {}, semesters: [], settings: {}};
+
+            if (!scheduleData.staging) scheduleData.staging = [];
+            if (!scheduleData.schedule) scheduleData.schedule = {};
+            if (!scheduleData.semesters) scheduleData.semesters = [];
+            if (!scheduleData.settings) scheduleData.settings = {};
+
+            if (event.detail.theme) {
+                const t = event.detail.theme;
+                if (t.primaryColor && !scheduleData.settings.theme_color) {
+                    document.documentElement.style.setProperty("--primary", t.primaryColor);
+                }
+                if (t.textColor) {
+                    document.documentElement.style.setProperty("--text", t.textColor);
+                    document.documentElement.style.setProperty("--muted", t.textColor);
+                }
+            }
+
+            render();
+        }
+
+        Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onRender);
+        Streamlit.setComponentReady();
+    </script>
+</body>
+</html>
+"""
+
+write_html = True
+if os.path.exists(_html_path):
+    with open(_html_path, "r", encoding="utf-8") as f:
+        if f.read() == _HTML_CONTENT:
+            write_html = False
+
+if write_html:
+    with open(_html_path, "w", encoding="utf-8") as f:
+        f.write(_HTML_CONTENT)
+
+dnd_board = components.declare_component("dnd_board_v2", path=_dnd_dir)
