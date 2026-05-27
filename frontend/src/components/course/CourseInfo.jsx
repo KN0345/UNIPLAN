@@ -12,6 +12,17 @@ function stripClassSuffix(value) {
 function normalizeProgramCourseName(value) {
   return String(stripClassSuffix(value) || '').replace(/[（）()\s:：／/\-—_]/g, '').toLowerCase()
 }
+const COURSE_NAME_ALIASES = {
+  [normalizeProgramCourseName('人工智慧')]: ['人工智慧', '人工智慧導論', '人工智慧概論', '人工智慧實務'],
+}
+function programNameMatchesCourse(programCourseName, actualCourseName) {
+  const programName = normalizeProgramCourseName(programCourseName)
+  const actualName = normalizeProgramCourseName(actualCourseName)
+  if (!programName || !actualName) return false
+  if (programName === actualName) return true
+  const aliases = COURSE_NAME_ALIASES[programName] || []
+  return aliases.map(normalizeProgramCourseName).includes(actualName)
+}
 function stripSchoolPrefix(value) {
   return String(value || '').replace(/^淡江大學/, '')
 }
@@ -24,7 +35,7 @@ function courseProgramMembership(course) {
   const results = []
   PROGRAMS.forEach((program) => {
     flattenProgramGroups(program.groups || []).forEach((group) => {
-      const found = (group.courses || []).some((pc) => normalizeProgramCourseName(pc.name) === name)
+      const found = (group.courses || []).some((pc) => programNameMatchesCourse(pc.name, course?.name || course?.course_name))
       if (found) results.push({ program: stripSchoolPrefix(program.name), group: group.name })
     })
   })

@@ -6143,3 +6143,70 @@ body[data-ui-theme="night"] .adminWarnLine,body[data-theme="dark"] .adminWarnLin
 .planSchemeModalList article span{display:block;color:var(--muted);font-size:12px;margin-top:4px;}
 
 @media(max-width:900px){.searchPage .courseList{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))!important;}.compareSummaryGrid{grid-template-columns:1fr;}}
+
+/* Beta public fix: course search cards stay compact while showing teacher and department clearly. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  min-height:118px!important;
+  padding:14px 14px 48px!important;
+}
+.courseCardDetails{display:grid!important;gap:4px!important;margin-top:10px!important;}
+.searchPage .courseList .courseCard .courseTeacherName,
+.searchPage .courseList .courseCard .courseDeptName,
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseTeacherName,
+.courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseMetaLine{
+  margin:0!important;
+  font-size:12.5px!important;
+  line-height:1.28!important;
+  color:rgba(203,213,225,.78)!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.searchPage .courseList .courseCard .cardHead strong,
+.courseList .courseCard .cardHead strong{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  left:auto!important;
+  right:12px!important;
+  bottom:12px!important;
+}
+.searchPage .courseList .courseCard .courseCreditsBadge,
+.courseList .courseCard .courseCreditsBadge{
+  left:12px!important;
+  bottom:14px!important;
+  font-size:11px!important;
+}
+
+/* Beta public fix: unscheduled courses float over the timetable instead of shrinking it. */
+.semesterPanel.activeSemesterPanel{position:relative!important;}
+.semesterPanel.activeSemesterPanel .unscheduled{
+  position:absolute!important;
+  left:14px!important;
+  right:14px!important;
+  bottom:12px!important;
+  z-index:8!important;
+  display:flex!important;
+  gap:8px!important;
+  max-height:66px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  margin:0!important;
+  padding:6px!important;
+  border-radius:16px!important;
+  background:rgba(15,23,42,.22)!important;
+  backdrop-filter:blur(12px)!important;
+}
+.semesterPanel.activeSemesterPanel .unscheduledItem.glassCourse{
+  flex:0 0 176px!important;
+  min-height:52px!important;
+  padding:9px 12px!important;
+}
+.semesterPanel.activeSemesterPanel .timetableGridClean{padding-bottom:74px!important;}

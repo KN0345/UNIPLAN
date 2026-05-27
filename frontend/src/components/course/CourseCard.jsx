@@ -5,11 +5,17 @@ function courseCode(course) {
   return c.serial || c.code || c.course_id || c.class_id || c.id || ''
 }
 
+function courseUnit(course) {
+  const c = getCourse(course)
+  return c.department || c.major || c.unit || c.opening_unit || c.category || ''
+}
+
 function CourseCard({ course, draggable = true, onSelect, compact = false, dragSource = 'course', dragSemester = '', targetSemester = '', onAddCandidate, onFavorite, isFavorite = false, isCandidate = false, onCompare, isCompared = false, compareDisabled = false }) {
   const c = getCourse(course)
   const status = courseStatus(course)
   const semesterMismatch = Boolean(targetSemester && !courseMatchesSemester(c, targetSemester))
   const code = courseCode(c)
+  const unit = courseUnit(c)
   function handleAction(event, action) {
     event.preventDefault()
     event.stopPropagation()
@@ -20,8 +26,11 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
       <b className={`statusBadge ${STATUS[status]?.tone || 'blue'}`} title={STATUS[status]?.label || '正常排程'} />
       {code && <span className="courseSerialBadge" title="開課序號">{code}</span>}
       <div className="cardHead"><strong>{c.name || '未命名課程'}</strong></div>
-      {c.teacher && <p className="courseTeacherName">{c.teacher}</p>}
-      <p className="courseMetaLine">{studentCourseMeta(c)}</p>
+      <div className="courseCardDetails">
+        <p className="courseTeacherName">教師｜{c.teacher || c.instructor || '未列教師'}</p>
+        {unit && <p className="courseDeptName">開課｜{unit}</p>}
+        <p className="courseMetaLine">時間｜{studentCourseMeta(c)}</p>
+      </div>
       {semesterMismatch && <small className="courseTermNotice">{courseTermLabel(c)}</small>}
       <span className="courseCreditsBadge">{credits(c)} 學分</span>
       {(onCompare || onAddCandidate || onFavorite) && <div className="searchCardActions">

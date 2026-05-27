@@ -3,6 +3,40 @@ import { fetchCourses, fetchMetadata } from '../api'
 import { COURSE_CATALOG_TERMS, catalogTermForSemester, courseCatalogTermValue, courseSmartScore, courseMatchesSemester, extractCourseList, findConflict, getCourse, credits, courseKey, reviewKey } from '../utils/coursePlanning'
 import { COURSE_TAGS, countCourseTagVotes } from '../data/courses/courseTags'
 
+
+function normalizeSearchText(value = '') {
+  return String(value || '').replace(/[（）()\s:：／/\-—_]/g, '').toLowerCase()
+}
+
+function stripClassSuffix(value = '') {
+  return String(value || '')
+    .replace(/\s*[（(][^）)]*班[）)]\s*$/i, '')
+    .trim()
+}
+
+function relevanceScore(course, query) {
+  const c = getCourse(course)
+  const q = normalizeSearchText(query)
+  if (!q) return 0
+  const name = normalizeSearchText(c.name || c.course_name || '')
+  const baseName = normalizeSearchText(stripClassSuffix(c.name || c.course_name || ''))
+  const code = normalizeSearchText(c.serial || c.code || c.course_id || '')
+  const teacher = normalizeSearchText(c.teacher || c.instructor || '')
+  const unit = normalizeSearchText(c.department || c.major || c.unit || c.category || '')
+  let score = 0
+  if (baseName === q) score += 1000
+  if (name === q) score += 900
+  if (baseName.startsWith(q)) score += 650
+  if (name.startsWith(q)) score += 600
+  if (name.includes(q)) score += 420
+  if (code === q) score += 500
+  if (code.includes(q)) score += 180
+  if (teacher.includes(q)) score += 90
+  if (unit.includes(q)) score += 50
+  score += Math.max(0, 80 - Math.abs(name.length - q.length) * 4)
+  return score
+}
+
 export function useCourseSearchState({ activeSemester, favorites = [], candidates = [], plan = [], tagVotes = {} }) {
   const [courses, setCourses] = useState([])
   const [query, setQuery] = useState('')
@@ -72,6 +106,14 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
         return String(getCourse(a).name || '').localeCompare(String(getCourse(b).name || ''), 'zh-Hant')
       })
     }
+    const queryText = String(query || '').trim()
+    if (queryText && (searchSort === 'smart' || searchSort === 'default')) {
+      return list.sort((a, b) => {
+        const diff = relevanceScore(b, queryText) - relevanceScore(a, queryText)
+        if (diff) return diff
+        return String(getCourse(a).name || '').localeCompare(String(getCourse(b).name || ''), 'zh-Hant')
+      })
+    }
     if (searchSort === 'credits' || searchSort === 'creditsDesc') return list.sort((a, b) => credits(b) - credits(a))
     if (searchSort === 'name') return list.sort((a, b) => String(getCourse(a).name || '').localeCompare(String(getCourse(b).name || ''), 'zh-Hant'))
     if (searchSort === 'favorite') return list.sort((a, b) => Number(favorites.some((f) => courseKey(f) === courseKey(b))) - Number(favorites.some((f) => courseKey(f) === courseKey(a))))
@@ -81,7 +123,7 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
       const ctxB = { isFavorite: favorites.some((f) => courseKey(f) === courseKey(b)), hasConflict: Boolean(findConflict(b, plan[activeSemester] || [])) }
       return courseSmartScore(b, ctxB) - courseSmartScore(a, ctxA)
     })
-  }, [courses, activeSemester, searchOnlyAvailable, searchSort, favorites, candidates, plan, searchFilters.tag, tagVotes])
+  }, [courses, activeSemester, searchOnlyAvailable, searchSort, favorites, candidates, plan, searchFilters.tag, tagVotes, query])
 
   const majorOptions = useMemo(() => Array.from(new Set([...(metadata.majors || []), ...courses.map((course) => getCourse(course).major).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])
   const departmentOptions = useMemo(() => Array.from(new Set([...(metadata.departments || []), ...courses.map((course) => getCourse(course).department).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])

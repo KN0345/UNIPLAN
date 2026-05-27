@@ -17,6 +17,14 @@ function stripClassSuffix(value) {
 function normBase(value) {
   return norm(stripClassSuffix(value))
 }
+const COURSE_NAME_ALIASES = {
+  [normBase('人工智慧')]: ['人工智慧', '人工智慧導論', '人工智慧概論', '人工智慧實務'],
+}
+function acceptableProgramNames(programCourse) {
+  const base = normBase(programCourse?.name)
+  const aliases = COURSE_NAME_ALIASES[base] || []
+  return new Set([base, ...aliases.map(normBase)].filter(Boolean))
+}
 function getCourse(course) {
   return course?.course || course || {}
 }
@@ -36,12 +44,12 @@ function stripSchoolName(name) {
   return String(name || '').replace(/^淡江大學/, '')
 }
 function catalogMatches(programCourse, courses = []) {
-  const target = normBase(programCourse?.name)
-  if (!target) return []
+  const targets = acceptableProgramNames(programCourse)
+  if (!targets.size) return []
   const seen = new Set()
   return courses.filter((course) => {
     const name = normBase(courseName(course))
-    const ok = name && name === target
+    const ok = name && targets.has(name)
     if (!ok) return false
     const c = getCourse(course)
     const key = `${courseName(course)}-${c.teacher || ''}-${c.serial || c.code || c.id || ''}-${courseTime(course)}`
