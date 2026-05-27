@@ -159,6 +159,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
   const [status, setStatus] = useState('ALL')
   const [activeProgramId, setActiveProgramId] = useState(PROGRAMS[0]?.id || '')
   const [selected, setSelected] = useState({})
+  const [selectedVariants, setSelectedVariants] = useState({})
   const [coursePicker, setCoursePicker] = useState(null)
   const context = useMemo(() => ({ plan, candidates, favorites }), [plan, candidates, favorites])
   const rows = useMemo(() => PROGRAMS.map((program) => evaluateProgram(effectiveProgramForProfile(program, profile), context)), [context, profile])
@@ -184,35 +185,66 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
   function selectedSet(groupId) {
     return new Set(selected[`${active?.program?.id}:${groupId}`] || [])
   }
-  function toggleCourse(group, programCourse) {
+  function variantKey(groupId, programCourse) {
+    return `${active?.program?.id || ''}:${groupId}:${programCourse?.name || ''}`
+  }
+  function chooseCourseVariant(group, programCourse, variant) {
     const groupKey = `${active.program.id}:${group.id}`
-    const current = new Set(selected[groupKey] || [])
     const key = programCourse.name
-    if (current.has(key)) current.delete(key)
-    else current.add(key)
-    setSelected((prev) => ({ ...prev, [groupKey]: [...current] }))
+    setSelected((prev) => {
+      const current = new Set(prev[groupKey] || [])
+      current.add(key)
+      return { ...prev, [groupKey]: [...current] }
+    })
+    setSelectedVariants((prev) => ({ ...prev, [variantKey(group.id, programCourse)]: getCourse(variant) }))
+    setCoursePicker(null)
+  }
+  function removeCourseChoice(group, programCourse) {
+    const groupKey = `${active.program.id}:${group.id}`
+    const key = programCourse.name
+    setSelected((prev) => {
+      const current = new Set(prev[groupKey] || [])
+      current.delete(key)
+      return { ...prev, [groupKey]: [...current] }
+    })
+    setSelectedVariants((prev) => {
+      const copy = { ...prev }
+      delete copy[variantKey(group.id, programCourse)]
+      return copy
+    })
+  }
+  function toggleCourse(group, programCourse) {
+    if (!active) return
+    const picked = selectedSet(group.id)
+    if (picked.has(programCourse.name)) {
+      removeCourseChoice(group, programCourse)
+      return
+    }
+    openCoursePicker(programCourse, group)
   }
   function addSelectedToCandidate() {
     if (!active || !onAddCandidate) return
-    const unique = [...new Set(programSelectedKeys(active.program.id, selected))]
-    unique.forEach((name) => {
-      const programCourse = programCourseList(active.program).find((c) => c.name === name) || { name }
-      const matched = findCatalogMatch(programCourse, courses)
-      const alreadyDone = isCompletedProgramMatch(programCourse, pool)
-      const alreadyPlanned = isPlannedProgramMatch(programCourse, pool)
-      if (alreadyDone || alreadyPlanned) return
-      onAddCandidate(matched || { name, credits: programCourse.credits || 0, time_info: '', teacher: '', source: 'program' })
+    flattenProgramGroups(active.program.groups || []).forEach((group) => {
+      const groupKey = `${active.program.id}:${group.id}`
+      ;(selected[groupKey] || []).forEach((name) => {
+        const programCourse = (group.courses || []).find((c) => c.name === name) || { name }
+        const chosenVariant = selectedVariants[variantKey(group.id, programCourse)]
+        const matched = chosenVariant || findCatalogMatch(programCourse, courses)
+        const alreadyDone = isCompletedProgramMatch(programCourse, pool)
+        const alreadyPlanned = isPlannedProgramMatch(programCourse, pool)
+        if (alreadyDone || alreadyPlanned || !matched) return
+        onAddCandidate(getCourse(matched))
+      })
     })
   }
-  function addVariantToCandidate(programCourse, variant) {
-    if (!variant || !onAddCandidate) return
-    if (!isAlreadyInPool(variant, pool)) onAddCandidate(getCourse(variant))
-    setCoursePicker(null)
+  function selectVariantFromPicker(variant) {
+    if (!coursePicker?.group || !coursePicker?.programCourse || !variant) return
+    chooseCourseVariant(coursePicker.group, coursePicker.programCourse, variant)
   }
 
-  async function openCoursePicker(programCourse) {
+  async function openCoursePicker(programCourse, group = null) {
     const localMatches = catalogMatches(programCourse, courses)
-    setCoursePicker({ programCourse, matches: localMatches, loading: true, source: localMatches.length ? '目前清單' : '搜尋中' })
+    setCoursePicker({ group, programCourse, matches: localMatches, loading: true, source: localMatches.length ? '目前清單' : '搜尋中' })
     try {
       const payload = await fetchCourses({ keyword: programCourse?.name || '', semester: '全部' })
       const dbCourses = extractCourseList(payload)
@@ -226,10 +258,10 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
           merged.push(item)
         }
       })
-      setCoursePicker({ programCourse, matches: merged, loading: false, source: globalMatches.length ? '全課程資料庫' : '目前清單' })
+      setCoursePicker({ group, programCourse, matches: merged, loading: false, source: globalMatches.length ? '全課程資料庫' : '目前清單' })
     } catch (error) {
       console.error(error)
-      setCoursePicker({ programCourse, matches: localMatches, loading: false, source: localMatches.length ? '目前清單' : '搜尋失敗' })
+      setCoursePicker({ group, programCourse, matches: localMatches, loading: false, source: localMatches.length ? '目前清單' : '搜尋失敗' })
     }
   }
 
@@ -252,14 +284,16 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
               const planned = isPlannedProgramMatch(programCourse, pool)
               const chosen = picked.has(programCourse.name)
               const matches = catalogMatches(programCourse, courses)
+              const selectedVariant = selectedVariants[variantKey(group.id, programCourse)]
               const unavailable = !matches.length && !done && !planned
               const state = courseButtonState({ done, planned, chosen, required, unavailable })
               return <article key={`${group.id}-${programCourse.name}`} className={`programCourseRow ${state}`}>
-                <button type="button" disabled={done} className="programCourseMainButton" onClick={() => toggleCourse(group, programCourse)} title={done ? '已修過，已完成此項' : planned ? '已在暫存或課表中' : unavailable ? '本學期找不到同名開課，仍可先規劃' : '點選選擇'}>
+                <button type="button" disabled={done} className="programCourseMainButton" onClick={() => toggleCourse(group, programCourse)} title={done ? '已修過，已完成此項' : chosen ? '已選班別，點擊可取消' : planned ? '已在暫存或課表中' : unavailable ? '本學期找不到同名開課，仍可先規劃' : '先選擇班別'}>
                   <strong>{programCourse.name}</strong>
+                  {selectedVariant && <em className="programSelectedVariant">{selectedVariant.teacher || '未列教師'}｜{courseTime(selectedVariant)}</em>}
                   <span>{programCourse.credits ? `${programCourse.credits}學分` : groupHint(group)}</span>
                 </button>
-                <button type="button" className="programCourseInfoDot" aria-label="選擇開課班別" onClick={(event) => { event.stopPropagation(); openCoursePicker(programCourse) }}>i</button>
+                <button type="button" className="programCourseInfoDot" aria-label="選擇或查看開課班別" onClick={(event) => { event.stopPropagation(); openCoursePicker(programCourse, group) }}>i</button>
               </article>
             })}</div>
           </section>
@@ -268,7 +302,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
     </div>
     {coursePicker && <div className="programCourseModalOverlay" onMouseDown={(event) => { if (event.target.className === 'programCourseModalOverlay') setCoursePicker(null) }}>
       <section className="programCourseModal">
-        <header><div><h3>{coursePicker.programCourse.name}</h3><p>依課名搜尋全課程資料庫，請選擇想放入暫存區的班別。</p>{coursePicker.source && <small>來源：{coursePicker.source}</small>}</div><button className="modalCloseButton" onClick={() => setCoursePicker(null)} aria-label="關閉">×</button></header>
+        <header><div><h3>{coursePicker.programCourse.name}</h3><p>依課名搜尋全課程資料庫，請先選擇班別；選好後再由上方加入暫存區。</p>{coursePicker.source && <small>來源：{coursePicker.source}</small>}</div><button className="modalCloseButton" onClick={() => setCoursePicker(null)} aria-label="關閉">×</button></header>
         <div className="programCourseVariantList">
           {coursePicker.loading ? <div className="emptyVariantBox"><b>正在搜尋全課程資料庫</b><p>請稍候，系統正在依課名查找所有可用班別。</p></div> : coursePicker.matches?.length ? coursePicker.matches.map((match) => {
             const mc = getCourse(match)
@@ -276,7 +310,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
             return <article key={dedupeCourseKey(mc)}>
               <button className="variantInfoButton" onClick={() => onOpenCourseInfo?.(mc)}><b>{mc.name || coursePicker.programCourse.name}</b><span>{mc.serial || mc.code || '無序號'}</span></button>
               <p>{mc.teacher || '未列教師'}｜{courseTime(mc)}｜{mc.credits || mc.credit || coursePicker.programCourse.credits || 0}學分</p>
-              <button disabled={already} onClick={() => addVariantToCandidate(coursePicker.programCourse, mc)}>{already ? '已在規劃中' : '加入暫存區'}</button>
+              <button disabled={already} onClick={() => selectVariantFromPicker(mc)}>{already ? '已在規劃中' : '選擇'}</button>
             </article>
           }) : <div className="emptyVariantBox"><b>本學期找不到同名開課</b><p>仍可先在學程中選取作為規劃目標，等課程資料補齊後再選班別。</p></div>}
         </div>
