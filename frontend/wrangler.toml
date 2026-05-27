@@ -1,0 +1,7 @@
+name = "uniplan"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-12-01"
+
+[vars]
+# Production 建議在 Cloudflare Dashboard 設定，不要把真實 DATABASE_URL 寫進 git。
+# DATABASE_URL = "postgresql://..."
