@@ -84,7 +84,7 @@ export default function FeedbackPage({ notify }) {
           <label>標題<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="例如：課程時間顯示錯誤" /></label>
           <label>內容<textarea value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} placeholder="簡單描述你遇到的問題" rows={6} /></label>
           <button>送出回報</button>
-          <p className="muted feedbackNote">送出後會交由管理端處理。未來可加入通知中心，用來顯示選課時間提醒與回報處理結果。</p>
+          <p className="muted feedbackNote">送出後由管理端處理。</p>
         </form>
       </div>
       <aside className="recentFeedbackPanel feedbackRecentPane">

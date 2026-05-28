@@ -26,14 +26,14 @@ function compareHints(rows) {
   const hints = []
   const withTime = rows.filter((r) => r.time !== '未列時間')
   const withoutTime = rows.filter((r) => r.time === '未列時間')
-  if (withoutTime.length) hints.push(`${withoutTime.map((r) => r.name).join('、')} 尚未列出時間，較適合先暫存觀察。`)
+  if (withoutTime.length) hints.push(`未列時間：${withoutTime.map((r) => r.name).join('、')}`)
   const creditValues = [...new Set(rows.map((r) => r.creditValue))]
   if (creditValues.length > 1) hints.push(`學分不同：${rows.map((r) => `${r.name} ${r.creditValue}學分`).join('｜')}`)
   const tagRich = rows.filter((r) => r.topTagRaw)
   const easy = tagRich.filter((r) => /作業少|給分高|考試少|報告少|點名少|分組少/.test(r.topTagRaw.tag))
   const heavy = tagRich.filter((r) => /作業多|給分低|考試多|報告多|點名多|分組多/.test(r.topTagRaw.tag))
-  if (easy.length) hints.push(`目前較輕鬆傾向：${easy.map((r) => `${r.name}（${r.topTagRaw.tag}）`).join('、')}`)
-  if (heavy.length) hints.push(`需要注意負擔：${heavy.map((r) => `${r.name}（${r.topTagRaw.tag}）`).join('、')}`)
+  if (easy.length) hints.push(`低負擔標籤：${easy.map((r) => `${r.name}（${r.topTagRaw.tag}）`).join('、')}`)
+  if (heavy.length) hints.push(`高負擔標籤：${heavy.map((r) => `${r.name}（${r.topTagRaw.tag}）`).join('、')}`)
   if (withTime.length >= 2) {
     const sameTime = []
     for (let i = 0; i < withTime.length; i += 1) {
@@ -43,7 +43,7 @@ function compareHints(rows) {
         if (a.some((x) => b.some((y) => x.day === y.day && Math.max(x.start, y.start) <= Math.min(x.end, y.end)))) sameTime.push(`${withTime[i].name} / ${withTime[j].name}`)
       }
     }
-    if (sameTime.length) hints.push(`比較組內有時間重疊：${sameTime.join('、')}`)
+    if (sameTime.length) hints.push(`時間重疊：${sameTime.join('、')}`)
   }
   return hints.slice(0, 4)
 }
@@ -64,9 +64,9 @@ export function compareCourseRows(courses = [], tagVotes = {}) {
       requirement: c.required_type || c.requiredType || c.type || c.category || '未列',
       department: c.department || c.major || c.category || '未列',
       code: c.serial || c.code || c.course_id || '未列',
-      topTag: topTag ? `${topTag.tag}（${topTag.count}）` : '尚無標籤票數',
+      topTag: topTag ? `${topTag.tag} ${topTag.count}` : '0票',
       topTagRaw: topTag,
-      tagList: tags.length ? tags.map((t) => `${t.tag} ${t.count}`).join('、') : '尚無標籤票數',
+      tagList: tags.length ? tags.map((t) => `${t.tag} ${t.count}`).join('、') : '0票',
       raw: c,
     }
   })

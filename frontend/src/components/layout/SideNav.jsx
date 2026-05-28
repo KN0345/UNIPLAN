@@ -5,7 +5,6 @@ const MAIN_MENU = [
   ['search', '課程搜尋'],
   ['credits', '學分進度'],
   ['programs', '學程進度'],
-  ['snapshots', '我的方案'],
   ['feedback', '意見箱'],
 ]
 

@@ -19,7 +19,6 @@ export default function CompareTable({ courses = [], tagVotes = {}, onClose, onO
         <header className="modalHeader compareHeader">
           <div>
             <h2>課程比較</h2>
-            <p className="muted">用時間、學分、標籤票數快速判斷哪門課比較適合。</p>
           </div>
           <button className="modalClose" type="button" onClick={onClose}>×</button>
         </header>
@@ -33,7 +32,7 @@ export default function CompareTable({ courses = [], tagVotes = {}, onClose, onO
         </div>
         <div className="compareHints">
           <b>比較觀察</b>
-          {hints.length ? hints.map((hint) => <p key={hint}>{hint}</p>) : <p>目前資料差異不明顯，可依時間與教師自行判斷。</p>}
+          {hints.length ? hints.map((hint) => <p key={hint}>{hint}</p>) : <p>無明顯差異</p>}
         </div>
         <div className="compareTableWrap">
           <table className="compareTable">

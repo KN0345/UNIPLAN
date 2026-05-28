@@ -100,11 +100,12 @@ function isCompletedProgramMatch(programCourse, pool) {
 function isPlannedProgramMatch(programCourse, pool) {
   return Boolean(matchCourse(programCourse, (pool || []).filter(({ course }) => courseStatus(course) !== 'completed' && courseStatus(course) !== 'failed')))
 }
-function courseButtonState({ done, planned, chosen, required, unavailable }) {
+function courseButtonState({ done, planned, chosen, required, unavailable, hasMatches }) {
   if (done) return 'done'
   if (planned || chosen) return 'selected'
   if (unavailable) return 'unavailable'
-  if (required) return 'required'
+  if (hasMatches) return 'pending'
+  if (required) return 'pending'
   return 'normal'
 }
 function statusText(program) {
@@ -266,7 +267,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
   }
 
   return <section className="pageCard programPage programChooserPage">
-    <div className="pageHead compactHead"><div><h2>學程選課</h2><p className="muted">選好課程後加入暫存區，再回課表確認時間。</p></div></div>
+    <div className="pageHead compactHead"><div><h2>學程選課</h2></div></div>
     <div className="programToolbar compactToolbar"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜尋學程" /><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="ALL">全部</option><option value="ACTIVE">已建規則</option><option value="PARTIAL">部分規則</option><option value="NEEDS_RULES">待補規則</option></select></div>
     <div className="programChooserLayout">
       <aside className="programPickerList">{filtered.map((row) => <button key={row.program.id} className={row.program.id === active?.program?.id ? 'active' : ''} onClick={() => setActiveProgramId(row.program.id)}><strong>{stripSchoolName(row.program.name)}</strong><span>{row.percent}%</span>{statusText(row.program) && <small>{statusText(row.program)}</small>}</button>)}</aside>
@@ -277,7 +278,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
           const required = isRequiredGroup(group)
           const progress = groupProgress(group, picked, pool, courses)
           return <section className="programChoiceGroup" key={group.id}>
-            <div className="programChoiceGroupHead"><div><h4>{group.name}</h4><span>{groupHint(group)}{progress.reached ? '｜已達建議門檻，可繼續加選' : ''}</span></div><b>{progress.label}</b></div>
+            <div className="programChoiceGroupHead"><div><h4>{group.name}</h4><span>{groupHint(group)}{progress.reached ? '｜已達' : ''}</span></div><b>{progress.label}</b></div>
             <div className="programGroupProgress"><i style={{ width: `${progress.percent}%` }} /></div>
             <div className="programCourseList">{(group.courses || []).map((programCourse) => {
               const done = isCompletedProgramMatch(programCourse, pool)
@@ -286,7 +287,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
               const matches = catalogMatches(programCourse, courses)
               const selectedVariant = selectedVariants[variantKey(group.id, programCourse)]
               const unavailable = !matches.length && !done && !planned
-              const state = courseButtonState({ done, planned, chosen, required, unavailable })
+              const state = courseButtonState({ done, planned, chosen, required, unavailable, hasMatches: Boolean(matches.length) })
               return <article key={`${group.id}-${programCourse.name}`} className={`programCourseRow ${state}`}>
                 <button type="button" disabled={done} className="programCourseMainButton" onClick={() => toggleCourse(group, programCourse)} title={done ? '已修過，已完成此項' : chosen ? '已選班別，點擊可取消' : planned ? '已在暫存或課表中' : unavailable ? '本學期找不到同名開課，仍可先規劃' : '先選擇班別'}>
                   <strong>{programCourse.name}</strong>
@@ -302,9 +303,9 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
     </div>
     {coursePicker && <div className="programCourseModalOverlay" onMouseDown={(event) => { if (event.target.className === 'programCourseModalOverlay') setCoursePicker(null) }}>
       <section className="programCourseModal">
-        <header><div><h3>{coursePicker.programCourse.name}</h3><p>依課名搜尋全課程資料庫，請先選擇班別；選好後再由上方加入暫存區。</p>{coursePicker.source && <small>來源：{coursePicker.source}</small>}</div><button className="modalCloseButton" onClick={() => setCoursePicker(null)} aria-label="關閉">×</button></header>
+        <header><div><h3>{coursePicker.programCourse.name}</h3>{coursePicker.source && <small>{coursePicker.source}</small>}</div><button className="modalCloseButton" onClick={() => setCoursePicker(null)} aria-label="關閉">×</button></header>
         <div className="programCourseVariantList">
-          {coursePicker.loading ? <div className="emptyVariantBox"><b>正在搜尋全課程資料庫</b><p>請稍候，系統正在依課名查找所有可用班別。</p></div> : coursePicker.matches?.length ? coursePicker.matches.map((match) => {
+          {coursePicker.loading ? <div className="emptyVariantBox"><b>搜尋中</b></div> : coursePicker.matches?.length ? coursePicker.matches.map((match) => {
             const mc = getCourse(match)
             const already = isAlreadyInPool(mc, pool)
             return <article key={dedupeCourseKey(mc)}>
@@ -312,7 +313,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
               <p>{mc.teacher || '未列教師'}｜{courseTime(mc)}｜{mc.credits || mc.credit || coursePicker.programCourse.credits || 0}學分</p>
               <button disabled={already} onClick={() => selectVariantFromPicker(mc)}>{already ? '已在規劃中' : '選擇'}</button>
             </article>
-          }) : <div className="emptyVariantBox"><b>本學期找不到同名開課</b><p>仍可先在學程中選取作為規劃目標，等課程資料補齊後再選班別。</p></div>}
+          }) : <div className="emptyVariantBox"><b>無同名開課</b></div>}
         </div>
       </section>
     </div>}

@@ -21,6 +21,14 @@ function stripClassSuffix(value) {
     .trim()
 }
 function normBase(value) { return norm(stripClassSuffix(value)) }
+const COURSE_NAME_ALIASES = {
+  [normBase('人工智慧')]: ['人工智慧', '人工智慧導論', '人工智慧概論', '人工智慧實務'],
+}
+function acceptableProgramNames(programCourse) {
+  const base = normBase(programCourse?.name)
+  const aliases = COURSE_NAME_ALIASES[base] || []
+  return new Set([base, ...aliases.map(normBase)].filter(Boolean))
+}
 function courseStatus(course) {
   const raw = course?.course || course || {}
   return raw.planningStatus || 'planned'
@@ -41,11 +49,11 @@ function plannedCoursePool(plan = {}, candidates = [], favorites = []) {
   return [...planned, ...temp]
 }
 export function matchCourse(programCourse, coursePool) {
-  const target = normBase(programCourse?.name)
-  if (!target) return null
+  const targets = acceptableProgramNames(programCourse)
+  if (!targets.size) return null
   return coursePool.find(({ course }) => {
-    const name = norm(getCourseName(course))
-    return name && name === target
+    const name = normBase(getCourseName(course))
+    return name && targets.has(name)
   }) || null
 }
 function summarizeRule(rule) {

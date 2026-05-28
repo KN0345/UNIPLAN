@@ -56,7 +56,7 @@ function CourseInfo({ course, reviews = [], tagVotes = {}, onTagVote, userId = '
   const [editingReviewId, setEditingReviewId] = useState('')
   const [editingText, setEditingText] = useState('')
   if (!course || !c || Object.keys(c).length === 0) {
-    return <section className="courseInfoSafe"><h3>尚未選擇課程</h3><p className="muted">請先從課程搜尋或課表中選擇一門課。</p></section>
+    return <section className="courseInfoSafe"><h3>尚未選擇課程</h3></section>
   }
   const room = c.classroom || c.room || c.location || '未列教室'
   const time = c.time_info || c.time || '未列時間'
@@ -107,12 +107,11 @@ function CourseInfo({ course, reviews = [], tagVotes = {}, onTagVote, userId = '
       </div>
       <div className="courseInfoBlock courseProgramBlock">
         <h3>對應學程</h3>
-        {programMemberships.length ? <div className="courseProgramTags">{programMemberships.map((item) => <span key={`${item.program}-${item.group}`}><b>{item.program}</b><small>{item.group}</small></span>)}</div> : <p className="muted">目前未對應到已建規則的學程。</p>}
+        {programMemberships.length ? <div className="courseProgramTags">{programMemberships.map((item) => <span key={`${item.program}-${item.group}`}><b>{item.program}</b><small>{item.group}</small></span>)}</div> : <p className="muted">未對應學程</p>}
       </div>
       <div className="courseInfoBlock"><h3>課程簡介</h3><p>{c.description || c.note || '尚無資料'}</p></div>
       <div className="courseInfoBlock courseTagVoteBlock">
         <h3>課程標籤投票</h3>
-        <p className="muted">點擊標籤即可投票；搜尋頁可依標籤得票排序。</p>
         <div className="teacherTagGrid courseTagGrid">
           {tags.map((tag) => {
             const key = reviewKey(c)
@@ -137,7 +136,7 @@ function CourseInfo({ course, reviews = [], tagVotes = {}, onTagVote, userId = '
           <div className="reviewTagPicker" aria-label="評論標籤">
             {tags.map((tag) => <button key={tag} type="button" className={reviewDraft.tags.includes(tag) ? 'active' : ''} onClick={() => toggleDraftTag(tag)}>{tag}</button>)}
           </div>
-          <textarea value={reviewDraft.content} onChange={(e) => setReviewDraft((prev) => ({ ...prev, content: e.target.value }))} placeholder="寫下這門課的修課感受、作業量、考試方式或給分狀況。" />
+          <textarea value={reviewDraft.content} onChange={(e) => setReviewDraft((prev) => ({ ...prev, content: e.target.value }))} placeholder="課程心得，最多100字。" />
           <button type="submit" disabled={!reviewDraft.content.trim()}>送出評論</button>
         </form>
       </div>
@@ -165,7 +164,7 @@ function CourseInfo({ course, reviews = [], tagVotes = {}, onTagVote, userId = '
               </div> : null}
             </article>
           )
-        }) : <p className="muted">尚無心得紀錄。</p>}
+        }) : <p className="muted">尚無心得</p>}
       </div>
     </section>
   )
