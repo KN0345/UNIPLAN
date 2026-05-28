@@ -6646,3 +6646,259 @@ body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]) .progressTrack
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]) .creditTrack{
   background:#d2ddec!important;
 }
+
+/* ========================================================================== 
+   Beta readability fix 2026-05-29
+   Fix: search course-card overlap, program-card state rendering, and theme text colors.
+   ========================================================================== */
+.searchPage .courseList{
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr))!important;
+  gap:12px!important;
+}
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  position:relative!important;
+  height:178px!important;
+  min-height:178px!important;
+  max-height:178px!important;
+  padding:42px 14px 50px 16px!important;
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:0!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,#315f9a 0%,#26518a 48%,#1b3f70 100%)!important;
+  color:#f8fafc!important;
+  border:1px solid rgba(191,219,254,.28)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 12px 24px rgba(22,48,84,.18)!important;
+  transform:none!important;
+}
+.searchPage .courseList .courseCard:hover,
+.courseList .courseCard:hover{
+  background:linear-gradient(180deg,#3568a7 0%,#2a5995 48%,#20497c 100%)!important;
+  border-color:rgba(191,219,254,.48)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 14px 26px rgba(22,48,84,.22)!important;
+  transform:translateY(-1px)!important;
+}
+.searchPage .courseList .courseCard::before,
+.searchPage .courseList .courseCard::after,
+.courseList .courseCard::before,
+.courseList .courseCard::after{
+  content:none!important;
+  display:none!important;
+}
+.searchPage .courseList .courseCard .statusBadge,
+.courseList .courseCard .statusBadge{
+  position:absolute!important;
+  top:16px!important;
+  left:16px!important;
+  width:12px!important;
+  height:12px!important;
+  z-index:6!important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.50)!important;
+}
+.searchPage .courseList .courseCard .courseSerialBadge,
+.courseList .courseCard .courseSerialBadge{
+  position:absolute!important;
+  top:10px!important;
+  left:42px!important;
+  right:auto!important;
+  max-width:96px!important;
+  height:24px!important;
+  padding:4px 10px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+  background:rgba(15,37,76,.44)!important;
+  border:1px solid rgba(226,232,240,.22)!important;
+  color:#f8fafc!important;
+  font-size:12px!important;
+  line-height:14px!important;
+  font-weight:850!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  z-index:5!important;
+}
+.searchPage .courseList .courseCard .cardHead,
+.courseList .courseCard .cardHead{
+  display:block!important;
+  width:100%!important;
+  min-height:43px!important;
+  max-height:43px!important;
+  padding:0!important;
+  margin:0 0 7px 0!important;
+  overflow:hidden!important;
+  z-index:2!important;
+}
+.searchPage .courseList .courseCard .cardHead strong,
+.courseList .courseCard .cardHead strong{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+  color:#f8fbff!important;
+  font-size:16px!important;
+  line-height:1.28!important;
+  font-weight:850!important;
+  letter-spacing:-.02em!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.16)!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:3px!important;
+  height:47px!important;
+  max-height:47px!important;
+  min-height:47px!important;
+  width:100%!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  z-index:2!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails p,
+.courseList .courseCard .courseCardDetails p{
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  color:rgba(226,236,250,.82)!important;
+  font-size:11.5px!important;
+  line-height:1.25!important;
+  font-weight:650!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  text-shadow:none!important;
+}
+.searchPage .courseList .courseCard .courseCreditsBadge,
+.courseList .courseCard .courseCreditsBadge{
+  position:absolute!important;
+  left:14px!important;
+  bottom:13px!important;
+  height:22px!important;
+  padding:3px 9px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+  background:rgba(15,37,76,.48)!important;
+  border:1px solid rgba(226,232,240,.22)!important;
+  color:#f8fafc!important;
+  font-size:12px!important;
+  line-height:14px!important;
+  font-weight:850!important;
+  z-index:5!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  position:absolute!important;
+  right:12px!important;
+  bottom:10px!important;
+  left:auto!important;
+  display:flex!important;
+  gap:8px!important;
+  z-index:6!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:12px!important;
+  background:rgba(255,255,255,.14)!important;
+  border:1px solid rgba(226,232,240,.22)!important;
+  color:#fff!important;
+  box-shadow:0 8px 16px rgba(15,23,42,.16),inset 0 1px 0 rgba(255,255,255,.12)!important;
+  font-size:17px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  transform:none!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button:hover,
+.courseList .courseCard .searchCardActions button:hover{
+  background:rgba(96,165,250,.32)!important;
+  border-color:rgba(191,219,254,.48)!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction{
+  font-size:13px!important;
+}
+@media(max-width:980px){
+  .searchPage .courseList .courseCard,
+  .courseList .courseCard{height:186px!important;min-height:186px!important;max-height:186px!important;}
+}
+
+/* Program cards: remove inner broken panel; state belongs to the card itself. */
+.programCourseRow{
+  position:relative!important;
+  min-height:128px!important;
+  padding:16px!important;
+  border-radius:20px!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:stretch!important;
+  border:1px solid rgba(148,163,184,.28)!important;
+  color:var(--text)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 20px rgba(15,23,42,.12)!important;
+}
+.programCourseRow::before{content:""!important;position:absolute!important;left:0!important;right:0!important;top:0!important;height:26%!important;background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0))!important;pointer-events:none!important;}
+.programCourseMainButton{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:96px!important;
+  padding:0 28px 0 0!important;
+  background:transparent!important;
+  border:0!important;
+  color:inherit!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  text-align:left!important;
+  gap:10px!important;
+  box-shadow:none!important;
+}
+.programCourseMainButton strong{font-size:15px!important;line-height:1.32!important;color:inherit!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;}
+.programCourseMainButton span,.programCourseMainButton em{font-size:12px!important;color:inherit!important;opacity:.82!important;}
+.programCourseInfoDot{position:absolute!important;top:14px!important;right:14px!important;z-index:5!important;background:rgba(255,255,255,.16)!important;color:inherit!important;border:1px solid rgba(255,255,255,.28)!important;}
+.programCourseRow.pending,.programCourseRow.required{background:linear-gradient(180deg,#8eb9ff 0%,#72a5f2 100%)!important;color:#08224a!important;border-color:#abcaff!important;}
+.programCourseRow.selected{background:linear-gradient(180deg,#315f9a 0%,#214d84 100%)!important;color:#f8fafc!important;border-color:rgba(147,197,253,.66)!important;}
+.programCourseRow.done{background:linear-gradient(180deg,#20b86f 0%,#0a8c52 100%)!important;color:#fff!important;border-color:rgba(134,239,172,.72)!important;}
+.programCourseRow.unavailable,.programCourseRow.disabled{background:linear-gradient(180deg,#5b6678 0%,#465367 100%)!important;color:rgba(255,255,255,.72)!important;border-color:rgba(148,163,184,.35)!important;}
+body[data-ui-theme="clean"] .programCourseRow.normal,
+body[data-ui-theme="mist"] .programCourseRow.normal,
+body:not([data-ui-theme]) .programCourseRow.normal{background:linear-gradient(180deg,#ffffff 0%,#eef4ff 100%)!important;color:#10223d!important;border-color:#bfdbfe!important;}
+body[data-ui-theme="night"] .programCourseRow.normal,
+body[data-ui-theme="graphite"] .programCourseRow.normal{background:linear-gradient(180deg,#20385d 0%,#182d4f 100%)!important;color:#f8fafc!important;border-color:rgba(147,197,253,.28)!important;}
+
+/* Theme text adaptation for sidebar user card and other small identity panels. */
+.studentInfoDock,
+.sideNav .studentInfoDock,
+.studentCard,
+.studentMiniCard{
+  background:var(--panel)!important;
+  border-color:var(--border)!important;
+  color:var(--text)!important;
+}
+.studentInfoDock span,.studentInfoDock small,
+.studentCard span,.studentCard small,
+.studentMiniCard span,.studentMiniCard small{color:var(--muted)!important;}
+.studentInfoDock strong,.studentCard strong,.studentMiniCard strong{color:var(--text)!important;}
+body[data-ui-theme="night"] .studentInfoDock,
+body[data-ui-theme="graphite"] .studentInfoDock{background:rgba(24,47,85,.86)!important;color:#f8fafc!important;border-color:rgba(147,197,253,.28)!important;}
+body[data-ui-theme="night"] .studentInfoDock strong,
+body[data-ui-theme="graphite"] .studentInfoDock strong{color:#f8fafc!important;}
+body[data-ui-theme="night"] .studentInfoDock span,
+body[data-ui-theme="night"] .studentInfoDock small,
+body[data-ui-theme="graphite"] .studentInfoDock span,
+body[data-ui-theme="graphite"] .studentInfoDock small{color:rgba(226,232,240,.74)!important;}
