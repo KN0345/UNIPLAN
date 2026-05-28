@@ -7577,3 +7577,213 @@ body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-them
 }
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .grid::before,
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .grid::after{opacity:0!important;}
+
+/* UniPlan V1 visual QA patch: theme-aware card density, program page theme repair, compact timetable grid. */
+:root{
+  --card-text-strong:#10213f;
+  --card-text-soft:#50637c;
+  --card-surface:#ffffff;
+  --card-surface-2:#f6f9ff;
+  --card-line:#bfd3f3;
+  --timetable-cell:#dfeaf7;
+  --timetable-head:#cbd8e8;
+  --timetable-line:#bdcadb;
+}
+body[data-ui-theme="night"],body[data-ui-theme="graphite"],body[data-theme="dark"]{
+  --card-text-strong:#f8fbff;
+  --card-text-soft:#c7d5ea;
+  --card-surface:#173b68;
+  --card-surface-2:#102b4f;
+  --card-line:rgba(191,219,254,.28);
+  --timetable-cell:#1b2f4c;
+  --timetable-head:#29405f;
+  --timetable-line:#3a5273;
+}
+
+/* Course search card: keep five-column density, but reserve a safe information area above the buttons. */
+.courseList .courseCard:not(.compact),
+.searchPage .courseList .courseCard:not(.compact),
+.courseSearchCard,
+.courseCard.searchCard,
+.courseCard.searchResultCard{
+  min-height:196px!important;
+  height:196px!important;
+  padding:38px 14px 56px 14px!important;
+  background:linear-gradient(180deg,var(--card-surface) 0%,color-mix(in srgb,var(--theme-accent,#2563eb) 6%,var(--card-surface-2)) 100%)!important;
+  color:var(--card-text-strong)!important;
+  border-color:color-mix(in srgb,var(--theme-accent,#2563eb) 24%,var(--card-line))!important;
+  overflow:hidden!important;
+}
+body[data-ui-theme="night"] .courseList .courseCard:not(.compact),
+body[data-ui-theme="graphite"] .courseList .courseCard:not(.compact),
+body[data-theme="dark"] .courseList .courseCard:not(.compact){
+  background:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent,#60a5fa) 30%,#24598f) 0%,#102b4f 100%)!important;
+}
+.courseList .courseCard:not(.compact) .cardHead,
+.searchPage .courseList .courseCard:not(.compact) .cardHead{
+  min-height:44px!important;
+  max-height:48px!important;
+  margin-bottom:10px!important;
+  overflow:hidden!important;
+}
+.courseList .courseCard:not(.compact) .cardHead strong,
+.searchPage .courseList .courseCard:not(.compact) .cardHead strong,
+.courseList .courseCard:not(.compact) .courseTitle,
+.searchPage .courseList .courseCard:not(.compact) .courseTitle{
+  font-size:12.4px!important;
+  line-height:1.22!important;
+  letter-spacing:-.025em!important;
+  color:var(--card-text-strong)!important;
+  -webkit-line-clamp:2!important;
+  text-shadow:none!important;
+}
+.courseList .courseCard:not(.compact) .courseCardDetails,
+.searchPage .courseList .courseCard:not(.compact) .courseCardDetails{
+  max-height:58px!important;
+  min-height:0!important;
+  overflow:hidden!important;
+  display:grid!important;
+  gap:2px!important;
+  margin:0!important;
+  color:var(--card-text-soft)!important;
+}
+.courseList .courseCard:not(.compact) .courseCardDetails p,
+.searchPage .courseList .courseCard:not(.compact) .courseCardDetails p,
+.courseList .courseCard:not(.compact) p,
+.searchPage .courseList .courseCard:not(.compact) p,
+.courseList .courseCard:not(.compact) small,
+.searchPage .courseList .courseCard:not(.compact) small{
+  font-size:10.7px!important;
+  line-height:1.34!important;
+  color:var(--card-text-soft)!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  text-shadow:none!important;
+  opacity:.94!important;
+}
+.courseList .courseCard:not(.compact) .searchCardActions,
+.searchPage .courseList .courseCard:not(.compact) .searchCardActions{
+  bottom:12px!important;
+  right:12px!important;
+}
+.courseList .courseCard:not(.compact) .searchCardActions button,
+.searchPage .courseList .courseCard:not(.compact) .searchCardActions button{
+  width:32px!important;height:32px!important;min-width:32px!important;border-radius:11px!important;
+}
+.courseList .courseCard:not(.compact) .courseCreditsBadge,
+.searchPage .courseList .courseCard:not(.compact) .courseCreditsBadge{
+  bottom:15px!important;left:14px!important;font-size:10.5px!important;
+}
+.courseList .courseCard:not(.compact):hover,
+.searchPage .courseList .courseCard:not(.compact):hover{
+  background:linear-gradient(180deg,var(--card-surface) 0%,color-mix(in srgb,var(--theme-accent,#2563eb) 8%,var(--card-surface-2)) 100%)!important;
+  filter:none!important;
+}
+body[data-ui-theme="night"] .courseList .courseCard:not(.compact):hover,
+body[data-ui-theme="graphite"] .courseList .courseCard:not(.compact):hover,
+body[data-theme="dark"] .courseList .courseCard:not(.compact):hover{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent,#60a5fa) 34%,#24598f) 0%,#102b4f 100%)!important;
+}
+
+/* Program page: full theme adaptation; remove white shell in dark themes and eliminate broken inner card surface. */
+.programPage,.programChoicePage,.programShell,.programPageRoot{
+  background:var(--bg)!important;
+  color:var(--text)!important;
+}
+body[data-ui-theme="night"] :where(.programPage,.programChoicePage,.programShell,.programPageRoot,.programDetail,.programLayout),
+body[data-ui-theme="graphite"] :where(.programPage,.programChoicePage,.programShell,.programPageRoot,.programDetail,.programLayout),
+body[data-theme="dark"] :where(.programPage,.programChoicePage,.programShell,.programPageRoot,.programDetail,.programLayout){
+  background:var(--bg)!important;
+  color:var(--text)!important;
+}
+.programDetail,.programGroup,.programListItem{
+  background:var(--panel)!important;
+  color:var(--text)!important;
+  border-color:var(--border)!important;
+}
+.programCourseList{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))!important;gap:12px!important;}
+.programCourseRow,
+.programChoicePanel .programCourseRow{
+  min-height:116px!important;
+  height:116px!important;
+  border-radius:17px!important;
+  overflow:hidden!important;
+}
+.programCourseRow::before,.programCourseRow::after,
+.programChoicePanel .programCourseRow::before,.programChoicePanel .programCourseRow::after{display:none!important;content:none!important;}
+.programCourseRow > :not(.programCourseInfoDot),
+.programChoicePanel .programCourseRow > :not(.programCourseInfoDot){
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.programCourseRow .programCourseMainButton,
+.programChoicePanel .programCourseRow .programCourseMainButton{
+  min-height:116px!important;
+  padding:18px 42px 16px 18px!important;
+  justify-content:center!important;
+  background:transparent!important;
+  color:inherit!important;
+}
+.programCourseRow .programCourseMainButton strong{font-size:15px!important;line-height:1.2!important;}
+.programCourseRow .programCourseMainButton span{font-size:11px!important;}
+.programCourseRow.pending,.programCourseRow.required,.programCourseRow.needsSelection{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent,#2563eb) 48%,#b8d4ff) 0%,color-mix(in srgb,var(--theme-accent,#2563eb) 28%,#d9e9ff) 100%)!important;
+  color:#0f2546!important;
+}
+.programCourseRow.selected,.programCourseRow.planned{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent,#2563eb) 76%,#1d4e89) 0%,color-mix(in srgb,var(--theme-accent,#2563eb) 50%,#123765) 100%)!important;
+  color:#f8fbff!important;
+}
+body[data-ui-theme="night"] .programCourseRow.pending,
+body[data-ui-theme="graphite"] .programCourseRow.pending,
+body[data-theme="dark"] .programCourseRow.pending,
+body[data-ui-theme="night"] .programCourseRow.required,
+body[data-ui-theme="graphite"] .programCourseRow.required,
+body[data-theme="dark"] .programCourseRow.required,
+body[data-ui-theme="night"] .programCourseRow.needsSelection,
+body[data-ui-theme="graphite"] .programCourseRow.needsSelection,
+body[data-theme="dark"] .programCourseRow.needsSelection{
+  color:#f8fbff!important;
+}
+.programCourseRow :where(strong,span,small,b,em){color:inherit!important;text-shadow:none!important;opacity:1!important;}
+.programCourseRow.unavailable :where(strong,span,small,b,em),.programCourseRow.disabled :where(strong,span,small,b,em){opacity:.72!important;}
+
+/* Timetable: deeper light theme surface and no stretched blank area under period 10. */
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .grid,
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .grid{
+  background:#dbe7f5!important;
+  border-color:#adc0d5!important;
+}
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .corner,
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .day,
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .period,
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .corner,
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .day,
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .period{
+  background:#bfccd9!important;
+  color:#f8fbff!important;
+  border-color:#b0bdcc!important;
+}
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .slot,
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .slot{
+  background:#e8f0fa!important;
+  border-color:#ccd8e6!important;
+}
+.semesterPanel.activeSemesterPanel .grid,
+.semesterPanel .grid{
+  height:auto!important;
+  min-height:0!important;
+  align-content:start!important;
+  grid-template-rows:40px repeat(10,52px)!important;
+}
+.semesterPanel.activeSemesterPanel .corner,
+.semesterPanel.activeSemesterPanel .day,
+.semesterPanel.activeSemesterPanel .period,
+.semesterPanel.activeSemesterPanel .slot,
+.semesterPanel .corner,
+.semesterPanel .day,
+.semesterPanel .period,
+.semesterPanel .slot{
+  min-height:0!important;
+}
