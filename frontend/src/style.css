@@ -6646,411 +6646,204 @@ body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]) .progressTrack
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]) .creditTrack{
   background:#d2ddec!important;
 }
+
 /* =========================================================
-   UniPlan Recovery Patch
-   Full style.css restoration + recent visual fixes
-   - Use this file as a complete replacement, not as a partial patch.
-   - No markdown/backend files included in the ZIP.
+   UniPlan Complete UI Fix Layer
+   Full style.css replacement file.
+   Fixes: CourseCard, SearchPage, ProgramPage, ProgramTree, Timetable.
    ========================================================= */
 
-/* Safety: make sure the app never falls back to raw HTML layout */
-html, body, #root {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
+html,body,#root{width:100%;height:100%;margin:0;overflow:hidden}
+body{font-family:Inter,"Noto Sans TC",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+:root{
+  --uni-accent:var(--button-accent,var(--accent,#2563eb));
+  --uni-text-main:var(--text,#14213d);
+  --uni-text-sub:var(--muted,#667085);
+  --uni-card:var(--panel,#fff);
+  --uni-card-soft:var(--panel2,#f7f9fd);
+  --uni-line:var(--border,#d9e1ee);
+}
+body[data-ui-theme="night"],body[data-ui-theme="graphite"],body[data-theme="dark"]{
+  --uni-text-main:var(--text,#f8fafc);
+  --uni-text-sub:var(--muted,#cbd5e1);
+  --uni-card:var(--panel,#172033);
+  --uni-card-soft:var(--panel2,#202b42);
 }
 
-body {
-  font-family: Inter, "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+/* Course search cards */
+.searchPage .courseList{grid-template-columns:repeat(auto-fill,minmax(270px,1fr))!important;gap:12px!important;align-content:start!important}
+.searchPage .courseList .courseCard,.courseList .courseCard{
+  position:relative!important;display:flex!important;flex-direction:column!important;
+  min-height:154px!important;max-height:154px!important;padding:14px 14px 50px!important;
+  border-radius:16px!important;overflow:hidden!important;
+  background:color-mix(in srgb,var(--uni-card) 92%,var(--uni-accent) 8%)!important;
+  border:1px solid color-mix(in srgb,var(--uni-line) 78%,var(--uni-accent) 22%)!important;
+  color:var(--uni-text-main)!important;box-shadow:0 10px 24px rgba(15,23,42,.08)!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;text-shadow:none!important
 }
-
-/* Theme text tokens fallback */
-:root {
-  --text-primary: var(--text, #14213d);
-  --text-secondary: var(--muted, #667085);
-  --card-primary: var(--panel, #ffffff);
-  --card-secondary: var(--panel2, #f7f9fd);
-  --line-soft: color-mix(in srgb, var(--border, #d9e1ee) 78%, transparent);
-}
-
-body[data-ui-theme="night"],
-body[data-ui-theme="graphite"],
-body[data-theme="dark"] {
-  --text-primary: var(--text, #f8fafc);
-  --text-secondary: var(--muted, #cbd5e1);
-  --card-primary: var(--panel, #172033);
-  --card-secondary: var(--panel2, #202b42);
-}
-
-/* Course search cards: readable, compact, theme-aware */
-.searchPage .courseList {
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)) !important;
-  gap: 12px !important;
-}
-
-.searchPage .courseList .courseCard,
-.courseList .courseCard {
-  position: relative !important;
-  min-height: 142px !important;
-  padding: 14px 14px 50px !important;
-  border-radius: 16px !important;
-  color: var(--text-primary) !important;
-  background: color-mix(in srgb, var(--card-primary) 92%, var(--accent, #2563eb) 8%) !important;
-  border: 1px solid color-mix(in srgb, var(--border, #d9e1ee) 82%, var(--accent, #2563eb) 18%) !important;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .08) !important;
-  overflow: hidden !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  text-shadow: none !important;
-}
-
 body[data-ui-theme="night"] .searchPage .courseList .courseCard,
 body[data-ui-theme="graphite"] .searchPage .courseList .courseCard,
 body[data-theme="dark"] .searchPage .courseList .courseCard,
 body[data-ui-theme="night"] .courseList .courseCard,
 body[data-ui-theme="graphite"] .courseList .courseCard,
-body[data-theme="dark"] .courseList .courseCard {
-  background: linear-gradient(180deg, #284f86, #183b68) !important;
-  border: 1px solid rgba(124, 170, 255, .28) !important;
-  color: #f8fafc !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
-    0 12px 28px rgba(0,0,0,.20) !important;
+body[data-theme="dark"] .courseList .courseCard{
+  background:linear-gradient(180deg,#2b5d99 0%,#1d497d 100%)!important;
+  border-color:rgba(132,184,255,.26)!important;color:#f8fafc!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 12px 28px rgba(0,0,0,.22)!important
 }
-
-.searchPage .courseList .courseCard::before,
-.searchPage .courseList .courseCard::after,
-.courseList .courseCard::before,
-.courseList .courseCard::after {
-  display: none !important;
-  content: none !important;
+.searchPage .courseList .courseCard::before,.searchPage .courseList .courseCard::after,
+.courseList .courseCard::before,.courseList .courseCard::after{display:none!important;content:none!important}
+.searchPage .courseList .courseCard:hover,.courseList .courseCard:hover{
+  transform:translateY(-1px)!important;border-color:color-mix(in srgb,var(--uni-accent) 55%,var(--uni-line))!important;
+  box-shadow:0 14px 30px rgba(15,23,42,.12)!important
 }
-
-.searchPage .courseList .courseCard:hover,
-.courseList .courseCard:hover {
-  transform: translateY(-1px) !important;
-  border-color: color-mix(in srgb, var(--accent, #2563eb) 55%, var(--border, #d9e1ee)) !important;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, .12) !important;
+.searchPage .courseList .courseCard .cardHead,.courseList .courseCard .cardHead{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;
+  gap:8px!important;padding-left:12px!important;min-height:42px!important
 }
-
-.searchPage .courseList .courseCard .cardHead,
-.courseList .courseCard .cardHead {
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: space-between !important;
-  gap: 10px !important;
-  padding-left: 12px !important;
+.searchPage .courseList .courseCard .statusBadge,.courseList .courseCard .statusBadge{
+  position:absolute!important;left:14px!important;top:17px!important;width:10px!important;height:10px!important;
+  min-width:10px!important;padding:0!important;border-radius:999px!important
 }
-
-.searchPage .courseList .courseCard .cardHead strong,
-.courseList .courseCard .cardHead strong {
-  color: var(--text-primary) !important;
-  font-size: 1rem !important;
-  line-height: 1.22 !important;
-  font-weight: 850 !important;
-  letter-spacing: -.02em !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+.searchPage .courseList .courseCard .cardHead strong,.courseList .courseCard .cardHead strong{
+  min-width:0!important;color:var(--uni-text-main)!important;font-size:.98rem!important;line-height:1.18!important;
+  font-weight:850!important;letter-spacing:-.025em!important;display:-webkit-box!important;-webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;overflow:hidden!important;text-overflow:ellipsis!important;word-break:break-word!important;text-shadow:none!important
 }
-
 body[data-ui-theme="night"] .searchPage .courseList .courseCard .cardHead strong,
 body[data-ui-theme="graphite"] .searchPage .courseList .courseCard .cardHead strong,
-body[data-theme="dark"] .searchPage .courseList .courseCard .cardHead strong {
-  color: #f8fafc !important;
+body[data-theme="dark"] .searchPage .courseList .courseCard .cardHead strong,
+body[data-ui-theme="night"] .courseList .courseCard .cardHead strong,
+body[data-ui-theme="graphite"] .courseList .courseCard .cardHead strong,
+body[data-theme="dark"] .courseList .courseCard .cardHead strong{color:#f8fafc!important;text-shadow:0 1px 2px rgba(0,0,0,.24)!important}
+.searchPage .courseList .courseCard .cardHead span,.courseList .courseCard .cardHead span{
+  flex:0 0 auto!important;max-width:64px!important;padding:2px 10px!important;border-radius:999px!important;
+  font-size:.72rem!important;font-weight:900!important;white-space:nowrap!important;color:#f8fafc!important;
+  background:color-mix(in srgb,var(--uni-accent) 48%,#1e293b)!important
 }
-
-.searchPage .courseList .courseCard .cardHead span,
-.courseList .courseCard .cardHead span {
-  flex: 0 0 auto !important;
-  padding: 2px 10px !important;
-  border-radius: 999px !important;
-  font-size: .75rem !important;
-  font-weight: 900 !important;
-  color: #f8fafc !important;
-  background: color-mix(in srgb, var(--accent, #2563eb) 48%, #1e293b) !important;
-  white-space: nowrap !important;
+.searchPage .courseList .courseCard p,.courseList .courseCard p{
+  margin:10px 0 0!important;color:var(--uni-text-sub)!important;font-size:.76rem!important;line-height:1.36!important;
+  font-weight:650!important;text-shadow:none!important;display:-webkit-box!important;-webkit-line-clamp:3!important;
+  -webkit-box-orient:vertical!important;overflow:hidden!important;word-break:break-word!important
 }
-
-.searchPage .courseList .courseCard p,
-.courseList .courseCard p {
-  margin: 10px 0 0 !important;
-  color: var(--text-secondary) !important;
-  font-size: .78rem !important;
-  line-height: 1.35 !important;
-  text-shadow: none !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 3 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-}
-
 body[data-ui-theme="night"] .searchPage .courseList .courseCard p,
 body[data-ui-theme="graphite"] .searchPage .courseList .courseCard p,
 body[data-theme="dark"] .searchPage .courseList .courseCard p,
 body[data-ui-theme="night"] .courseList .courseCard p,
 body[data-ui-theme="graphite"] .courseList .courseCard p,
-body[data-theme="dark"] .courseList .courseCard p {
-  color: rgba(226, 232, 240, .78) !important;
+body[data-theme="dark"] .courseList .courseCard p{color:rgba(226,232,240,.82)!important}
+.searchPage .courseList .courseCard small,.courseList .courseCard small{color:var(--uni-text-sub)!important;font-size:.72rem!important;line-height:1.25!important;text-shadow:none!important}
+.searchPage .courseList .courseCard .creditBadge,.searchPage .courseList .courseCard .courseCredit,
+.courseList .courseCard .creditBadge,.courseList .courseCard .courseCredit{position:absolute!important;left:14px!important;bottom:15px!important;z-index:5!important}
+.searchPage .courseList .courseCard .searchCardActions,.courseList .courseCard .searchCardActions{
+  position:absolute!important;right:12px!important;bottom:12px!important;left:auto!important;display:flex!important;
+  flex-direction:row!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;z-index:8!important
 }
-
-.searchPage .courseList .courseCard small,
-.courseList .courseCard small {
-  color: var(--text-secondary) !important;
-  font-size: .72rem !important;
+.searchPage .courseList .courseCard .searchCardActions button,.courseList .courseCard .searchCardActions button{
+  width:34px!important;height:34px!important;min-width:34px!important;padding:0!important;display:grid!important;place-items:center!important;
+  border-radius:11px!important;font-size:17px!important;font-weight:900!important;color:var(--uni-text-main)!important;
+  background:color-mix(in srgb,var(--uni-card-soft) 82%,var(--uni-accent) 18%)!important;
+  border:1px solid color-mix(in srgb,var(--uni-line) 72%,var(--uni-accent) 28%)!important;box-shadow:0 8px 18px rgba(15,23,42,.10)!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important
 }
-
-.searchPage .courseList .courseCard .statusBadge,
-.courseList .courseCard .statusBadge {
-  position: absolute !important;
-  left: 14px !important;
-  top: 16px !important;
-  width: 10px !important;
-  height: 10px !important;
-}
-
-/* Bottom-right actions: compare / add / favorite */
-.searchPage .courseList .courseCard .searchCardActions,
-.courseList .courseCard .searchCardActions {
-  position: absolute !important;
-  right: 12px !important;
-  bottom: 12px !important;
-  left: auto !important;
-  display: flex !important;
-  gap: 8px !important;
-  z-index: 5 !important;
-}
-
-.searchPage .courseList .courseCard .searchCardActions button,
-.courseList .courseCard .searchCardActions button {
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px !important;
-  padding: 0 !important;
-  display: grid !important;
-  place-items: center !important;
-  border-radius: 11px !important;
-  font-size: 17px !important;
-  font-weight: 900 !important;
-  color: var(--text-primary) !important;
-  background: color-mix(in srgb, var(--card-secondary) 82%, var(--accent, #2563eb) 18%) !important;
-  border: 1px solid color-mix(in srgb, var(--border, #d9e1ee) 72%, var(--accent, #2563eb) 28%) !important;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, .10) !important;
-}
-
 body[data-ui-theme="night"] .searchPage .courseList .courseCard .searchCardActions button,
 body[data-ui-theme="graphite"] .searchPage .courseList .courseCard .searchCardActions button,
-body[data-theme="dark"] .searchPage .courseList .courseCard .searchCardActions button {
-  color: #f8fafc !important;
-  background: rgba(255,255,255,.13) !important;
-  border-color: rgba(255,255,255,.18) !important;
+body[data-theme="dark"] .searchPage .courseList .courseCard .searchCardActions button,
+body[data-ui-theme="night"] .courseList .courseCard .searchCardActions button,
+body[data-ui-theme="graphite"] .courseList .courseCard .searchCardActions button,
+body[data-theme="dark"] .courseList .courseCard .searchCardActions button{color:#f8fafc!important;background:rgba(255,255,255,.13)!important;border-color:rgba(255,255,255,.20)!important}
+.searchPage .courseList .courseCard .searchCardActions button:first-child,.courseList .courseCard .searchCardActions button:first-child{
+  color:#fff!important;background:color-mix(in srgb,var(--uni-accent) 88%,#fff 12%)!important;border-color:transparent!important
 }
 
-.searchPage .courseList .courseCard .searchCardActions button:first-child,
-.courseList .courseCard .searchCardActions button:first-child {
-  background: color-mix(in srgb, var(--button-accent, var(--accent, #2563eb)) 88%, #ffffff 12%) !important;
-  color: #fff !important;
-  border-color: transparent !important;
+/* Program page and program tree */
+.programPage,.programDetail,.programList,.programTree,.programTreePanel,.programCourseGrid{color:var(--uni-text-main)!important}
+body[data-ui-theme="night"] .programPage,body[data-ui-theme="graphite"] .programPage,body[data-theme="dark"] .programPage,
+body[data-ui-theme="night"] .programDetail,body[data-ui-theme="graphite"] .programDetail,body[data-theme="dark"] .programDetail,
+body[data-ui-theme="night"] .programList,body[data-ui-theme="graphite"] .programList,body[data-theme="dark"] .programList,
+body[data-ui-theme="night"] .programTree,body[data-ui-theme="graphite"] .programTree,body[data-theme="dark"] .programTree,
+body[data-ui-theme="night"] .programTreePanel,body[data-ui-theme="graphite"] .programTreePanel,body[data-theme="dark"] .programTreePanel{
+  background:color-mix(in srgb,var(--panel,#172033) 88%,#07152d 12%)!important;color:#f8fafc!important
 }
-
-/* Program page shell: remove accidental white panel in dark themes */
-body[data-ui-theme="night"] .programPage,
-body[data-ui-theme="graphite"] .programPage,
-body[data-theme="dark"] .programPage,
-body[data-ui-theme="night"] .programDetail,
-body[data-ui-theme="graphite"] .programDetail,
-body[data-theme="dark"] .programDetail,
-body[data-ui-theme="night"] .programList,
-body[data-ui-theme="graphite"] .programList,
-body[data-theme="dark"] .programList {
-  background: color-mix(in srgb, var(--panel, #172033) 88%, #07152d 12%) !important;
-  color: var(--text-primary) !important;
+.programCourseCard,.program-course-card,.programCardCourse,.programTreeCourse,.programCourseTile,.program-node-course,.programNodeCourse,.programCourse{
+  position:relative!important;min-height:132px!important;border-radius:18px!important;overflow:hidden!important;color:var(--uni-text-main)!important;
+  border:1px solid color-mix(in srgb,var(--uni-line) 72%,var(--uni-accent) 28%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 28px rgba(15,23,42,.10)!important;
+  backdrop-filter:blur(10px) saturate(1.08)!important;-webkit-backdrop-filter:blur(10px) saturate(1.08)!important;
+  background:linear-gradient(180deg,#eef5ff,#dbeafe)!important
 }
-
-/* Program course cards: fixed material and status colors */
-.programCourseCard,
-.program-course-card,
-.programCardCourse {
-  position: relative !important;
-  border-radius: 18px !important;
-  overflow: hidden !important;
-  color: var(--text-primary) !important;
-  border: 1px solid color-mix(in srgb, var(--border, #d9e1ee) 70%, var(--accent, #2563eb) 30%) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.18),
-    0 12px 30px rgba(15,23,42,.10) !important;
-  backdrop-filter: blur(12px) saturate(1.12) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.12) !important;
+.programCourseCard .programCourseInner,.programCourseCard .innerCard,.programCourseCard .courseInner,
+.program-course-card .programCourseInner,.program-course-card .innerCard,.program-course-card .courseInner,
+.programCardCourse .programCourseInner,.programCardCourse .innerCard,.programCardCourse .courseInner,
+.programTreeCourse .programCourseInner,.programTreeCourse .innerCard,.programTreeCourse .courseInner,
+.programCourseTile .programCourseInner,.programCourseTile .innerCard,.programCourseTile .courseInner{
+  background:transparent!important;border:0!important;box-shadow:none!important
 }
-
-/* pending-selection: dark blue in dark themes, calm blue-white in light themes */
-.programCourseCard.pending-selection,
-.program-course-card.pending-selection,
-.programCardCourse.pending-selection {
-  background: linear-gradient(180deg, #eef5ff, #dbeafe) !important;
-  color: #14213d !important;
-  border-color: rgba(90, 140, 255, .36) !important;
+.programCourseCard.pending-selection,.program-course-card.pending-selection,.programCardCourse.pending-selection,.programTreeCourse.pending-selection,.programCourseTile.pending-selection,
+.programCourseCard:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+.program-course-card:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+.programCardCourse:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+.programTreeCourse:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+.programCourseTile:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable){
+  background:linear-gradient(180deg,#eef5ff,#dbeafe)!important;color:#14213d!important;border-color:rgba(90,140,255,.36)!important
 }
-
-body[data-ui-theme="night"] .programCourseCard.pending-selection,
-body[data-ui-theme="graphite"] .programCourseCard.pending-selection,
-body[data-theme="dark"] .programCourseCard.pending-selection,
-body[data-ui-theme="night"] .program-course-card.pending-selection,
-body[data-ui-theme="graphite"] .program-course-card.pending-selection,
-body[data-theme="dark"] .program-course-card.pending-selection,
-body[data-ui-theme="night"] .programCardCourse.pending-selection,
-body[data-ui-theme="graphite"] .programCardCourse.pending-selection,
-body[data-theme="dark"] .programCardCourse.pending-selection {
-  background: linear-gradient(180deg, #284d84 0%, #1b3763 100%) !important;
-  color: #f8fafc !important;
-  border-color: rgba(120,170,255,.35) !important;
+body[data-ui-theme="night"] .programCourseCard.pending-selection,body[data-ui-theme="graphite"] .programCourseCard.pending-selection,body[data-theme="dark"] .programCourseCard.pending-selection,
+body[data-ui-theme="night"] .program-course-card.pending-selection,body[data-ui-theme="graphite"] .program-course-card.pending-selection,body[data-theme="dark"] .program-course-card.pending-selection,
+body[data-ui-theme="night"] .programCardCourse.pending-selection,body[data-ui-theme="graphite"] .programCardCourse.pending-selection,body[data-theme="dark"] .programCardCourse.pending-selection,
+body[data-ui-theme="night"] .programTreeCourse.pending-selection,body[data-ui-theme="graphite"] .programTreeCourse.pending-selection,body[data-theme="dark"] .programTreeCourse.pending-selection,
+body[data-ui-theme="night"] .programCourseTile.pending-selection,body[data-ui-theme="graphite"] .programCourseTile.pending-selection,body[data-theme="dark"] .programCourseTile.pending-selection,
+body[data-ui-theme="night"] .programCourseCard:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+body[data-ui-theme="graphite"] .programCourseCard:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+body[data-theme="dark"] .programCourseCard:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+body[data-ui-theme="night"] .program-course-card:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+body[data-ui-theme="graphite"] .program-course-card:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable),
+body[data-theme="dark"] .program-course-card:not(.selected):not(.planned):not(.completed):not(.done):not(.disabled):not(.unavailable){
+  background:linear-gradient(180deg,#284d84 0%,#1b3763 100%)!important;color:#f8fafc!important;border-color:rgba(120,170,255,.35)!important
 }
-
-/* selected/planned: deeper */
-.programCourseCard.selected,
-.programCourseCard.planned,
-.program-course-card.selected,
-.program-course-card.planned,
-.programCardCourse.selected,
-.programCardCourse.planned {
-  background: linear-gradient(180deg, #2f69ff, #1d4ed8) !important;
-  color: #fff !important;
-  border-color: rgba(37,99,235,.42) !important;
+.programCourseCard.selected,.programCourseCard.planned,.program-course-card.selected,.program-course-card.planned,.programCardCourse.selected,.programCardCourse.planned,.programTreeCourse.selected,.programTreeCourse.planned,.programCourseTile.selected,.programCourseTile.planned{
+  background:linear-gradient(180deg,#2f69ff,#1d4ed8)!important;color:#fff!important;border-color:rgba(37,99,235,.42)!important
 }
-
-body[data-ui-theme="night"] .programCourseCard.selected,
-body[data-ui-theme="graphite"] .programCourseCard.selected,
-body[data-theme="dark"] .programCourseCard.selected,
-body[data-ui-theme="night"] .programCourseCard.planned,
-body[data-ui-theme="graphite"] .programCourseCard.planned,
-body[data-theme="dark"] .programCourseCard.planned,
-body[data-ui-theme="night"] .program-course-card.selected,
-body[data-ui-theme="graphite"] .program-course-card.selected,
-body[data-theme="dark"] .program-course-card.selected,
-body[data-ui-theme="night"] .program-course-card.planned,
-body[data-ui-theme="graphite"] .program-course-card.planned,
-body[data-theme="dark"] .program-course-card.planned,
-body[data-ui-theme="night"] .programCardCourse.selected,
-body[data-ui-theme="graphite"] .programCardCourse.selected,
-body[data-theme="dark"] .programCardCourse.selected,
-body[data-ui-theme="night"] .programCardCourse.planned,
-body[data-ui-theme="graphite"] .programCardCourse.planned,
-body[data-theme="dark"] .programCardCourse.planned {
-  background: linear-gradient(180deg, #18345f 0%, #102544 100%) !important;
-  color: #f8fafc !important;
-  border-color: rgba(120,170,255,.28) !important;
+body[data-ui-theme="night"] .programCourseCard.selected,body[data-ui-theme="graphite"] .programCourseCard.selected,body[data-theme="dark"] .programCourseCard.selected,
+body[data-ui-theme="night"] .programCourseCard.planned,body[data-ui-theme="graphite"] .programCourseCard.planned,body[data-theme="dark"] .programCourseCard.planned,
+body[data-ui-theme="night"] .program-course-card.selected,body[data-ui-theme="graphite"] .program-course-card.selected,body[data-theme="dark"] .program-course-card.selected,
+body[data-ui-theme="night"] .program-course-card.planned,body[data-ui-theme="graphite"] .program-course-card.planned,body[data-theme="dark"] .program-course-card.planned{
+  background:linear-gradient(180deg,#18345f 0%,#102544 100%)!important;color:#f8fafc!important;border-color:rgba(120,170,255,.28)!important
 }
-
-/* completed */
-.programCourseCard.completed,
-.programCourseCard.done,
-.program-course-card.completed,
-.program-course-card.done,
-.programCardCourse.completed,
-.programCardCourse.done {
-  background: linear-gradient(180deg, #22c55e, #15803d) !important;
-  color: #fff !important;
-  border-color: rgba(34,197,94,.44) !important;
+.programCourseCard.completed,.programCourseCard.done,.program-course-card.completed,.program-course-card.done,.programCardCourse.completed,.programCardCourse.done,.programTreeCourse.completed,.programTreeCourse.done,.programCourseTile.completed,.programCourseTile.done{
+  background:linear-gradient(180deg,#22c55e,#15803d)!important;color:#fff!important;border-color:rgba(34,197,94,.44)!important
 }
-
-/* disabled/unavailable */
-.programCourseCard.disabled,
-.programCourseCard.unavailable,
-.program-course-card.disabled,
-.program-course-card.unavailable,
-.programCardCourse.disabled,
-.programCardCourse.unavailable {
-  background: linear-gradient(180deg, #e2e8f0, #cbd5e1) !important;
-  color: #64748b !important;
-  border-color: rgba(148,163,184,.40) !important;
-  opacity: .72 !important;
+.programCourseCard.disabled,.programCourseCard.unavailable,.program-course-card.disabled,.program-course-card.unavailable,.programCardCourse.disabled,.programCardCourse.unavailable,.programTreeCourse.disabled,.programTreeCourse.unavailable,.programCourseTile.disabled,.programCourseTile.unavailable{
+  background:linear-gradient(180deg,#e2e8f0,#cbd5e1)!important;color:#64748b!important;border-color:rgba(148,163,184,.40)!important;opacity:.78!important
 }
-
-body[data-ui-theme="night"] .programCourseCard.disabled,
-body[data-ui-theme="graphite"] .programCourseCard.disabled,
-body[data-theme="dark"] .programCourseCard.disabled,
-body[data-ui-theme="night"] .programCourseCard.unavailable,
-body[data-ui-theme="graphite"] .programCourseCard.unavailable,
-body[data-theme="dark"] .programCourseCard.unavailable,
-body[data-ui-theme="night"] .program-course-card.disabled,
-body[data-ui-theme="graphite"] .program-course-card.disabled,
-body[data-theme="dark"] .program-course-card.disabled,
-body[data-ui-theme="night"] .program-course-card.unavailable,
-body[data-ui-theme="graphite"] .program-course-card.unavailable,
-body[data-theme="dark"] .program-course-card.unavailable,
-body[data-ui-theme="night"] .programCardCourse.disabled,
-body[data-ui-theme="graphite"] .programCardCourse.disabled,
-body[data-theme="dark"] .programCardCourse.disabled,
-body[data-ui-theme="night"] .programCardCourse.unavailable,
-body[data-ui-theme="graphite"] .programCardCourse.unavailable,
-body[data-theme="dark"] .programCardCourse.unavailable {
-  background: linear-gradient(180deg, #475569, #334155) !important;
-  color: rgba(226,232,240,.68) !important;
+body[data-ui-theme="night"] .programCourseCard.disabled,body[data-ui-theme="graphite"] .programCourseCard.disabled,body[data-theme="dark"] .programCourseCard.disabled,
+body[data-ui-theme="night"] .programCourseCard.unavailable,body[data-ui-theme="graphite"] .programCourseCard.unavailable,body[data-theme="dark"] .programCourseCard.unavailable,
+body[data-ui-theme="night"] .program-course-card.disabled,body[data-ui-theme="graphite"] .program-course-card.disabled,body[data-theme="dark"] .program-course-card.disabled,
+body[data-ui-theme="night"] .program-course-card.unavailable,body[data-ui-theme="graphite"] .program-course-card.unavailable,body[data-theme="dark"] .program-course-card.unavailable{
+  background:linear-gradient(180deg,#475569,#334155)!important;color:rgba(226,232,240,.72)!important
 }
+.programCourseCard strong,.programCourseCard b,.programCourseCard span,
+.program-course-card strong,.program-course-card b,.program-course-card span,
+.programCardCourse strong,.programCardCourse b,.programCardCourse span,
+.programTreeCourse strong,.programTreeCourse b,.programTreeCourse span,
+.programCourseTile strong,.programCourseTile b,.programCourseTile span{color:inherit!important;text-shadow:none!important}
 
-/* remove broken inner boxes if any exist */
-.programCourseCard > .programCourseInner,
-.program-course-card > .programCourseInner,
-.programCardCourse > .programCourseInner,
-.programCourseCard .innerCard,
-.program-course-card .innerCard,
-.programCardCourse .innerCard {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-/* Timetable: light themes a bit deeper, dark themes preserved */
-.semesterPanel.activeSemesterPanel .grid,
-.semesterPanel .grid {
-  border-color: color-mix(in srgb, var(--border, #d9e1ee) 82%, #64748b 18%) !important;
-}
-
+/* Timetable */
+.semesterPanel.activeSemesterPanel .grid,.semesterPanel .grid{padding-bottom:0!important;border-color:color-mix(in srgb,var(--uni-line) 82%,#64748b 18%)!important}
+.semesterPanel.activeSemesterPanel .slot,.semesterPanel .slot{min-height:48px!important}
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .slot,
-body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .slot {
-  background: #dce8f6 !important;
-  border-color: #c7d6e8 !important;
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .slot{
+  background:#dce8f6!important;border-color:#c7d6e8!important
 }
-
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .corner,
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .day,
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel.activeSemesterPanel .period,
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .corner,
 body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .day,
-body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .period {
-  background: #aebdcd !important;
-  color: #f8fafc !important;
-  border-color: #9caec1 !important;
+body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-theme="dark"]) .semesterPanel .period{
+  background:#aebdcd!important;color:#f8fafc!important;border-color:#9caec1!important
 }
 
-/* Ensure period 10 remains visible */
-.semesterPanel.activeSemesterPanel .grid,
-.semesterPanel .grid {
-  padding-bottom: 0 !important;
-}
-
-.semesterPanel.activeSemesterPanel .slot,
-.semesterPanel .slot {
-  min-height: 48px !important;
-}
-
-/* Student info follows theme */
-.sideUser,
-.studentInfoDock {
-  color: var(--sidebar-text, var(--text-primary)) !important;
-}
-
-.sideUser strong,
-.studentInfoDock strong {
-  color: var(--sidebar-text, var(--text-primary)) !important;
-}
-
-.sideUser span,
-.sideUser small,
-.studentInfoDock span,
-.studentInfoDock small {
-  color: var(--sidebar-muted, var(--text-secondary)) !important;
-}
+/* Sidebar student info */
+.sideUser,.studentInfoDock{color:var(--sidebar-text,var(--uni-text-main))!important}
+.sideUser strong,.studentInfoDock strong{color:var(--sidebar-text,var(--uni-text-main))!important}
+.sideUser span,.sideUser small,.studentInfoDock span,.studentInfoDock small{color:var(--sidebar-muted,var(--uni-text-sub))!important}
