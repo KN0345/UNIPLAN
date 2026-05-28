@@ -7171,3 +7171,136 @@ body[data-theme="dark"] .programTree{
   background:color-mix(in srgb,var(--panel,#172033) 88%,#07152d 12%)!important;
   color:#f8fafc!important;
 }
+
+
+/* UniPlan hotfix: course credits belong to the card header, not the bottom action row.
+   This fixes previous patch-order conflicts by pairing JSX structure with final CSS specificity. */
+.courseList .courseCard,
+.searchPage .courseList .courseCard{
+  position:relative!important;
+  min-height:152px!important;
+  padding:18px 16px 58px 18px!important;
+}
+.courseList .courseCard .courseTopBadges,
+.searchPage .courseList .courseCard .courseTopBadges{
+  position:absolute!important;
+  right:12px!important;
+  top:12px!important;
+  z-index:6!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  gap:5px!important;
+  max-width:104px!important;
+  pointer-events:none!important;
+}
+.courseList .courseCard .courseTopBadges .courseCreditsBadge,
+.searchPage .courseList .courseCard .courseTopBadges .courseCreditsBadge,
+.courseList .courseCard .courseTopBadges .courseSerialBadge,
+.searchPage .courseList .courseCard .courseTopBadges .courseSerialBadge{
+  position:static!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  transform:none!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:104px!important;
+  height:auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:3px 8px!important;
+  border-radius:999px!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  opacity:1!important;
+  color:rgba(241,245,249,.96)!important;
+  background:#203d6b!important;
+  border:1px solid rgba(160,190,255,.22)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+.courseList .courseCard .courseTopBadges .courseCreditsBadge,
+.searchPage .courseList .courseCard .courseTopBadges .courseCreditsBadge{
+  background:linear-gradient(180deg,#2e67d8,#214f9f)!important;
+  color:#fff!important;
+}
+.courseList .courseCard .cardHead,
+.searchPage .courseList .courseCard .cardHead{
+  padding-left:12px!important;
+  padding-right:118px!important;
+  min-height:42px!important;
+}
+.courseList .courseCard .courseCardDetails,
+.searchPage .courseList .courseCard .courseCardDetails{
+  padding-right:0!important;
+}
+.courseList .courseCard .courseDeptName,
+.searchPage .courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseMetaLine,
+.searchPage .courseList .courseCard .courseMetaLine{
+  padding-right:0!important;
+  max-width:100%!important;
+}
+.courseList .courseCard .searchCardActions,
+.searchPage .courseList .courseCard .searchCardActions{
+  right:12px!important;
+  bottom:10px!important;
+  left:auto!important;
+  top:auto!important;
+}
+.courseList .courseCard .courseTermNotice,
+.searchPage .courseList .courseCard .courseTermNotice{
+  left:18px!important;
+  right:auto!important;
+  bottom:18px!important;
+  max-width:calc(100% - 160px)!important;
+}
+
+/* Program course tiles use the same top-right credit language. */
+.programCourseRow{
+  min-height:150px!important;
+}
+.programCourseMainButton{
+  min-height:150px!important;
+  padding:46px 18px 38px 18px!important;
+}
+.programCourseMainButton strong{
+  padding-right:44px!important;
+  max-width:100%!important;
+}
+.programCourseMainButton span{
+  left:auto!important;
+  right:12px!important;
+  top:12px!important;
+  bottom:auto!important;
+  position:absolute!important;
+  z-index:4!important;
+  max-width:96px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  background:linear-gradient(180deg,#2e67d8,#214f9f)!important;
+  color:#fff!important;
+  border-color:rgba(255,255,255,.24)!important;
+}
+.programCourseInfoDot{
+  top:auto!important;
+  right:12px!important;
+  bottom:12px!important;
+}
+.programCourseRow.selected .programCourseMainButton span,
+.programCourseRow.done .programCourseMainButton span{
+  background:rgba(255,255,255,.18)!important;
+  color:#fff!important;
+}
+.programCourseRow.required .programCourseMainButton span{
+  background:rgba(153,27,27,.12)!important;
+  color:#991b1b!important;
+  border-color:rgba(153,27,27,.22)!important;
+}

@@ -24,7 +24,10 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
   return (
     <article className={`courseCard ${compact ? 'compact' : ''} ${semesterMismatch ? 'semesterMismatch' : ''}`} draggable={draggable && !semesterMismatch} onDragStart={(e) => { if (semesterMismatch) { e.preventDefault(); return } e.dataTransfer.setData('application/json', JSON.stringify({ source: dragSource, semester: dragSemester, course })) }} onClick={() => onSelect?.(c)}>
       <b className={`statusBadge ${STATUS[status]?.tone || 'blue'}`} title={STATUS[status]?.label || '正常排程'} />
-      {code && <span className="courseSerialBadge" title="開課序號">{code}</span>}
+      <div className="courseTopBadges">
+        <span className="courseCreditsBadge">{credits(c)} 學分</span>
+        {code && <span className="courseSerialBadge" title="開課序號">{code}</span>}
+      </div>
       <div className="cardHead"><strong>{c.name || '未命名課程'}</strong></div>
       <div className="courseCardDetails">
         <p className="courseTeacherName">教師｜{c.teacher || c.instructor || '未列教師'}</p>
@@ -32,7 +35,6 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
         <p className="courseMetaLine">時間｜{studentCourseMeta(c)}</p>
       </div>
       {semesterMismatch && <small className="courseTermNotice">{courseTermLabel(c)}</small>}
-      <span className="courseCreditsBadge">{credits(c)} 學分</span>
       {(onCompare || onAddCandidate || onFavorite) && <div className="searchCardActions">
         {onCompare && <button className={isCompared ? 'active compareAction' : 'compareAction'} disabled={!isCompared && compareDisabled} title={isCompared ? '取消比較' : compareDisabled ? '最多比較 4 門課' : '加入比較'} aria-label={isCompared ? '取消比較' : '加入比較'} onClick={(event) => handleAction(event, onCompare)}>{isCompared ? '比✓' : '比'}</button>}
         {onAddCandidate && <button className={isCandidate ? 'active candidateAdded' : semesterMismatch ? 'semesterDifferent' : ''} disabled={isCandidate} title={isCandidate ? '已加入課表或暫存區' : semesterMismatch ? `可先加入暫存區；這門課屬於 ${courseTermLabel(c)}，目前課表是 ${targetSemester}` : '加入暫存區'} aria-label={isCandidate ? '已加入課表或暫存區' : '加入暫存區'} onClick={(event) => { if (isCandidate) { event.preventDefault(); event.stopPropagation(); return } handleAction(event, onAddCandidate) }}>{isCandidate ? '✓' : '＋'}</button>}
