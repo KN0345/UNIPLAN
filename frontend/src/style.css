@@ -7173,134 +7173,137 @@ body[data-theme="dark"] .programTree{
 }
 
 
-/* UniPlan hotfix: course credits belong to the card header, not the bottom action row.
-   This fixes previous patch-order conflicts by pairing JSX structure with final CSS specificity. */
-.courseList .courseCard,
-.searchPage .courseList .courseCard{
+/* ========================================================================== */
+/* UniPlan final layout override: course credits fixed at top-right            */
+/* This block intentionally uses new class names so old patch fragments cannot */
+/* move the credits back to the lower-left.                                    */
+/* ========================================================================== */
+.courseCard{
   position:relative!important;
-  min-height:152px!important;
-  padding:18px 16px 58px 18px!important;
+  overflow:hidden!important;
+  padding-top:48px!important;
+  padding-right:16px!important;
+  padding-bottom:58px!important;
 }
-.courseList .courseCard .courseTopBadges,
-.searchPage .courseList .courseCard .courseTopBadges{
+.courseCard .courseSerialBadge,
+.courseCard .courseCreditsBadge{
+  display:none!important;
+}
+.courseTopBadges{
   position:absolute!important;
-  right:12px!important;
   top:12px!important;
-  z-index:6!important;
+  right:12px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:20!important;
   display:flex!important;
-  flex-direction:column!important;
-  align-items:flex-end!important;
-  gap:5px!important;
-  max-width:104px!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:6px!important;
+  max-width:calc(100% - 52px)!important;
   pointer-events:none!important;
 }
-.courseList .courseCard .courseTopBadges .courseCreditsBadge,
-.searchPage .courseList .courseCard .courseTopBadges .courseCreditsBadge,
-.courseList .courseCard .courseTopBadges .courseSerialBadge,
-.searchPage .courseList .courseCard .courseTopBadges .courseSerialBadge{
-  position:static!important;
-  left:auto!important;
-  right:auto!important;
-  top:auto!important;
-  bottom:auto!important;
-  transform:none!important;
-  width:auto!important;
-  min-width:0!important;
-  max-width:104px!important;
-  height:auto!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  padding:3px 8px!important;
+.courseSerialPill,
+.courseCreditPill{
+  display:inline-grid!important;
+  place-items:center!important;
+  min-height:24px!important;
   border-radius:999px!important;
-  font-size:10px!important;
-  line-height:1.15!important;
-  font-weight:900!important;
+  padding:4px 9px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:850!important;
   white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  opacity:1!important;
-  color:rgba(241,245,249,.96)!important;
-  background:#203d6b!important;
-  border:1px solid rgba(160,190,255,.22)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+  color:var(--text)!important;
+  background:color-mix(in srgb,var(--panel2) 88%,var(--accent) 12%)!important;
+  border:1px solid color-mix(in srgb,var(--border) 64%,var(--accent) 36%)!important;
+  box-shadow:0 8px 18px rgba(15,23,42,.10)!important;
 }
-.courseList .courseCard .courseTopBadges .courseCreditsBadge,
-.searchPage .courseList .courseCard .courseTopBadges .courseCreditsBadge{
-  background:linear-gradient(180deg,#2e67d8,#214f9f)!important;
-  color:#fff!important;
+.courseCreditPill{
+  background:color-mix(in srgb,var(--accent) 18%,var(--panel2))!important;
 }
-.courseList .courseCard .cardHead,
-.searchPage .courseList .courseCard .cardHead{
-  padding-left:12px!important;
-  padding-right:118px!important;
-  min-height:42px!important;
+.courseCard .cardHead{
+  padding-right:0!important;
+  margin-top:0!important;
 }
-.courseList .courseCard .courseCardDetails,
-.searchPage .courseList .courseCard .courseCardDetails{
+.courseCard .cardHead strong{
   padding-right:0!important;
 }
-.courseList .courseCard .courseDeptName,
-.searchPage .courseList .courseCard .courseDeptName,
-.courseList .courseCard .courseMetaLine,
-.searchPage .courseList .courseCard .courseMetaLine{
-  padding-right:0!important;
+.courseCard .courseCardDetails,
+.courseCard .courseTeacherName,
+.courseCard .courseDeptName,
+.courseCard .courseMetaLine{
   max-width:100%!important;
 }
-.courseList .courseCard .searchCardActions,
-.searchPage .courseList .courseCard .searchCardActions{
-  right:12px!important;
-  bottom:10px!important;
-  left:auto!important;
-  top:auto!important;
-}
-.courseList .courseCard .courseTermNotice,
-.searchPage .courseList .courseCard .courseTermNotice{
-  left:18px!important;
-  right:auto!important;
-  bottom:18px!important;
-  max-width:calc(100% - 160px)!important;
-}
-
-/* Program course tiles use the same top-right credit language. */
-.programCourseRow{
-  min-height:150px!important;
-}
-.programCourseMainButton{
-  min-height:150px!important;
-  padding:46px 18px 38px 18px!important;
-}
-.programCourseMainButton strong{
-  padding-right:44px!important;
-  max-width:100%!important;
-}
-.programCourseMainButton span{
-  left:auto!important;
-  right:12px!important;
-  top:12px!important;
-  bottom:auto!important;
+.courseCard .searchCardActions{
   position:absolute!important;
-  z-index:4!important;
-  max-width:96px!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:ellipsis!important;
-  background:linear-gradient(180deg,#2e67d8,#214f9f)!important;
-  color:#fff!important;
-  border-color:rgba(255,255,255,.24)!important;
-}
-.programCourseInfoDot{
-  top:auto!important;
   right:12px!important;
   bottom:12px!important;
+  left:auto!important;
+  top:auto!important;
+  z-index:21!important;
 }
-.programCourseRow.selected .programCourseMainButton span,
-.programCourseRow.done .programCourseMainButton span{
-  background:rgba(255,255,255,.18)!important;
-  color:#fff!important;
+@media(max-width:720px){
+  .courseCard{padding-top:52px!important;padding-bottom:58px!important;}
+  .courseTopBadges{top:12px!important;right:10px!important;gap:5px!important;}
+  .courseSerialPill,.courseCreditPill{font-size:10px!important;padding:4px 7px!important;}
 }
-.programCourseRow.required .programCourseMainButton span{
-  background:rgba(153,27,27,.12)!important;
-  color:#991b1b!important;
-  border-color:rgba(153,27,27,.22)!important;
+
+.programCourseRow{
+  position:relative!important;
+  min-height:118px!important;
+  overflow:hidden!important;
+}
+.programCourseMainButton{
+  position:relative!important;
+  width:100%!important;
+  min-height:118px!important;
+  padding:42px 42px 18px 14px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:7px!important;
+  text-align:left!important;
+}
+.programCourseMainButton strong{
+  width:100%!important;
+  max-width:100%!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:3!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+.programCourseCreditPill{
+  position:absolute!important;
+  top:10px!important;
+  right:12px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:12!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  min-height:24px!important;
+  border-radius:999px!important;
+  padding:4px 9px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  color:inherit!important;
+  background:rgba(255,255,255,.20)!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  opacity:1!important;
+}
+.programCourseInfoDot{
+  position:absolute!important;
+  right:10px!important;
+  bottom:10px!important;
+  top:auto!important;
+  z-index:18!important;
+}
+@media(max-width:720px){
+  .programCourseRow,.programCourseMainButton{min-height:126px!important;}
+  .programCourseMainButton{padding:40px 38px 18px 12px!important;}
+  .programCourseCreditPill{top:9px!important;right:10px!important;font-size:10px!important;padding:4px 7px!important;}
 }

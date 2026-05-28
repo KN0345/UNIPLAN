@@ -25,8 +25,8 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
     <article className={`courseCard ${compact ? 'compact' : ''} ${semesterMismatch ? 'semesterMismatch' : ''}`} draggable={draggable && !semesterMismatch} onDragStart={(e) => { if (semesterMismatch) { e.preventDefault(); return } e.dataTransfer.setData('application/json', JSON.stringify({ source: dragSource, semester: dragSemester, course })) }} onClick={() => onSelect?.(c)}>
       <b className={`statusBadge ${STATUS[status]?.tone || 'blue'}`} title={STATUS[status]?.label || '正常排程'} />
       <div className="courseTopBadges">
-        <span className="courseCreditsBadge">{credits(c)} 學分</span>
-        {code && <span className="courseSerialBadge" title="開課序號">{code}</span>}
+        {code && <span className="courseSerialPill" title="開課序號">{code}</span>}
+        <span className="courseCreditPill" title="學分數">{credits(c)} 學分</span>
       </div>
       <div className="cardHead"><strong>{c.name || '未命名課程'}</strong></div>
       <div className="courseCardDetails">

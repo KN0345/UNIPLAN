@@ -292,7 +292,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
                 <button type="button" disabled={done} className="programCourseMainButton" onClick={() => toggleCourse(group, programCourse)} title={done ? '已修過，已完成此項' : chosen ? '已選班別，點擊可取消' : planned ? '已在暫存或課表中' : unavailable ? '本學期找不到同名開課，仍可先規劃' : '先選擇班別'}>
                   <strong>{programCourse.name}</strong>
                   {selectedVariant && <em className="programSelectedVariant">{selectedVariant.teacher || '未列教師'}｜{courseTime(selectedVariant)}</em>}
-                  <span>{programCourse.credits ? `${programCourse.credits}學分` : groupHint(group)}</span>
+                  <span className="programCourseCreditPill">{programCourse.credits ? `${programCourse.credits} 學分` : groupHint(group)}</span>
                 </button>
                 <button type="button" className="programCourseInfoDot" aria-label="選擇或查看開課班別" onClick={(event) => { event.stopPropagation(); openCoursePicker(programCourse, group) }}>i</button>
               </article>
