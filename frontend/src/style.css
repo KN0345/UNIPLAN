@@ -7182,3 +7182,182 @@ body[data-ui-theme="night"] .slotCourse,body[data-ui-theme="graphite"] .slotCour
 body[data-ui-theme="night"] .unscheduledItem,body[data-ui-theme="graphite"] .unscheduledItem,body[data-theme="dark"] .unscheduledItem{
   background:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent) 22%,#1e293b) 0%,color-mix(in srgb,var(--theme-accent) 10%,#0f172a) 100%)!important;color:#f8fafc!important;
 }
+
+/* UniPlan final theme text-token patch: all course/program text must adapt with the active theme. */
+:root{
+  --up-course-light-text:#10213f;
+  --up-course-light-muted:#52647d;
+  --up-course-light-faint:#6f8098;
+  --up-course-dark-text:#f8fbff;
+  --up-course-dark-muted:#c2d0e8;
+  --up-course-dark-faint:#a7b8d4;
+}
+body:not([data-ui-theme]),
+body[data-ui-theme="clean"],
+body[data-ui-theme="mist"],
+body[data-ui-theme="warm"],
+body[data-ui-theme="forest"],
+body[data-ui-theme="lavender"]{
+  --up-course-text:var(--up-course-light-text);
+  --up-course-muted:var(--up-course-light-muted);
+  --up-course-faint:var(--up-course-light-faint);
+  --up-course-surface:linear-gradient(180deg,#ffffff 0%,color-mix(in srgb,var(--theme-accent,#2563eb) 6%,#f6faff) 100%);
+  --up-course-border:color-mix(in srgb,var(--theme-accent,#2563eb) 28%,#cad8ec);
+  --up-course-chip:color-mix(in srgb,var(--theme-accent,#2563eb) 14%,#eef5ff);
+}
+body[data-ui-theme="night"],
+body[data-ui-theme="graphite"],
+body[data-theme="dark"]{
+  --up-course-text:var(--up-course-dark-text);
+  --up-course-muted:var(--up-course-dark-muted);
+  --up-course-faint:var(--up-course-dark-faint);
+  --up-course-surface:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent,#60a5fa) 36%,#244d7e) 0%,#173b68 58%,#102b4f 100%);
+  --up-course-border:color-mix(in srgb,var(--theme-accent,#60a5fa) 34%,rgba(191,219,254,.22));
+  --up-course-chip:rgba(15,37,76,.56);
+}
+
+.searchPage .courseList .courseCard,
+.courseList .courseCard,
+.courseSearchCard,
+.courseCard.searchCard,
+.courseCard.searchResultCard{
+  background:var(--up-course-surface)!important;
+  color:var(--up-course-text)!important;
+  border-color:var(--up-course-border)!important;
+}
+.searchPage .courseList .courseCard:hover,
+.courseList .courseCard:hover,
+.courseSearchCard:hover,
+.courseCard.searchCard:hover,
+.courseCard.searchResultCard:hover{
+  background:var(--up-course-surface)!important;
+  color:var(--up-course-text)!important;
+  filter:none!important;
+}
+.searchPage .courseList .courseCard :where(.cardHead,strong,h1,h2,h3,h4,.courseTitle,.courseSearchTitle,.courseName,.title),
+.courseList .courseCard :where(.cardHead,strong,h1,h2,h3,h4,.courseTitle,.courseSearchTitle,.courseName,.title),
+.courseSearchCard :where(.cardHead,strong,h1,h2,h3,h4,.courseTitle,.courseSearchTitle,.courseName,.title){
+  color:var(--up-course-text)!important;
+  opacity:1!important;
+  text-shadow:none!important;
+  font-size:14px!important;
+  line-height:1.22!important;
+  font-weight:850!important;
+}
+.searchPage .courseList .courseCard :where(p,small,.courseCardDetails,.courseCardDetails *, .courseSearchMeta,.courseMetaLine,.teacher,.department,.time,.courseTeacher,.courseDepartment,.courseTime),
+.courseList .courseCard :where(p,small,.courseCardDetails,.courseCardDetails *, .courseSearchMeta,.courseMetaLine,.teacher,.department,.time,.courseTeacher,.courseDepartment,.courseTime),
+.courseSearchCard :where(p,small,.courseCardDetails,.courseCardDetails *, .courseSearchMeta,.courseMetaLine,.teacher,.department,.time,.courseTeacher,.courseDepartment,.courseTime){
+  color:var(--up-course-muted)!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+.searchPage .courseList .courseCard :where(.courseSerialBadge,.courseCreditsBadge,.courseCode,.courseCodeBadge,.courseNoBadge),
+.courseList .courseCard :where(.courseSerialBadge,.courseCreditsBadge,.courseCode,.courseCodeBadge,.courseNoBadge),
+.courseSearchCard :where(.courseSerialBadge,.courseCreditsBadge,.courseCode,.courseCodeBadge,.courseNoBadge){
+  background:var(--up-course-chip)!important;
+  color:var(--up-course-text)!important;
+  border-color:color-mix(in srgb,var(--theme-accent,#2563eb) 26%,transparent)!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button,
+.courseSearchCard .searchCardActions button,
+.courseSearchActions button{
+  color:var(--up-course-text)!important;
+  background:color-mix(in srgb,var(--theme-accent,#2563eb) 16%,transparent)!important;
+  border-color:color-mix(in srgb,var(--theme-accent,#2563eb) 32%,transparent)!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.addButton,
+.courseList .courseCard .searchCardActions button.addButton,
+.courseSearchCard .searchCardActions button.addButton,
+.searchCardActions button[aria-label*="加入"]{
+  color:#fff!important;
+  background:var(--theme-accent,var(--accent,#2563eb))!important;
+}
+
+/* Program cards: the whole card carries the state color; inner button must stay transparent and readable. */
+.programCourseRow,
+.programCourseRow.normal,
+.programCourseRow.pending,
+.programCourseRow.required,
+.programCourseRow.needsSelection,
+.programCourseRow.selected,
+.programCourseRow.planned,
+.programCourseRow.done,
+.programCourseRow.completed,
+.programCourseRow.unavailable,
+.programCourseRow.disabled{
+  color:var(--up-course-text)!important;
+  border-color:var(--up-course-border)!important;
+}
+.programCourseRow.normal{background:var(--up-course-surface)!important;}
+.programCourseRow.pending,
+.programCourseRow.required,
+.programCourseRow.needsSelection{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent,#2563eb) 44%,#93c5fd) 0%,color-mix(in srgb,var(--theme-accent,#2563eb) 28%,#bfdbfe) 100%)!important;
+  color:#10213f!important;
+}
+body[data-ui-theme="night"] .programCourseRow.pending,
+body[data-ui-theme="night"] .programCourseRow.required,
+body[data-ui-theme="night"] .programCourseRow.needsSelection,
+body[data-ui-theme="graphite"] .programCourseRow.pending,
+body[data-ui-theme="graphite"] .programCourseRow.required,
+body[data-ui-theme="graphite"] .programCourseRow.needsSelection,
+body[data-theme="dark"] .programCourseRow.pending,
+body[data-theme="dark"] .programCourseRow.required,
+body[data-theme="dark"] .programCourseRow.needsSelection{
+  color:#f8fbff!important;
+}
+.programCourseRow.selected,
+.programCourseRow.planned{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--theme-accent,#2563eb) 68%,#1e3a8a) 0%,color-mix(in srgb,var(--theme-accent,#2563eb) 44%,#172554) 100%)!important;
+  color:#f8fbff!important;
+}
+.programCourseRow.done,
+.programCourseRow.completed{
+  background:linear-gradient(180deg,#22c55e 0%,#15803d 100%)!important;
+  color:#f0fdf4!important;
+}
+.programCourseRow.unavailable,
+.programCourseRow.disabled{
+  background:linear-gradient(180deg,#e2e8f0 0%,#cbd5e1 100%)!important;
+  color:#64748b!important;
+}
+body[data-ui-theme="night"] .programCourseRow.unavailable,
+body[data-ui-theme="graphite"] .programCourseRow.unavailable,
+body[data-theme="dark"] .programCourseRow.unavailable,
+body[data-ui-theme="night"] .programCourseRow.disabled,
+body[data-ui-theme="graphite"] .programCourseRow.disabled,
+body[data-theme="dark"] .programCourseRow.disabled{
+  background:linear-gradient(180deg,#475569 0%,#334155 100%)!important;
+  color:#cbd5e1!important;
+}
+.programCourseRow .programCourseMainButton,
+.programCourseRow .programCourseMainButton:hover,
+.programCourseRow .programCourseMainButton:focus{
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  border:0!important;
+  color:inherit!important;
+  filter:none!important;
+}
+.programCourseRow .programCourseMainButton *,
+.programCourseRow :where(strong,b,h1,h2,h3,h4,p,span,small){
+  color:inherit!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+.programCourseRow .programCourseInfoDot{
+  color:inherit!important;
+  background:color-mix(in srgb,#ffffff 20%,transparent)!important;
+  border-color:color-mix(in srgb,#ffffff 38%,transparent)!important;
+}
+
+/* Small theme safety net for side user/student cards. */
+.sideUser,.studentInfoDock,.studentCard,.studentMiniCard{
+  color:var(--text)!important;
+}
+.sideUser :where(strong,b),.studentInfoDock :where(strong,b),.studentCard :where(strong,b),.studentMiniCard :where(strong,b){color:var(--text)!important;opacity:1!important;}
+.sideUser :where(span,small,p),.studentInfoDock :where(span,small,p),.studentCard :where(span,small,p),.studentMiniCard :where(span,small,p){color:var(--muted)!important;opacity:1!important;}
