@@ -22,7 +22,7 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
     action?.(c)
   }
   return (
-    <article className={`courseCard ${compact ? 'compact' : ''} ${semesterMismatch ? 'semesterMismatch' : ''}`} draggable={draggable && !semesterMismatch} onDragStart={(e) => { if (semesterMismatch) { e.preventDefault(); return } e.dataTransfer.setData('application/json', JSON.stringify({ source: dragSource, semester: dragSemester, course })) }} onClick={() => onSelect?.(c)}>
+    <article data-uniplan-fix="credit-layout-v4" className={`courseCard ${compact ? 'compact' : ''} ${semesterMismatch ? 'semesterMismatch' : ''}`} draggable={draggable && !semesterMismatch} onDragStart={(e) => { if (semesterMismatch) { e.preventDefault(); return } e.dataTransfer.setData('application/json', JSON.stringify({ source: dragSource, semester: dragSemester, course })) }} onClick={() => onSelect?.(c)}>
       <b className={`statusBadge ${STATUS[status]?.tone || 'blue'}`} title={STATUS[status]?.label || '正常排程'} />
       <div className="courseTopBadges">
         {code && <span className="courseSerialPill" title="開課序號">{code}</span>}

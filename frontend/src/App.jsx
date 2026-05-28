@@ -1,5 +1,6 @@
 import { Component, useRef, useState } from 'react'
 import './style.css'
+import './uniplan-final-fix.css'
 import ProgramsPage from './pages/ProgramsPage'
 import AdminProgramsPage from './components/admin/AdminProgramsPage'
 import AdminDataConsolePanel from './components/admin/AdminDataConsole'
