@@ -7787,3 +7787,54 @@ body:not([data-ui-theme="night"]):not([data-ui-theme="graphite"]):not([data-them
 .semesterPanel .slot{
   min-height:0!important;
 }
+
+/* UniPlan V1 timetable cut-off fix: keep all 10 periods visible and remove bottom overlay. */
+.semesterPanel.activeSemesterPanel .grid,
+.semesterPanel .grid,
+.semesterPanel.activeSemesterPanel .grid.referenceTimetableGrid{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  grid-template-rows:40px repeat(10,48px)!important;
+  align-content:start!important;
+  overflow:visible!important;
+  padding-bottom:0!important;
+  margin-bottom:0!important;
+}
+.semesterPanel.activeSemesterPanel .grid.referenceTimetableGrid::after,
+.semesterPanel.activeSemesterPanel .grid::after,
+.semesterPanel .grid::after{
+  display:none!important;
+  content:none!important;
+}
+.semesterPanel.activeSemesterPanel .corner,
+.semesterPanel.activeSemesterPanel .day,
+.semesterPanel.activeSemesterPanel .period,
+.semesterPanel.activeSemesterPanel .slot,
+.semesterPanel .corner,
+.semesterPanel .day,
+.semesterPanel .period,
+.semesterPanel .slot{
+  min-height:48px!important;
+  height:48px!important;
+  overflow:visible!important;
+}
+.semesterPanel.activeSemesterPanel .corner,
+.semesterPanel.activeSemesterPanel .day,
+.semesterPanel .corner,
+.semesterPanel .day{
+  min-height:40px!important;
+  height:40px!important;
+}
+.semesterPanel.activeSemesterPanel .period,
+.semesterPanel .period{
+  color:color-mix(in srgb,var(--text) 82%,#ffffff 18%)!important;
+  font-weight:800!important;
+}
+.plannerLayout .semesterPanel,
+.semesterPanel.activeSemesterPanel{
+  padding-bottom:14px!important;
+}
+.plannerLayout .semesterScroller{
+  padding-bottom:0!important;
+}
