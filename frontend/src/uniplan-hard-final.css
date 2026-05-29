@@ -729,3 +729,110 @@ body[data-ui-theme="arcane"] .sideNav .studentInfoDock small,
 body[data-ui-theme="arcane"] .studentInfoDock small{
   color:rgba(226,232,240,.78)!important;
 }
+
+/* V1.0 beta: custom primary color now drives the visual system in addition to the six base UI themes. */
+:root{
+  --primary-soft:color-mix(in srgb,var(--accent,#2563eb) 10%,transparent);
+  --primary-panel:color-mix(in srgb,var(--panel,#fff) 88%,var(--accent,#2563eb) 12%);
+  --primary-panel-strong:color-mix(in srgb,var(--panel,#fff) 78%,var(--accent,#2563eb) 22%);
+  --primary-border:color-mix(in srgb,var(--border,#cbd5e1) 62%,var(--accent,#2563eb) 38%);
+  --primary-shadow:color-mix(in srgb,var(--accent,#2563eb) 18%,transparent);
+}
+body[data-ui-theme]{
+  background:linear-gradient(135deg,
+    color-mix(in srgb,var(--bg) 86%,var(--accent) 14%) 0%,
+    var(--bg) 46%,
+    color-mix(in srgb,var(--bg) 92%,var(--accent) 8%) 100%
+  )!important;
+}
+body[data-ui-theme="night"],
+body[data-ui-theme="graphite"]{
+  background:linear-gradient(135deg,
+    color-mix(in srgb,var(--bg) 82%,var(--accent) 18%) 0%,
+    var(--bg) 52%,
+    color-mix(in srgb,#020617 86%,var(--accent) 14%) 100%
+  )!important;
+}
+body[data-ui-theme] .topbar,
+body[data-ui-theme] .creditStrip,
+body[data-ui-theme] .toolCard,
+body[data-ui-theme] .filterPanel,
+body[data-ui-theme] .searchSortBar,
+body[data-ui-theme] .pageCard,
+body[data-ui-theme] .infoPanel,
+body[data-ui-theme] .emptyPanel,
+body[data-ui-theme] .appearanceModal,
+body[data-ui-theme] .modalCard,
+body[data-ui-theme] .programSection,
+body[data-ui-theme] .programHeaderCard{
+  border-color:var(--primary-border)!important;
+  box-shadow:var(--shadow),0 0 0 1px color-mix(in srgb,var(--accent) 8%,transparent),0 18px 42px var(--primary-shadow)!important;
+}
+body[data-ui-theme] .sideNav{
+  --sidebar-start:color-mix(in srgb,var(--accent) 32%,#f8fbff 68%);
+  --sidebar-mid:color-mix(in srgb,var(--accent) 18%,#ffffff 82%);
+  --sidebar-end:color-mix(in srgb,var(--accent) 8%,#ffffff 92%);
+  --sidebar-border:color-mix(in srgb,var(--accent) 30%,transparent);
+  --sidebar-active-bg:color-mix(in srgb,var(--accent) 18%,transparent);
+  --sidebar-hover-bg:color-mix(in srgb,var(--accent) 11%,transparent);
+  --sidebar-glow:color-mix(in srgb,var(--accent) 18%,transparent);
+}
+body[data-ui-theme="night"] .sideNav,
+body[data-ui-theme="graphite"] .sideNav{
+  --sidebar-start:color-mix(in srgb,var(--accent) 25%,#020617 75%);
+  --sidebar-mid:color-mix(in srgb,var(--accent) 18%,#0f172a 82%);
+  --sidebar-end:color-mix(in srgb,var(--accent) 8%,#020617 92%);
+  --sidebar-border:color-mix(in srgb,var(--accent) 28%,rgba(255,255,255,.08));
+  --sidebar-active-bg:color-mix(in srgb,var(--accent) 23%,rgba(255,255,255,.06));
+  --sidebar-hover-bg:color-mix(in srgb,var(--accent) 14%,rgba(255,255,255,.04));
+  --sidebar-glow:color-mix(in srgb,var(--accent) 20%,transparent);
+}
+body[data-ui-theme] .sideNav button.active,
+body[data-ui-theme] .sideNav button:hover,
+body[data-ui-theme] .semesterButtons button.active,
+body[data-ui-theme] .tabs button.active,
+body[data-ui-theme] .moveSemesterGrid button.active,
+body[data-ui-theme] .themeChoices button.active,
+body[data-ui-theme] .searchButton,
+body[data-ui-theme] button.primary,
+body[data-ui-theme] .primaryLink{
+  background:linear-gradient(135deg,var(--button-accent),color-mix(in srgb,var(--button-accent) 70%,var(--accent) 30%))!important;
+  border-color:color-mix(in srgb,var(--button-accent) 78%,var(--accent) 22%)!important;
+  color:#fff!important;
+}
+body[data-ui-theme] input:focus,
+body[data-ui-theme] select:focus,
+body[data-ui-theme] textarea:focus{
+  border-color:var(--accent)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)!important;
+  outline:none!important;
+}
+body[data-ui-theme] .bar i,
+body[data-ui-theme] .creditStackBar .plannedSeg,
+body[data-ui-theme] .legendPlan{
+  background:var(--accent)!important;
+}
+body[data-ui-theme] .searchPage .courseList .courseCard,
+body[data-ui-theme] .courseList .courseCard{
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--accent) 54%,#24558c 46%) 0%,
+    color-mix(in srgb,var(--accent) 38%,#15385f 62%) 100%
+  )!important;
+  border-color:color-mix(in srgb,var(--accent) 45%,rgba(255,255,255,.18))!important;
+  box-shadow:0 14px 30px color-mix(in srgb,var(--accent) 18%,rgba(15,23,42,.14))!important;
+}
+body[data-ui-theme] .searchPage .courseList .courseCard:hover,
+body[data-ui-theme] .courseList .courseCard:hover{
+  box-shadow:0 18px 38px color-mix(in srgb,var(--accent) 26%,rgba(15,23,42,.18))!important;
+  border-color:color-mix(in srgb,var(--accent) 62%,rgba(255,255,255,.22))!important;
+}
+body[data-ui-theme] .courseList .courseCard .searchCardActions button.compareAction,
+body[data-ui-theme] .searchPage .courseList .courseCard .searchCardActions button.compareAction{
+  background:linear-gradient(135deg,var(--button-accent),color-mix(in srgb,var(--button-accent) 70%,var(--accent) 30%))!important;
+  border-color:transparent!important;
+  color:#fff!important;
+}
+body[data-ui-theme] .compactAccentGrid button.active{
+  outline-color:color-mix(in srgb,var(--accent) 48%,transparent)!important;
+  box-shadow:0 0 0 2px color-mix(in srgb,#fff 48%,transparent),0 0 0 5px color-mix(in srgb,var(--accent) 24%,transparent)!important;
+}
