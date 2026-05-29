@@ -1,0 +1,309 @@
+/* UniPlan hard final layout override
+   Purpose: loaded after App.jsx re-imports style.css. Keeps the real last CSS order.
+*/
+
+/* Program course cards: stop old required/pending button backgrounds from repainting light blue. */
+.programChooserPage .programCourseList{
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important;
+  gap:22px!important;
+}
+.programChooserPage .programCourseRow,
+.programChooserPage .programCourseRow.normal,
+.programChooserPage .programCourseRow.pending,
+.programChooserPage .programCourseRow.required,
+.programCourseList .programCourseRow,
+.programCourseList .programCourseRow.normal,
+.programCourseList .programCourseRow.pending,
+.programCourseList .programCourseRow.required{
+  position:relative!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,#2b5b95 0%,#1f4d83 100%)!important;
+  color:#f8fbff!important;
+  border:1px solid rgba(147,197,253,.52)!important;
+  box-shadow:0 12px 24px rgba(31,73,122,.14), inset 0 1px 0 rgba(255,255,255,.14)!important;
+  opacity:1!important;
+  filter:none!important;
+}
+.programChooserPage .programCourseRow.selected,
+.programChooserPage .programCourseRow.planned,
+.programCourseList .programCourseRow.selected,
+.programCourseList .programCourseRow.planned{
+  background:linear-gradient(180deg,#234f88 0%,#173d6d 100%)!important;
+  color:#fff!important;
+  border-color:rgba(191,219,254,.72)!important;
+}
+.programChooserPage .programCourseRow.done,
+.programCourseList .programCourseRow.done{
+  background:linear-gradient(180deg,#14865b 0%,#0f6d4b 100%)!important;
+  color:#fff!important;
+  border-color:rgba(134,239,172,.72)!important;
+}
+.programChooserPage .programCourseRow.unavailable,
+.programChooserPage .programCourseRow.disabled,
+.programCourseList .programCourseRow.unavailable,
+.programCourseList .programCourseRow.disabled{
+  background:linear-gradient(180deg,#526176 0%,#415064 100%)!important;
+  color:rgba(248,251,255,.78)!important;
+  border-color:rgba(203,213,225,.46)!important;
+}
+.programChooserPage .programCourseRow::before,
+.programChooserPage .programCourseRow::after,
+.programChooserPage .programCourseMainButton::before,
+.programChooserPage .programCourseMainButton::after,
+.programCourseList .programCourseRow::before,
+.programCourseList .programCourseRow::after,
+.programCourseList .programCourseMainButton::before,
+.programCourseList .programCourseMainButton::after{
+  content:none!important;
+  display:none!important;
+}
+.programChooserPage .programCourseMainButton,
+.programChooserPage .programCourseRow .programCourseMainButton,
+.programChooserPage .programCourseRow.required .programCourseMainButton,
+.programChooserPage .programCourseRow.pending .programCourseMainButton,
+.programChooserPage .programCourseRow.normal .programCourseMainButton,
+.programCourseList .programCourseMainButton,
+.programCourseList .programCourseRow .programCourseMainButton,
+.programCourseList .programCourseRow.required .programCourseMainButton,
+.programCourseList .programCourseRow.pending .programCourseMainButton,
+.programCourseList .programCourseRow.normal .programCourseMainButton{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  padding:48px 46px 26px 28px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-end!important;
+  gap:6px!important;
+  border:0!important;
+  border-radius:20px!important;
+  background:transparent!important;
+  color:inherit!important;
+  text-align:left!important;
+  box-shadow:none!important;
+  opacity:1!important;
+  filter:none!important;
+}
+.programChooserPage .programCourseMainButton strong,
+.programChooserPage .programCourseRow .programCourseMainButton strong,
+.programCourseList .programCourseMainButton strong,
+.programCourseList .programCourseRow .programCourseMainButton strong{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+  color:inherit!important;
+  font-size:18px!important;
+  line-height:1.24!important;
+  font-weight:950!important;
+  letter-spacing:-.02em!important;
+  text-shadow:none!important;
+}
+.programChooserPage .programCourseCreditPill,
+.programChooserPage .programCourseMainButton .programCourseCreditPill,
+.programCourseList .programCourseCreditPill,
+.programCourseList .programCourseMainButton .programCourseCreditPill{
+  position:absolute!important;
+  left:24px!important;
+  top:22px!important;
+  right:auto!important;
+  bottom:auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:30px!important;
+  min-height:30px!important;
+  min-width:64px!important;
+  padding:0 14px!important;
+  border-radius:999px!important;
+  background:rgba(219,234,254,.20)!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  color:inherit!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  opacity:1!important;
+  box-shadow:none!important;
+}
+.programChooserPage .programCourseInfoDot,
+.programCourseList .programCourseInfoDot{
+  position:absolute!important;
+  right:20px!important;
+  bottom:20px!important;
+  z-index:4!important;
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  border-radius:999px!important;
+  display:grid!important;
+  place-items:center!important;
+  background:rgba(219,234,254,.22)!important;
+  color:rgba(255,255,255,.88)!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+  font-weight:900!important;
+}
+
+/* Search cards: compact but readable, with details restored. */
+.searchPage .courseList{
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;
+  gap:14px!important;
+  align-items:stretch!important;
+}
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  height:162px!important;
+  min-height:162px!important;
+  max-height:162px!important;
+  padding:44px 18px 54px 18px!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:linear-gradient(180deg,#2e609d 0%,#234f86 100%)!important;
+  color:#f8fafc!important;
+  border:1px solid rgba(147,197,253,.34)!important;
+  box-shadow:0 10px 22px rgba(30,64,119,.16), inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+.searchPage .courseList .courseCard .cardHead,
+.courseList .courseCard .cardHead{
+  min-height:42px!important;
+  max-height:42px!important;
+  padding:0!important;
+  margin:0 0 6px 0!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard .cardHead strong,
+.courseList .courseCard .cardHead strong{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+  color:#f8fbff!important;
+  font-size:16px!important;
+  line-height:1.28!important;
+  font-weight:950!important;
+  letter-spacing:-.02em!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+  width:100%!important;
+  max-width:calc(100% - 78px)!important;
+  min-height:48px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails p,
+.searchPage .courseList .courseCard .courseTeacherName,
+.searchPage .courseList .courseCard .courseDeptName,
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseCardDetails p,
+.courseList .courseCard .courseTeacherName,
+.courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseMetaLine{
+  display:block!important;
+  color:rgba(235,244,255,.88)!important;
+  font-size:12px!important;
+  line-height:1.28!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  opacity:1!important;
+  visibility:visible!important;
+  text-shadow:none!important;
+}
+.searchPage .courseList .courseCard .courseTopBadges,
+.courseList .courseCard .courseTopBadges{
+  position:absolute!important;
+  right:14px!important;
+  top:14px!important;
+  z-index:30!important;
+  display:flex!important;
+  flex-direction:row!important;
+  gap:6px!important;
+}
+.searchPage .courseList .courseCard .courseSerialPill,
+.searchPage .courseList .courseCard .courseCreditPill,
+.courseList .courseCard .courseSerialPill,
+.courseList .courseCard .courseCreditPill{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:50px!important;
+  height:24px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  background:#dceafe!important;
+  color:#12223b!important;
+  border:1px solid rgba(255,255,255,.48)!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+.searchPage .courseList .courseCard .courseSerialBadge,
+.searchPage .courseList .courseCard .courseCreditsBadge,
+.courseList .courseCard .courseSerialBadge,
+.courseList .courseCard .courseCreditsBadge{display:none!important;}
+.searchPage .courseList .courseCard .statusBadge,
+.courseList .courseCard .statusBadge{
+  position:absolute!important;
+  left:16px!important;
+  top:18px!important;
+  width:12px!important;
+  height:12px!important;
+  z-index:30!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  position:absolute!important;
+  right:13px!important;
+  bottom:13px!important;
+  display:flex!important;
+  gap:7px!important;
+  z-index:31!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  padding:0!important;
+  border-radius:11px!important;
+  display:grid!important;
+  place-items:center!important;
+  background:#dbe8fb!important;
+  color:#0f1f38!important;
+  border:1px solid rgba(255,255,255,.42)!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:900!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction{
+  background:#3b82f6!important;
+  color:#fff!important;
+  font-size:14px!important;
+}
+
+@media(max-width:780px){
+  .programChooserPage .programCourseList{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;}
+  .programChooserPage .programCourseRow,.programChooserPage .programCourseMainButton{height:136px!important;min-height:136px!important;max-height:136px!important;}
+  .programChooserPage .programCourseMainButton{padding:42px 38px 24px 18px!important;}
+  .programChooserPage .programCourseMainButton strong{font-size:15px!important;}
+}
