@@ -660,3 +660,72 @@
 .courseList .courseCard .searchCardActions button.compareAction{
   font-size:13px!important;
 }
+
+/* V1.0 beta: theme-aware student info dock restore */
+.sideNav .studentInfoDock,
+.studentInfoDock{
+  background:linear-gradient(
+    145deg,
+    color-mix(in srgb,var(--panel) 72%,var(--accent) 10%),
+    color-mix(in srgb,var(--panel2) 82%,transparent)
+  )!important;
+  border:1px solid color-mix(in srgb,var(--border) 72%,var(--accent) 28%)!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,#fff 38%,transparent),
+    0 16px 34px color-mix(in srgb,var(--accent) 12%,transparent)!important;
+  color:var(--text)!important;
+}
+.sideNav .studentInfoDock span,
+.studentInfoDock span{
+  color:color-mix(in srgb,var(--muted) 86%,var(--text) 14%)!important;
+}
+.sideNav .studentInfoDock strong,
+.studentInfoDock strong{
+  color:var(--text)!important;
+}
+.sideNav .studentInfoDock small,
+.studentInfoDock small{
+  color:color-mix(in srgb,var(--muted) 82%,var(--text) 18%)!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock,
+body[data-theme="dark"] .studentInfoDock,
+body[data-ui-theme="night"] .sideNav .studentInfoDock,
+body[data-ui-theme="night"] .studentInfoDock,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock,
+body[data-ui-theme="graphite"] .studentInfoDock,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock,
+body[data-ui-theme="arcane"] .studentInfoDock{
+  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.055))!important;
+  border-color:rgba(255,255,255,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 18px 40px rgba(0,0,0,.22)!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock span,
+body[data-theme="dark"] .studentInfoDock span,
+body[data-ui-theme="night"] .sideNav .studentInfoDock span,
+body[data-ui-theme="night"] .studentInfoDock span,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock span,
+body[data-ui-theme="graphite"] .studentInfoDock span,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock span,
+body[data-ui-theme="arcane"] .studentInfoDock span{
+  color:rgba(226,232,240,.68)!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock strong,
+body[data-theme="dark"] .studentInfoDock strong,
+body[data-ui-theme="night"] .sideNav .studentInfoDock strong,
+body[data-ui-theme="night"] .studentInfoDock strong,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock strong,
+body[data-ui-theme="graphite"] .studentInfoDock strong,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock strong,
+body[data-ui-theme="arcane"] .studentInfoDock strong{
+  color:#fff!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock small,
+body[data-theme="dark"] .studentInfoDock small,
+body[data-ui-theme="night"] .sideNav .studentInfoDock small,
+body[data-ui-theme="night"] .studentInfoDock small,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock small,
+body[data-ui-theme="graphite"] .studentInfoDock small,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock small,
+body[data-ui-theme="arcane"] .studentInfoDock small{
+  color:rgba(226,232,240,.78)!important;
+}
