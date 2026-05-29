@@ -307,3 +307,84 @@
   .programChooserPage .programCourseMainButton{padding:42px 38px 24px 18px!important;}
   .programChooserPage .programCourseMainButton strong{font-size:15px!important;}
 }
+
+/* 2026-05-29 final pass: equalize program cards and allow long time rows to wrap safely. */
+.programChooserPage .programCourseList,
+.programCourseList{
+  align-items:start!important;
+}
+.programChooserPage .programCourseRow,
+.programChooserPage .programCourseRow.selected,
+.programChooserPage .programCourseRow.planned,
+.programChooserPage .programCourseRow.required,
+.programChooserPage .programCourseRow.pending,
+.programChooserPage .programCourseRow.normal,
+.programChooserPage .programCourseRow.unavailable,
+.programChooserPage .programCourseRow.disabled,
+.programCourseList .programCourseRow,
+.programCourseList .programCourseRow.selected,
+.programCourseList .programCourseRow.planned,
+.programCourseList .programCourseRow.required,
+.programCourseList .programCourseRow.pending,
+.programCourseList .programCourseRow.normal,
+.programCourseList .programCourseRow.unavailable,
+.programCourseList .programCourseRow.disabled{
+  box-sizing:border-box!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  transform:none!important;
+}
+.programChooserPage .programCourseRow .programCourseMainButton,
+.programChooserPage .programCourseRow.selected .programCourseMainButton,
+.programChooserPage .programCourseRow.planned .programCourseMainButton,
+.programChooserPage .programCourseRow.required .programCourseMainButton,
+.programChooserPage .programCourseRow.pending .programCourseMainButton,
+.programChooserPage .programCourseRow.normal .programCourseMainButton,
+.programChooserPage .programCourseRow.unavailable .programCourseMainButton,
+.programChooserPage .programCourseRow.disabled .programCourseMainButton,
+.programCourseList .programCourseRow .programCourseMainButton,
+.programCourseList .programCourseRow.selected .programCourseMainButton,
+.programCourseList .programCourseRow.planned .programCourseMainButton,
+.programCourseList .programCourseRow.required .programCourseMainButton,
+.programCourseList .programCourseRow.pending .programCourseMainButton,
+.programCourseList .programCourseRow.normal .programCourseMainButton,
+.programCourseList .programCourseRow.unavailable .programCourseMainButton,
+.programCourseList .programCourseRow.disabled .programCourseMainButton{
+  box-sizing:border-box!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  transform:none!important;
+}
+
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  height:178px!important;
+  min-height:178px!important;
+  max-height:178px!important;
+  padding-bottom:44px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .courseCardDetails,
+.courseList .courseCard.longTimeMeta .courseCardDetails{
+  max-width:calc(100% - 118px)!important;
+}
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseMetaLine{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  line-height:1.28!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .courseMetaLine,
+.courseList .courseCard.longTimeMeta .courseMetaLine{
+  white-space:normal!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .searchCardActions,
+.courseList .courseCard.longTimeMeta .searchCardActions{
+  bottom:12px!important;
+}

@@ -5,6 +5,16 @@ function courseCode(course) {
   return c.serial || c.code || c.course_id || c.class_id || c.id || ''
 }
 
+
+function cleanTeacherName(value) {
+  return String(value || '')
+    .replace(/（[^）]*\*{2,}[^）]*）/g, '')
+    .replace(/\([^)]*\*{2,}[^)]*\)/g, '')
+    .replace(/\s*,\s*/g, '、')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function courseUnit(course) {
   const c = getCourse(course)
   return c.department || c.major || c.unit || c.opening_unit || c.category || ''
@@ -16,13 +26,16 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
   const semesterMismatch = Boolean(targetSemester && !courseMatchesSemester(c, targetSemester))
   const code = courseCode(c)
   const unit = courseUnit(c)
+  const teacherName = cleanTeacherName(c.teacher || c.instructor) || '未列教師'
+  const timeMeta = studentCourseMeta(c)
+  const hasLongTimeMeta = String(timeMeta || '').length > 24 || String(timeMeta || '').includes('｜') || String(timeMeta || '').includes('|')
   function handleAction(event, action) {
     event.preventDefault()
     event.stopPropagation()
     action?.(c)
   }
   return (
-    <article className={`courseCard ${compact ? 'compact' : ''} ${semesterMismatch ? 'semesterMismatch' : ''}`} draggable={draggable && !semesterMismatch} onDragStart={(e) => { if (semesterMismatch) { e.preventDefault(); return } e.dataTransfer.setData('application/json', JSON.stringify({ source: dragSource, semester: dragSemester, course })) }} onClick={() => onSelect?.(c)}>
+    <article className={`courseCard ${compact ? 'compact' : ''} ${semesterMismatch ? 'semesterMismatch' : ''} ${hasLongTimeMeta ? 'longTimeMeta' : ''}`} draggable={draggable && !semesterMismatch} onDragStart={(e) => { if (semesterMismatch) { e.preventDefault(); return } e.dataTransfer.setData('application/json', JSON.stringify({ source: dragSource, semester: dragSemester, course })) }} onClick={() => onSelect?.(c)}>
       <b className={`statusBadge ${STATUS[status]?.tone || 'blue'}`} title={STATUS[status]?.label || '正常排程'} />
       <div className="courseTopBadges">
         {code && <span className="courseSerialPill" title="開課序號">{code}</span>}
@@ -30,9 +43,9 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
       </div>
       <div className="cardHead"><strong>{c.name || '未命名課程'}</strong></div>
       <div className="courseCardDetails">
-        <p className="courseTeacherName">教師｜{c.teacher || c.instructor || '未列教師'}</p>
+        <p className="courseTeacherName">教師｜{teacherName}</p>
         {unit && <p className="courseDeptName">開課｜{unit}</p>}
-        <p className="courseMetaLine">時間｜{studentCourseMeta(c)}</p>
+        <p className="courseMetaLine">時間｜{timeMeta}</p>
       </div>
       {semesterMismatch && <small className="courseTermNotice">{courseTermLabel(c)}</small>}
       {(onCompare || onAddCandidate || onFavorite) && <div className="searchCardActions">
