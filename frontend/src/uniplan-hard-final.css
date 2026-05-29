@@ -514,3 +514,78 @@
   height:34px!important;
   min-width:34px!important;
 }
+
+/* 2026-05-29 final course metadata/badge refinement: keep room visible and shrink top-right pills. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  min-height:178px!important;
+  height:178px!important;
+  padding:40px 18px 58px 18px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  min-height:202px!important;
+  height:202px!important;
+  padding-bottom:62px!important;
+}
+.searchPage .courseList .courseCard .courseTopBadges,
+.courseList .courseCard .courseTopBadges{
+  top:16px!important;
+  right:16px!important;
+  gap:6px!important;
+}
+.searchPage .courseList .courseCard .courseSerialPill,
+.searchPage .courseList .courseCard .courseCreditPill,
+.courseList .courseCard .courseSerialPill,
+.courseList .courseCard .courseCreditPill{
+  height:26px!important;
+  min-height:26px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  font-size:13px!important;
+  line-height:26px!important;
+  font-weight:900!important;
+  min-width:auto!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  max-width:calc(100% - 120px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:1px!important;
+}
+.searchPage .courseList .courseCard .courseTimeLine,
+.searchPage .courseList .courseCard .courseRoomLine,
+.courseList .courseCard .courseTimeLine,
+.courseList .courseCard .courseRoomLine{
+  display:block!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+  font-size:12px!important;
+  line-height:1.22!important;
+  margin:0!important;
+}
+.searchPage .courseList .courseCard .courseTimeLine,
+.courseList .courseCard .courseTimeLine{
+  max-height:30px!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard .courseRoomLine,
+.courseList .courseCard .courseRoomLine{
+  max-height:30px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  border-radius:10px!important;
+  font-size:17px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction{
+  font-size:13px!important;
+}

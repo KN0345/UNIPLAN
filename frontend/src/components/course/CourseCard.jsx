@@ -1,4 +1,4 @@
-import { STATUS, courseMatchesSemester, courseStatus, courseTermLabel, credits, getCourse, studentCourseMeta } from '../../utils/coursePlanning'
+import { STATUS, courseMatchesSemester, courseStatus, courseTermLabel, credits, getCourse } from '../../utils/coursePlanning'
 
 function courseCode(course) {
   const c = getCourse(course)
@@ -27,8 +27,9 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
   const code = courseCode(c)
   const unit = courseUnit(c)
   const teacherName = cleanTeacherName(c.teacher || c.instructor) || '未列教師'
-  const timeMeta = studentCourseMeta(c)
-  const hasLongTimeMeta = String(timeMeta || '').length > 24 || String(timeMeta || '').includes('｜') || String(timeMeta || '').includes('|')
+  const timeMeta = c.time_info || c.time || '未列時間'
+  const roomMeta = c.classroom || c.room || c.location || ''
+  const hasLongTimeMeta = String(timeMeta || '').length > 18 || String(timeMeta || '').includes('｜') || String(timeMeta || '').includes('|') || Boolean(roomMeta)
   function handleAction(event, action) {
     event.preventDefault()
     event.stopPropagation()
@@ -45,7 +46,8 @@ function CourseCard({ course, draggable = true, onSelect, compact = false, dragS
       <div className="courseCardDetails">
         <p className="courseTeacherName">教師｜{teacherName}</p>
         {unit && <p className="courseDeptName">開課｜{unit}</p>}
-        <p className="courseMetaLine">時間｜{timeMeta}</p>
+        <p className="courseTimeLine">時間｜{timeMeta}</p>
+        {roomMeta && <p className="courseRoomLine">教室｜{roomMeta}</p>}
       </div>
       {semesterMismatch && <small className="courseTermNotice">{courseTermLabel(c)}</small>}
       {(onCompare || onAddCandidate || onFavorite) && <div className="searchCardActions">
