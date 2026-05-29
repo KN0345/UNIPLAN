@@ -589,3 +589,74 @@
 .courseList .courseCard .searchCardActions button.compareAction{
   font-size:13px!important;
 }
+
+/* 2026-05-29 final layout: move serial/credit badges to bottom-left to free title area. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  padding:28px 18px 58px 18px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  padding-bottom:62px!important;
+}
+.searchPage .courseList .courseCard .courseTopBadges,
+.courseList .courseCard .courseTopBadges{
+  display:none!important;
+}
+.searchPage .courseList .courseCard .cardHead,
+.courseList .courseCard .cardHead{
+  max-width:100%!important;
+  padding-right:0!important;
+  margin-right:0!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails,
+.searchPage .courseList .courseCard.longTimeMeta .courseCardDetails,
+.courseList .courseCard.longTimeMeta .courseCardDetails{
+  max-width:calc(100% - 112px)!important;
+}
+.searchPage .courseList .courseCard .courseBottomBadges,
+.courseList .courseCard .courseBottomBadges{
+  position:absolute!important;
+  left:18px!important;
+  bottom:18px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  z-index:4!important;
+}
+.searchPage .courseList .courseCard .courseBottomBadges .courseSerialPill,
+.searchPage .courseList .courseCard .courseBottomBadges .courseCreditPill,
+.courseList .courseCard .courseBottomBadges .courseSerialPill,
+.courseList .courseCard .courseBottomBadges .courseCreditPill{
+  height:24px!important;
+  min-height:24px!important;
+  line-height:24px!important;
+  padding:0 9px!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  min-width:auto!important;
+  background:rgba(226,239,255,.96)!important;
+  color:#14243d!important;
+  border:1px solid rgba(255,255,255,.55)!important;
+  box-shadow:0 4px 10px rgba(15,23,42,.08)!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  right:14px!important;
+  bottom:14px!important;
+  gap:7px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  border-radius:11px!important;
+  font-size:17px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction{
+  font-size:13px!important;
+}
