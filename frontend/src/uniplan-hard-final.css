@@ -388,3 +388,69 @@
 .courseList .courseCard.longTimeMeta .searchCardActions{
   bottom:12px!important;
 }
+
+/* 2026-05-29 overlap fix: keep course metadata readable without changing title scale. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  height:158px!important;
+  min-height:158px!important;
+  max-height:158px!important;
+  padding-bottom:48px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  height:182px!important;
+  min-height:182px!important;
+  max-height:182px!important;
+  padding-bottom:54px!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  max-width:calc(100% - 148px)!important;
+  padding-right:0!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .courseCardDetails,
+.courseList .courseCard.longTimeMeta .courseCardDetails{
+  max-width:calc(100% - 148px)!important;
+}
+.searchPage .courseList .courseCard .courseTeacherName,
+.searchPage .courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseTeacherName,
+.courseList .courseCard .courseDeptName{
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseMetaLine{
+  white-space:normal!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  right:12px!important;
+  bottom:14px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .searchCardActions,
+.courseList .courseCard.longTimeMeta .searchCardActions{
+  bottom:14px!important;
+}
+
+/* Program selected variant should include room data and wrap inside the card. */
+.programChooserPage .programSelectedVariant,
+.programSelectedVariant{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  white-space:normal!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  max-width:calc(100% - 44px)!important;
+  line-height:1.25!important;
+}

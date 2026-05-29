@@ -40,6 +40,23 @@ function courseTime(course) {
   const c = getCourse(course)
   return c.time_info || c.time || c.period || '未列時間'
 }
+function courseRoom(course) {
+  const c = getCourse(course)
+  return c.classroom || c.room || c.location || ''
+}
+function cleanTeacherName(value) {
+  return String(value || '')
+    .replace(/（[^）]*\*{2,}[^）]*）/g, '')
+    .replace(/\([^)]*\*{2,}[^)]*\)/g, '')
+    .replace(/\s*,\s*/g, '、')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+function courseTimeRoom(course) {
+  const time = courseTime(course)
+  const room = courseRoom(course)
+  return room ? `${time}｜${room}` : time
+}
 function stripSchoolName(name) {
   return String(name || '').replace(/^淡江大學/, '')
 }
@@ -299,7 +316,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
               return <article key={`${group.id}-${programCourse.name}`} className={`programCourseRow ${state}`}>
                 <button type="button" disabled={done} className="programCourseMainButton" onClick={() => toggleCourse(group, programCourse)} title={done ? '已修過，已完成此項' : chosen ? '已選班別，點擊可取消' : planned ? '已在暫存或課表中' : unavailable ? '本學期找不到同名開課，仍可先規劃' : '先選擇班別'}>
                   <strong>{programCourse.name}</strong>
-                  {selectedVariant && <em className="programSelectedVariant">{selectedVariant.teacher || '未列教師'}｜{courseTime(selectedVariant)}</em>}
+                  {selectedVariant && <em className="programSelectedVariant">{cleanTeacherName(selectedVariant.teacher) || '未列教師'}｜{courseTimeRoom(selectedVariant)}</em>}
                   <span className="programCourseCreditPill">{programCourse.credits ? `${programCourse.credits} 學分` : groupHint(group)}</span>
                 </button>
                 <button type="button" className="programCourseInfoDot" aria-label="選擇或查看開課班別" onClick={(event) => { event.stopPropagation(); openCoursePicker(programCourse, group, true) }}>i</button>
@@ -318,7 +335,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
             const already = isAlreadyInPool(mc, pool)
             return <article key={dedupeCourseKey(mc)}>
               <button className="variantInfoButton" onClick={() => onOpenCourseInfo?.(mc)}><b>{mc.name || coursePicker.programCourse.name}</b><span>{mc.serial || mc.code || '無序號'}</span></button>
-              <p>{mc.teacher || '未列教師'}｜{courseTime(mc)}｜{mc.credits || mc.credit || coursePicker.programCourse.credits || 0}學分</p>
+              <p>{cleanTeacherName(mc.teacher) || '未列教師'}｜{courseTimeRoom(mc)}｜{mc.credits || mc.credit || coursePicker.programCourse.credits || 0}學分</p>
               <button disabled={already} onClick={() => selectVariantFromPicker(mc)}>{already ? '已在規劃中' : '選擇'}</button>
             </article>
           }) : <div className="emptyVariantBox"><b>無同名開課</b></div>}
