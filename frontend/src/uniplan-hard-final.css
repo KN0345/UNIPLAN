@@ -836,3 +836,21 @@ body[data-ui-theme] .compactAccentGrid button.active{
   outline-color:color-mix(in srgb,var(--accent) 48%,transparent)!important;
   box-shadow:0 0 0 2px color-mix(in srgb,#fff 48%,transparent),0 0 0 5px color-mix(in srgb,var(--accent) 24%,transparent)!important;
 }
+
+/* FINAL FIX 2026-05-29: remove extra blank space below timetable background */
+.semesterPanel.activeSemesterPanel .timetableGridClean,
+.semesterPanel.activeSemesterPanel .grid.timetableGridClean{
+  padding-bottom:0!important;
+  margin-bottom:0!important;
+}
+.semesterPanel.activeSemesterPanel .timetableGridClean::after,
+.semesterPanel.activeSemesterPanel .timetableGridClean::before{
+  bottom:0!important;
+}
+.semesterPanel.activeSemesterPanel{
+  padding-bottom:12px!important;
+}
+.plannerLayout .semesterScroller,
+.semesterScroller{
+  padding-bottom:0!important;
+}
