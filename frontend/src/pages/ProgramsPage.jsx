@@ -221,7 +221,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
       removeCourseChoice(group, programCourse)
       return
     }
-    openCoursePicker(programCourse, group)
+    openCoursePicker(programCourse, group, true)
   }
   function addSelectedToCandidate() {
     if (!active || !onAddCandidate) return
@@ -243,8 +243,12 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
     chooseCourseVariant(coursePicker.group, coursePicker.programCourse, variant)
   }
 
-  async function openCoursePicker(programCourse, group = null) {
+  async function openCoursePicker(programCourse, group = null, autoSelectSingle = false) {
     const localMatches = catalogMatches(programCourse, courses)
+    if (autoSelectSingle && group && localMatches.length === 1) {
+      chooseCourseVariant(group, programCourse, localMatches[0])
+      return
+    }
     setCoursePicker({ group, programCourse, matches: localMatches, loading: true, source: localMatches.length ? '目前清單' : '搜尋中' })
     try {
       const payload = await fetchCourses({ keyword: programCourse?.name || '', semester: '全部' })
@@ -259,6 +263,10 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
           merged.push(item)
         }
       })
+      if (autoSelectSingle && group && merged.length === 1) {
+        chooseCourseVariant(group, programCourse, merged[0])
+        return
+      }
       setCoursePicker({ group, programCourse, matches: merged, loading: false, source: globalMatches.length ? '全課程資料庫' : '目前清單' })
     } catch (error) {
       console.error(error)
@@ -294,7 +302,7 @@ export default function ProgramsPage({ profile, plan, candidates, favorites, cou
                   {selectedVariant && <em className="programSelectedVariant">{selectedVariant.teacher || '未列教師'}｜{courseTime(selectedVariant)}</em>}
                   <span className="programCourseCreditPill">{programCourse.credits ? `${programCourse.credits} 學分` : groupHint(group)}</span>
                 </button>
-                <button type="button" className="programCourseInfoDot" aria-label="選擇或查看開課班別" onClick={(event) => { event.stopPropagation(); openCoursePicker(programCourse, group) }}>i</button>
+                <button type="button" className="programCourseInfoDot" aria-label="選擇或查看開課班別" onClick={(event) => { event.stopPropagation(); openCoursePicker(programCourse, group, true) }}>i</button>
               </article>
             })}</div>
           </section>

@@ -403,3 +403,163 @@
   .programCourseRow .programCourseMainButton strong,.programCourseMainButton strong{font-size:14px!important;}
   .programCourseCreditPill{left:14px!important;top:12px!important;font-size:11px!important;}
 }
+
+
+/* ---------- UniPlan v4: readability and single-variant picker fix ---------- */
+.searchPage .courseList{
+  grid-template-columns:repeat(auto-fill,minmax(360px,1fr))!important;
+  gap:20px!important;
+}
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  height:220px!important;
+  min-height:220px!important;
+  max-height:220px!important;
+  padding:58px 22px 76px 22px!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,#2b619f 0%,#1d4779 100%)!important;
+}
+.searchPage .courseList .courseCard .cardHead,
+.courseList .courseCard .cardHead,
+.courseCard .cardHead{
+  min-height:52px!important;
+  max-height:52px!important;
+}
+.searchPage .courseList .courseCard .cardHead strong,
+.courseList .courseCard .cardHead strong,
+.courseCard .cardHead strong{
+  color:#f8fbff!important;
+  font-size:17px!important;
+  line-height:1.32!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.08)!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails,
+.courseCard .courseCardDetails{
+  gap:5px!important;
+  margin-top:6px!important;
+  padding-right:6px!important;
+  max-width:calc(100% - 12px)!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails p,
+.searchPage .courseList .courseCard .courseTeacherName,
+.searchPage .courseList .courseCard .courseDeptName,
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseCardDetails p,
+.courseList .courseCard .courseTeacherName,
+.courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseMetaLine,
+.courseCard .courseCardDetails p,
+.courseCard .courseTeacherName,
+.courseCard .courseDeptName,
+.courseCard .courseMetaLine{
+  color:rgba(240,247,255,.92)!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+  font-weight:750!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions,
+.courseCard .searchCardActions{
+  right:18px!important;
+  bottom:18px!important;
+  gap:12px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button,
+.courseCard .searchCardActions button{
+  width:48px!important;
+  height:48px!important;
+  min-width:48px!important;
+  max-width:48px!important;
+}
+
+.programCourseList{
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr))!important;
+  gap:20px!important;
+}
+.programCourseRow{
+  height:184px!important;
+  min-height:184px!important;
+  border-radius:22px!important;
+  background:linear-gradient(180deg,#2b5e99 0%,#1f4774 100%)!important;
+  color:#f6f9ff!important;
+  border-color:rgba(154,190,240,.38)!important;
+  box-shadow:0 14px 28px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.14)!important;
+}
+.programCourseRow.pending,
+.programCourseRow.normal{
+  background:linear-gradient(180deg,#2f68aa 0%,#225183 100%)!important;
+  color:#f8fbff!important;
+}
+.programCourseRow.selected,
+.programCourseRow.planned{
+  background:linear-gradient(180deg,#214e87 0%,#173b68 100%)!important;
+  color:#ffffff!important;
+  border-color:rgba(177,212,255,.48)!important;
+}
+.programCourseRow.unavailable{
+  background:linear-gradient(180deg,#52677f 0%,#3f5167 100%)!important;
+  color:rgba(241,247,255,.72)!important;
+  border-color:rgba(210,225,245,.34)!important;
+}
+.programCourseRow.done{
+  background:linear-gradient(180deg,#1e8b59 0%,#14633f 100%)!important;
+  color:#ffffff!important;
+}
+.programCourseMainButton,
+.programCourseRow .programCourseMainButton{
+  min-height:184px!important;
+  padding:54px 46px 38px 24px!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+}
+.programCourseRow .programCourseMainButton strong,
+.programCourseMainButton strong{
+  color:inherit!important;
+  font-size:20px!important;
+  line-height:1.28!important;
+  -webkit-line-clamp:3!important;
+  word-break:break-word!important;
+}
+.programCourseCreditPill,
+.programCourseMainButton .programCourseCreditPill{
+  top:18px!important;
+  left:24px!important;
+  height:30px!important;
+  min-width:58px!important;
+  padding:0 13px!important;
+  background:rgba(224,238,255,.18)!important;
+  border-color:rgba(255,255,255,.28)!important;
+  color:inherit!important;
+  font-size:13px!important;
+  opacity:.98!important;
+}
+.programCourseInfoDot{
+  right:16px!important;
+  bottom:16px!important;
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  background:rgba(230,241,255,.20)!important;
+}
+.programCourseModal .programCourseVariantList article:only-child > button:last-child{
+  display:none!important;
+}
+.programCourseModal .programCourseVariantList article:only-child::after{
+  content:'只有一個班別，點課程卡片會直接選取';
+  display:block;
+  margin-top:12px;
+  color:#5b6b83;
+  font-size:13px;
+  font-weight:700;
+}
+
+@media(max-width:760px){
+  .searchPage .courseList{grid-template-columns:1fr!important;gap:14px!important;}
+  .searchPage .courseList .courseCard,.courseList .courseCard{height:210px!important;min-height:210px!important;max-height:210px!important;padding:54px 18px 72px 18px!important;}
+  .programCourseList{grid-template-columns:1fr!important;gap:14px!important;}
+  .programCourseRow{height:168px!important;min-height:168px!important;}
+  .programCourseMainButton,.programCourseRow .programCourseMainButton{min-height:168px!important;padding:50px 42px 36px 20px!important;}
+  .programCourseRow .programCourseMainButton strong,.programCourseMainButton strong{font-size:17px!important;line-height:1.28!important;}
+}
