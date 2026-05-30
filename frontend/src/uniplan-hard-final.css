@@ -1395,76 +1395,153 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   border-color:rgba(239,68,68,.24)!important;
 }
 
-/* === Auth viewport fit fix ===
-   Keep register/forgot submit buttons reachable on 1080p and smaller screens. */
-.login.authPage,
-.authPage.login,
-.authPage{
-  min-height:100svh!important;
-  height:100svh!important;
-  overflow-y:auto!important;
+/* === Auth v3 redesign: cleaner account center + safer reset flow === */
+.authV3Page{
+  min-height:100vh!important;
+  height:100vh!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(420px,1fr) minmax(420px,520px)!important;
   align-items:center!important;
-  padding:clamp(18px, 3.2vw, 44px)!important;
+  gap:clamp(28px,5vw,84px)!important;
+  padding:clamp(28px,5vw,72px)!important;
 }
-.login.authPage .authHero,
-.authHero{
-  align-self:center!important;
+.authV3Hero{
+  min-height:420px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+  border-radius:36px!important;
+  background:linear-gradient(145deg,rgba(14,38,75,.72),rgba(8,24,48,.86))!important;
 }
-.login.authPage .authCard,
-.authCard{
-  max-height:calc(100svh - 48px)!important;
-  overflow-y:auto!important;
-  padding:clamp(22px, 2.4vw, 30px)!important;
-  scrollbar-width:thin;
+.authV3Hero h1{
+  font-size:clamp(3.2rem,6vw,5.6rem)!important;
+  letter-spacing:-.06em!important;
 }
-.login.authPage .authCard h2,
-.authCard h2{
-  font-size:clamp(1.55rem, 2vw, 2rem)!important;
-  margin-bottom:6px!important;
+.authV3Card{
+  width:100%!important;
+  max-width:520px!important;
+  max-height:calc(100vh - 56px)!important;
+  overflow:auto!important;
+  padding:34px!important;
+  border-radius:28px!important;
+  scrollbar-gutter:stable!important;
 }
-.login.authPage .authCard > p,
-.authCard > p{
-  margin-bottom:14px!important;
-  line-height:1.45!important;
+.authV3Card::-webkit-scrollbar{width:8px!important;}
+.authV3Card::-webkit-scrollbar-thumb{background:rgba(71,97,127,.28)!important;border-radius:999px!important;}
+.authV3Header{margin-bottom:22px!important;}
+.authV3Eyebrow{
+  display:inline-flex!important;
+  margin-bottom:10px!important;
+  padding:7px 11px!important;
+  border-radius:999px!important;
+  background:rgba(47,128,237,.11)!important;
+  color:#2563eb!important;
+  font-weight:900!important;
+  font-size:.82rem!important;
+  letter-spacing:.04em!important;
 }
-.login.authPage .authSwitch,
-.authSwitch{
-  margin-bottom:14px!important;
+.authV3Card h2{
+  margin:0 0 10px!important;
+  font-size:clamp(2rem,4vw,2.6rem)!important;
+  line-height:1.08!important;
+  letter-spacing:-.04em!important;
+  color:#10233f!important;
 }
-.login.authPage .authField,
-.authField{
-  gap:5px!important;
-  margin-bottom:11px!important;
+.authV3Card .authV3Header p{
+  margin:0!important;
+  color:#506783!important;
+  font-size:1rem!important;
+  line-height:1.65!important;
 }
-.login.authPage .authField input,
-.authField input{
-  height:46px!important;
+.authV3Card .authField{
+  margin-bottom:16px!important;
+  gap:8px!important;
 }
-.login.authPage .authSubmit,
-.login.authPage .authGuest,
-.authSubmit,
-.authGuest{
+.authV3Card .authField span{
+  color:#263f5e!important;
+  font-size:.98rem!important;
+}
+.authV3Card .authField input{
+  height:54px!important;
+  border-radius:16px!important;
+  font-size:1.02rem!important;
+  padding:0 16px!important;
+}
+.authV3Card.registerMode .authField{
+  margin-bottom:12px!important;
+}
+.authV3Card.registerMode .authField input{
+  height:50px!important;
+}
+.authV3Card .authSubmit{
+  min-height:54px!important;
+  border-radius:16px!important;
+  margin-top:8px!important;
+  font-size:1.05rem!important;
+  box-shadow:0 14px 28px color-mix(in srgb,var(--accent,#2f80ed) 24%,transparent)!important;
+}
+.authGoogleStub{
+  width:100%!important;
+  min-height:50px!important;
+  border-radius:16px!important;
+  margin-top:12px!important;
+  border:1px dashed rgba(79,102,132,.38)!important;
+  background:rgba(255,255,255,.62)!important;
+  color:#6b7f98!important;
+  font-weight:900!important;
+  cursor:not-allowed!important;
+}
+.authV3Links{
+  display:flex!important;
+  justify-content:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+  margin:16px 0 2px!important;
+}
+.authV3Links button{
+  border:0!important;
+  background:transparent!important;
+  color:#2563eb!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+  padding:8px 10px!important;
+  border-radius:999px!important;
+}
+.authV3Links button:hover{
+  background:rgba(37,99,235,.08)!important;
+}
+.authV3Card .authGuest{
+  margin-top:8px!important;
   min-height:48px!important;
+  border-radius:16px!important;
 }
-.login.authPage .authCard small,
-.authCard small{
-  margin-top:10px!important;
+.login.authPage .authNotice,
+.authNotice{
+  margin:8px 0 12px!important;
+  padding:11px 13px!important;
+  border-radius:14px!important;
+  color:#125c35!important;
+  background:rgba(34,197,94,.12)!important;
+  border:1px solid rgba(34,197,94,.28)!important;
+  font-weight:850!important;
+}
+.authV3Card small{
+  margin-top:14px!important;
+  color:#687d99!important;
+}
+@media (max-width: 1020px){
+  .authV3Page{
+    grid-template-columns:1fr!important;
+    padding:22px!important;
+    overflow:auto!important;
+    height:auto!important;
+  }
+  .authV3Hero{display:none!important;}
+  .authV3Card{margin:auto!important; max-height:none!important;}
 }
 @media (max-height: 760px){
-  .login.authPage,
-  .authPage.login,
-  .authPage{
-    align-items:start!important;
-    padding:14px 22px!important;
-  }
-  .login.authPage .authHero,
-  .authHero{
-    display:none!important;
-  }
-  .login.authPage .authCard,
-  .authCard{
-    max-width:560px!important;
-    margin:0 auto!important;
-    max-height:calc(100svh - 28px)!important;
-  }
+  .authV3Page{grid-template-columns:1fr!important; overflow:auto!important; height:auto!important; align-items:start!important;}
+  .authV3Hero{display:none!important;}
+  .authV3Card{margin:0 auto!important; max-height:none!important;}
 }

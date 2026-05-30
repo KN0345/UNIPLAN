@@ -12,8 +12,8 @@ function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: jsonHeaders })
 }
 
-function error(message, status = 400) {
-  return json({ ok: false, error: message }, status)
+function error(message, status = 400, extra = {}) {
+  return json({ ok: false, error: message, ...extra }, status)
 }
 
 function normalizeStudentId(value) {
@@ -82,6 +82,60 @@ function randomSalt() {
   return base64UrlEncode(bytes)
 }
 
+function randomResetCode() {
+  const bytes = new Uint8Array(4)
+  crypto.getRandomValues(bytes)
+  const value = ((bytes[0] << 24) >>> 0) + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3]
+  return String(value % 1000000).padStart(6, '0')
+}
+
+async function sendResetEmail(env, to, code) {
+  if (!env.RESEND_API_KEY || !env.RESET_FROM_EMAIL) {
+    throw new Error('尚未設定寄信服務，請在 Cloudflare 新增 RESEND_API_KEY 與 RESET_FROM_EMAIL')
+  }
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: env.RESET_FROM_EMAIL,
+      to,
+      subject: 'UniPlan 密碼重設驗證碼',
+      html: `<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.7;color:#10233f"><h2>UniPlan 密碼重設</h2><p>你的驗證碼是：</p><p style="font-size:28px;font-weight:800;letter-spacing:6px">${code}</p><p>此驗證碼 10 分鐘內有效。若不是你本人操作，請忽略這封信。</p></div>`,
+    }),
+  })
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(`寄信失敗：${text || response.status}`)
+  }
+}
+
+
+async function sendVerificationEmail(env, to, code) {
+  if (!env.RESEND_API_KEY || !env.RESET_FROM_EMAIL) {
+    throw new Error('尚未設定寄信服務，請在 Cloudflare 新增 RESEND_API_KEY 與 RESET_FROM_EMAIL')
+  }
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: env.RESET_FROM_EMAIL,
+      to,
+      subject: 'UniPlan Email 驗證碼',
+      html: `<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.7;color:#10233f"><h2>UniPlan Email 驗證</h2><p>你的驗證碼是：</p><p style="font-size:28px;font-weight:800;letter-spacing:6px">${code}</p><p>此驗證碼 10 分鐘內有效。完成驗證後才能登入 UniPlan。</p></div>`,
+    }),
+  })
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    throw new Error(`寄信失敗：${text || response.status}`)
+  }
+}
+
 function getSql(env) {
   if (!env.DATABASE_URL) throw new Error('DATABASE_URL 未設定')
   return neon(env.DATABASE_URL)
@@ -106,6 +160,14 @@ async function ensureSchema(sql) {
   await sql`alter table users add column if not exists google_id text`
   await sql`alter table users add column if not exists email_verified boolean default false`
   await sql`alter table users add column if not exists updated_at timestamp default now()`
+  await sql`alter table users add column if not exists verification_code_hash text`
+  await sql`alter table users add column if not exists verification_code_salt text`
+  await sql`alter table users add column if not exists verification_expires_at timestamp`
+  await sql`alter table users add column if not exists verification_attempts integer not null default 0`
+  await sql`alter table users add column if not exists reset_code_hash text`
+  await sql`alter table users add column if not exists reset_code_salt text`
+  await sql`alter table users add column if not exists reset_expires_at timestamp`
+  await sql`alter table users add column if not exists reset_attempts integer not null default 0`
 
   await sql`
     create table if not exists user_settings (
@@ -148,6 +210,8 @@ function publicUser(row) {
     offline: false,
     localAccount: false,
     cloudAccount: true,
+    emailVerified: Boolean(row.email_verified),
+    email: row.email || row.profile?.email || '',
     profile: row.profile || {},
   }
 }
@@ -227,39 +291,166 @@ async function handleRegister(request, env, sql) {
   const body = await readBody(request)
   const studentId = normalizeStudentId(body.student_id || body.studentId)
   const password = String(body.password || '')
+  const email = normalizeEmail(body.email)
   if (!/^\d{9}$/.test(studentId)) return error('學號必須為 9 碼數字')
+  if (!email) return error('請輸入 Email')
   if (password.length < 6) return error('密碼至少需要 6 碼')
-  const exists = await sql`select id from users where student_id = ${studentId} limit 1`
-  if (exists.length) return error('此學號已註冊雲端帳號', 409)
+  const exists = await sql`select id from users where student_id = ${studentId} or lower(email) = ${email} limit 1`
+  if (exists.length) return error('此學號或 Email 已註冊雲端帳號', 409)
   const salt = randomSalt()
   const passwordHash = await hashPassword(password, salt)
   const role = ADMIN_STUDENT_IDS.has(studentId) ? 'super_admin' : 'student'
-  const profile = profileFromBody({ ...body, displayName: body.displayName || body.display_name || studentId })
+  const profile = profileFromBody({ ...body, displayName: body.displayName || body.display_name || studentId, email })
+  const code = randomResetCode()
+  const verificationSalt = randomSalt()
+  const verificationHash = await hashPassword(code, verificationSalt)
+  await sendVerificationEmail(env, email, code)
   const rows = await sql`
-    insert into users (student_id, email, display_name, password_hash, password_salt, role, profile, updated_at)
-    values (${studentId}, ${profile.email || null}, ${profile.displayName || studentId}, ${passwordHash}, ${salt}, ${role}, ${JSON.stringify(profile)}, now())
+    insert into users (student_id, email, display_name, password_hash, password_salt, role, profile, email_verified, verification_code_hash, verification_code_salt, verification_expires_at, verification_attempts, updated_at)
+    values (${studentId}, ${email}, ${profile.displayName || studentId}, ${passwordHash}, ${salt}, ${role}, ${JSON.stringify(profile)}, false, ${verificationHash}, ${verificationSalt}, now() + interval '10 minutes', 0, now())
     returning *
   `
-  const user = publicUser(rows[0])
-  const token = await signToken({ uid: user.id, sid: studentId }, env.JWT_SECRET || 'uniplan-dev-secret')
-  return json({ ok: true, token, user, profile })
+  return json({
+    ok: true,
+    requiresVerification: true,
+    user: { studentId, student_id: studentId, email, emailVerified: false },
+    profile,
+    message: '帳號已建立，Email 驗證碼已寄出；完成驗證後才能登入',
+  })
 }
 
 async function handleLogin(request, env, sql) {
   const body = await readBody(request)
-  const studentId = normalizeStudentId(body.student_id || body.studentId)
+  const identifier = normalizeStudentId(body.identifier || body.student_id || body.studentId)
   const password = String(body.password || '')
-  const rows = await sql`select * from users where student_id = ${studentId} limit 1`
+  const email = normalizeEmail(identifier)
+  const rows = identifier.includes('@')
+    ? await sql`select * from users where lower(email) = ${email} limit 1`
+    : await sql`select * from users where student_id = ${identifier} limit 1`
   if (!rows.length) return error('找不到此雲端帳號', 404)
   const row = rows[0]
   if (!row.password_salt) return error('此帳號缺少密碼鹽值，請重新註冊或重設密碼', 409)
   const passwordHash = await hashPassword(password, row.password_salt)
   if (passwordHash !== row.password_hash) return error('密碼錯誤', 401)
+  if (!row.email_verified) return error('此帳號尚未完成 Email 驗證，請先輸入驗證碼或重新寄送驗證信', 403, { code: 'EMAIL_NOT_VERIFIED', studentId: row.student_id, email: row.email })
   await sql`update users set last_login = now(), updated_at = now() where id = ${row.id}`
   const user = publicUser(row)
-  const token = await signToken({ uid: user.id, sid: studentId }, env.JWT_SECRET || 'uniplan-dev-secret')
+  const token = await signToken({ uid: user.id, sid: user.studentId }, env.JWT_SECRET || 'uniplan-dev-secret')
   const data = await loadUserBundle(sql, row.id)
   return json({ ok: true, token, user, profile: row.profile || {}, data })
+}
+
+
+
+async function handleVerifyEmail(request, env, sql) {
+  const body = await readBody(request)
+  const studentId = normalizeStudentId(body.student_id || body.studentId)
+  const email = normalizeEmail(body.email)
+  const code = String(body.code || body.verificationCode || '').trim()
+  if (!/^\d{9}$/.test(studentId)) return error('學號必須為 9 碼數字')
+  if (!email) return error('請輸入註冊 Email')
+  if (!/^\d{6}$/.test(code)) return error('驗證碼必須為 6 碼數字')
+  const rows = await sql`select * from users where student_id = ${studentId} and lower(email) = ${email} limit 1`
+  if (!rows.length) return error('找不到符合的帳號與 Email', 404)
+  const row = rows[0]
+  if (row.email_verified) {
+    const user = publicUser(row)
+    const token = await signToken({ uid: user.id, sid: user.studentId }, env.JWT_SECRET || 'uniplan-dev-secret')
+    const data = await loadUserBundle(sql, row.id)
+    return json({ ok: true, token, user, profile: row.profile || {}, data, message: 'Email 已完成驗證' })
+  }
+  if (!row.verification_code_hash || !row.verification_code_salt || !row.verification_expires_at) return error('尚未申請 Email 驗證碼', 400)
+  if (new Date(row.verification_expires_at).getTime() < Date.now()) return error('驗證碼已過期，請重新寄送', 400)
+  if ((row.verification_attempts || 0) >= 5) return error('驗證碼錯誤次數過多，請重新寄送', 429)
+  const codeHash = await hashPassword(code, row.verification_code_salt)
+  if (codeHash !== row.verification_code_hash) {
+    await sql`update users set verification_attempts = coalesce(verification_attempts, 0) + 1 where id = ${row.id}`
+    return error('驗證碼錯誤', 401)
+  }
+  const verifiedRows = await sql`
+    update users
+    set email_verified = true, verification_code_hash = null, verification_code_salt = null, verification_expires_at = null, verification_attempts = 0, last_login = now(), updated_at = now()
+    where id = ${row.id}
+    returning *
+  `
+  const user = publicUser(verifiedRows[0])
+  const token = await signToken({ uid: user.id, sid: user.studentId }, env.JWT_SECRET || 'uniplan-dev-secret')
+  const data = await loadUserBundle(sql, row.id)
+  return json({ ok: true, token, user, profile: verifiedRows[0].profile || {}, data, message: 'Email 驗證完成，已登入 UniPlan' })
+}
+
+async function handleResendVerification(request, env, sql) {
+  const body = await readBody(request)
+  const studentId = normalizeStudentId(body.student_id || body.studentId)
+  const email = normalizeEmail(body.email)
+  if (!/^\d{9}$/.test(studentId)) return error('學號必須為 9 碼數字')
+  if (!email) return error('請輸入註冊 Email')
+  const rows = await sql`select * from users where student_id = ${studentId} and lower(email) = ${email} limit 1`
+  if (!rows.length) return error('找不到符合的帳號與 Email', 404)
+  const row = rows[0]
+  if (row.email_verified) return json({ ok: true, message: '此 Email 已完成驗證' })
+  const code = randomResetCode()
+  const salt = randomSalt()
+  const codeHash = await hashPassword(code, salt)
+  await sendVerificationEmail(env, email, code)
+  await sql`
+    update users
+    set verification_code_hash = ${codeHash}, verification_code_salt = ${salt}, verification_expires_at = now() + interval '10 minutes', verification_attempts = 0, updated_at = now()
+    where id = ${row.id}
+  `
+  return json({ ok: true, message: 'Email 驗證碼已重新寄出，請在 10 分鐘內完成驗證' })
+}
+
+async function handlePasswordRequest(request, env, sql) {
+  const body = await readBody(request)
+  const studentId = normalizeStudentId(body.student_id || body.studentId)
+  const email = normalizeEmail(body.email)
+  if (!/^\d{9}$/.test(studentId)) return error('學號必須為 9 碼數字')
+  if (!email) return error('請輸入註冊 Email')
+  const rows = await sql`select * from users where student_id = ${studentId} and lower(email) = ${email} limit 1`
+  if (!rows.length) return error('找不到符合的帳號與 Email', 404)
+  if (!rows[0].email_verified) return error('此帳號尚未完成 Email 驗證，請先完成驗證再重設密碼', 403, { code: 'EMAIL_NOT_VERIFIED' })
+  const code = randomResetCode()
+  const salt = randomSalt()
+  const codeHash = await hashPassword(code, salt)
+  await sendResetEmail(env, email, code)
+  await sql`
+    update users
+    set reset_code_hash = ${codeHash}, reset_code_salt = ${salt}, reset_expires_at = now() + interval '10 minutes', reset_attempts = 0, updated_at = now()
+    where id = ${rows[0].id}
+  `
+  return json({ ok: true, message: '驗證碼已寄出，請在 10 分鐘內完成重設' })
+}
+
+async function handlePasswordReset(request, env, sql) {
+  const body = await readBody(request)
+  const studentId = normalizeStudentId(body.student_id || body.studentId)
+  const email = normalizeEmail(body.email)
+  const code = String(body.code || '').trim()
+  const newPassword = String(body.new_password || body.newPassword || '')
+  if (!/^\d{9}$/.test(studentId)) return error('學號必須為 9 碼數字')
+  if (!email) return error('請輸入註冊 Email')
+  if (!/^\d{6}$/.test(code)) return error('驗證碼必須為 6 碼數字')
+  if (newPassword.length < 6) return error('新密碼至少需要 6 碼')
+  const rows = await sql`select * from users where student_id = ${studentId} and lower(email) = ${email} limit 1`
+  if (!rows.length) return error('找不到符合的帳號與 Email', 404)
+  const row = rows[0]
+  if (!row.reset_code_hash || !row.reset_code_salt || !row.reset_expires_at) return error('尚未申請重設驗證碼', 400)
+  if (new Date(row.reset_expires_at).getTime() < Date.now()) return error('驗證碼已過期，請重新申請', 400)
+  if ((row.reset_attempts || 0) >= 5) return error('驗證碼錯誤次數過多，請重新申請', 429)
+  const codeHash = await hashPassword(code, row.reset_code_salt)
+  if (codeHash !== row.reset_code_hash) {
+    await sql`update users set reset_attempts = coalesce(reset_attempts, 0) + 1 where id = ${row.id}`
+    return error('驗證碼錯誤', 401)
+  }
+  const salt = randomSalt()
+  const passwordHash = await hashPassword(newPassword, salt)
+  await sql`
+    update users
+    set password_hash = ${passwordHash}, password_salt = ${salt}, reset_code_hash = null, reset_code_salt = null, reset_expires_at = null, reset_attempts = 0, updated_at = now()
+    where id = ${row.id}
+  `
+  return json({ ok: true, message: '密碼已重設，請重新登入' })
 }
 
 async function handleMe(request, env, sql) {
@@ -375,6 +566,10 @@ export async function onRequest(context) {
     if (method === 'POST' && path === '/auth/register') return handleRegister(request, env, sql)
     if (method === 'POST' && path === '/auth/login') return handleLogin(request, env, sql)
     if (method === 'POST' && path === '/auth/logout') return json({ ok: true })
+    if (method === 'POST' && path === '/auth/verify-email') return handleVerifyEmail(request, env, sql)
+    if (method === 'POST' && path === '/auth/verification/resend') return handleResendVerification(request, env, sql)
+    if (method === 'POST' && path === '/auth/password/request') return handlePasswordRequest(request, env, sql)
+    if (method === 'POST' && path === '/auth/password/reset') return handlePasswordReset(request, env, sql)
     if (method === 'GET' && path === '/auth/me') return handleMe(request, env, sql)
     if (method === 'PUT' && path === '/auth/profile') return handleProfile(request, env, sql)
     if (method === 'GET' && path === '/user/data') return handleGetUserData(request, env, sql)

@@ -19,9 +19,30 @@ export async function register(student_id, password, extra = {}) {
   return data
 }
 
-export async function login(student_id, password) {
-  const { data } = await api.post('/auth/login', { student_id, password })
+export async function login(identifier, password) {
+  const { data } = await api.post('/auth/login', { identifier, student_id: identifier, password })
   if (data?.token) localStorage.setItem('uniplan:token', data.token)
+  return data
+}
+
+export async function verifyEmail(student_id, email, code) {
+  const { data } = await api.post('/auth/verify-email', { student_id, email, code })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
+  return data
+}
+
+export async function resendVerification(student_id, email) {
+  const { data } = await api.post('/auth/verification/resend', { student_id, email })
+  return data
+}
+
+export async function requestPasswordReset(student_id, email) {
+  const { data } = await api.post('/auth/password/request', { student_id, email })
+  return data
+}
+
+export async function resetPassword(student_id, email, code, new_password) {
+  const { data } = await api.post('/auth/password/reset', { student_id, email, code, new_password })
   return data
 }
 

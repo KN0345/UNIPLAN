@@ -108,8 +108,8 @@ function App() {
     localReviews, setLocalReviews, tagVotes, setTagVotes, applyRemoteBundle, makeUserBundle,
   } = usePersistentAcademicState()
   const {
-    user, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError,
-    accountProfile, handleLogin, handleGuestLogin, logout,
+    user, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError, authNotice, resetRequested,
+    accountProfile, handleLogin, handleResendVerification, handleGuestLogin, logout,
   } = useAccountState({
     notify,
     applyRemoteBundle,
@@ -225,7 +225,7 @@ function App() {
   }, [user?.studentId, user?.publicAlpha, plan, candidates, favorites, snapshots, localReviews, tagVotes])
 
   if (!user) {
-    return <LoginPage authMode={authMode} setAuthMode={setAuthMode} loginForm={loginForm} setLoginForm={setLoginForm} studentIdPreview={studentIdPreview} authError={authError} handleLogin={handleLogin} handleGuestLogin={handleGuestLogin} />
+    return <LoginPage authMode={authMode} setAuthMode={setAuthMode} loginForm={loginForm} setLoginForm={setLoginForm} studentIdPreview={studentIdPreview} authError={authError} authNotice={authNotice} resetRequested={resetRequested} handleLogin={handleLogin} handleResendVerification={handleResendVerification} handleGuestLogin={handleGuestLogin} />
   }
 
   return (
