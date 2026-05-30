@@ -347,7 +347,7 @@ function App() {
 
         {activeMenu === 'adminPrograms' && isSuperAdminUser(user) && <AdminProgramsPage />}
 
-        {coursePopover && <CoursePopover data={coursePopover} onClose={() => setCoursePopover(null)} onStatus={setPlannedCourseStatus} onMove={movePlannedCourse} onInfo={(course) => { setCoursePopover(null); openCourseInfo(course) }} onFavorite={toggleFavorite} />}
+        {coursePopover && <CoursePopover data={coursePopover} onClose={() => setCoursePopover(null)} onStatus={setPlannedCourseStatus} onMove={movePlannedCourse} onInfo={(course) => { setCoursePopover(null); openCourseInfo(course) }} onFavorite={toggleFavorite} favorites={favorites} />}
         {infoOpen && <div className="infoOverlay" onMouseDown={(e) => { if (e.target.className === 'infoOverlay') setInfoOpen(false) }}><div className="infoDrawerPanel"><button className="closeInfo" onClick={() => setInfoOpen(false)}>關閉</button><CourseInfo course={selectedCourse} reviews={reviews} tagVotes={tagVotes} onTagVote={toggleTeacherTag} userId={userKey(user)} onAddReview={handleAddReview} onUpdateReview={updateLocalReview} onDeleteReview={deleteLocalReview} /></div></div>}
       </main>
       {toast && <div className="toast" role="status">{toast}</div>}

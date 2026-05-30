@@ -2702,3 +2702,17 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
 .adminImportControls input:not([type]){
   width:100%!important;
 }
+
+/* Favorite state in planner course popover */
+.coursePopover .favoritePopoverAction.active{
+  color:#f8d96a !important;
+  border-color:rgba(248,217,106,.56) !important;
+  background:linear-gradient(180deg, rgba(248,217,106,.22), rgba(248,217,106,.08)) !important;
+  box-shadow:0 12px 24px rgba(248,217,106,.10) !important;
+}
+.coursePopover .favoritePopoverAction{
+  transition:transform .16s ease, background .16s ease, color .16s ease, border-color .16s ease;
+}
+.coursePopover .favoritePopoverAction:active{
+  transform:scale(.96);
+}

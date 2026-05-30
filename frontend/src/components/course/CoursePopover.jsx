@@ -1,16 +1,17 @@
 import { createPortal } from 'react-dom'
-import { SEMESTERS, STATUS, STATUS_ORDER, courseStatus, credits, getCourse, uid } from '../../utils/coursePlanning'
+import { SEMESTERS, STATUS, STATUS_ORDER, courseKey, courseStatus, credits, getCourse, uid } from '../../utils/coursePlanning'
 
 function nextStatus(value) {
   const index = STATUS_ORDER.indexOf(value)
   return STATUS_ORDER[(index + 1) % STATUS_ORDER.length]
 }
 
-function CoursePopover({ data, onClose, onStatus, onMove, onInfo, onFavorite }) {
+function CoursePopover({ data, onClose, onStatus, onMove, onInfo, onFavorite, favorites = [] }) {
   if (!data?.course) return null
   const course = data.course
   const c = getCourse(course)
   const status = courseStatus(course)
+  const isFavorite = favorites.some((fav) => courseKey(fav) === courseKey(c))
   const popoverWidth = 282
   const popoverHeight = 310
   const viewportW = typeof window === 'undefined' ? 1200 : window.innerWidth
@@ -28,7 +29,7 @@ function CoursePopover({ data, onClose, onStatus, onMove, onInfo, onFavorite }) 
           <button className="miniClose" onClick={onClose}>×</button>
         </div>
         <div className="popoverActions">
-          <button onClick={() => onFavorite(c)}>☆ 收藏</button>
+          <button className={isFavorite ? 'favoritePopoverAction active' : 'favoritePopoverAction'} onClick={() => onFavorite(c)} title={isFavorite ? '取消收藏' : '收藏'}>{isFavorite ? '★ 已收藏' : '☆ 收藏'}</button>
           <button onClick={() => onInfo(c)}>資訊</button>
         </div>
         <div className="moveBlock">
