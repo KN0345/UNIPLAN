@@ -2434,3 +2434,28 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   .authV5FeatureList{margin-top:22px!important;}
   .authV5Stats{margin-top:22px!important;}
 }
+
+/* UniPlan auth loading state */
+.authSubmit{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+}
+.authSubmit:disabled,
+.authSubmit.isLoading{
+  cursor:progress!important;
+  opacity:.88!important;
+  filter:saturate(.92)!important;
+}
+.authButtonSpinner{
+  width:18px!important;
+  height:18px!important;
+  border-radius:999px!important;
+  border:2px solid rgba(255,255,255,.48)!important;
+  border-top-color:#fff!important;
+  animation:uniplanAuthSpin .72s linear infinite!important;
+  flex:0 0 auto!important;
+}
+@keyframes uniplanAuthSpin{to{transform:rotate(360deg)}}

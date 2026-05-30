@@ -99,21 +99,22 @@ export async function syncUserData(bundle) {
 function normalizeCatalogTermForApi(value) {
   const raw = String(value || '').trim()
   if (!raw || raw === '全部') return ''
-  if (/114\s*[_-]?\s*1|114\s*上|1141|114學年度上|上學期|1CLASS/i.test(raw)) return '1141CLASS'
-  if (/114\s*[_-]?\s*2|114\s*下|1142|114學年度下|下學期|2CLASS/i.test(raw)) return '1142CLASS'
+  if (/1142CLASS/i.test(raw) || /114\s*[_-]?\s*2/.test(raw) || /114\s*下/.test(raw) || /1142/.test(raw) || /114學年度下/.test(raw) || /下學期/.test(raw) || /2CLASS/i.test(raw)) return '1142CLASS'
+  if (/1141CLASS/i.test(raw) || /114\s*[_-]?\s*1/.test(raw) || /114\s*上/.test(raw) || /1141/.test(raw) || /114學年度上/.test(raw) || /上學期/.test(raw) || /1CLASS/i.test(raw)) return '1141CLASS'
   return raw
 }
 
 function matchesStaticCourse(course, params = {}) {
   const keyword = String(params.keyword || '').trim().toLowerCase()
-  const semester = normalizeCatalogTermForApi(params.semester || '')
+  const semester = normalizeCatalogTermForApi(params.semester || params.term || params.catalogTerm || '')
   const department = String(params.department || '').trim()
   const grade = String(params.grade || '').trim()
   const weekday = String(params.weekday || '').trim()
   const period = String(params.period || '').trim()
-  const haystack = [course.name, course.teacher, course.serial, course.code, course.department, course.major, course.category, course.class_name].join(' ').toLowerCase()
+  const haystack = [course.name, course.course_name, course.teacher, course.instructor, course.serial, course.code, course.course_id, course.department, course.major, course.category, course.class_name].join(' ').toLowerCase()
   if (keyword && !haystack.includes(keyword)) return false
-  if (semester && normalizeCatalogTermForApi(course.semester_source || course.semester || course.term || course.catalog_term) !== semester) return false
+  const courseTerm = normalizeCatalogTermForApi(course.semester_source || course.semester || course.term || course.source_term || course.catalog_term)
+  if (semester && courseTerm !== semester) return false
   if (department && department !== '全部' && course.department !== department) return false
   if (grade && grade !== '全部' && String(course.grade || '') !== grade) return false
   const timeText = String(course.time_info || course.time_data || '')

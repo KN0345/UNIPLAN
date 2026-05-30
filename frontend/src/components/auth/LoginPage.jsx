@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 export default function LoginPage({
   authMode,
   setAuthMode,
@@ -17,6 +19,18 @@ export default function LoginPage({
   const isLogin = authMode === 'login'
   const isVerify = authMode === 'verify'
   const isGoogleSetup = authMode === 'google-setup'
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  async function submitWithLoading(event) {
+    event.preventDefault()
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      await handleLogin(event)
+    } finally {
+      window.setTimeout(() => setIsSubmitting(false), 220)
+    }
+  }
 
   function updateField(key, value) {
     setLoginForm({ ...loginForm, [key]: value })
@@ -93,7 +107,7 @@ export default function LoginPage({
         </div>
       </section>
 
-      <form className={`authCard authV4Card ${isRegister ? 'registerInfoMode' : ''} ${isRegisterPassword ? 'registerPasswordMode' : ''} ${isForgot ? 'forgotMode' : ''} ${isGoogleSetup ? 'googleSetupMode' : ''}`} onSubmit={handleLogin}>
+      <form className={`authCard authV4Card ${isRegister ? 'registerInfoMode' : ''} ${isRegisterPassword ? 'registerPasswordMode' : ''} ${isForgot ? 'forgotMode' : ''} ${isGoogleSetup ? 'googleSetupMode' : ''}`} onSubmit={submitWithLoading}>
         <div className="authV4Header">
           <span className="authV4Eyebrow">UniPlan Account</span>
           <h2>{title}</h2>
@@ -235,8 +249,9 @@ export default function LoginPage({
         {authError && <p className="authError">{authError}</p>}
         {authNotice && <p className="authNotice">{authNotice}</p>}
 
-        <button className="authSubmit" type="submit">
-          {isGoogleSetup ? '完成設定並登入' : isVerify ? '完成驗證並登入' : isForgot ? (resetRequested ? '確認重設密碼' : '寄送驗證碼') : isRegister ? '下一步' : isRegisterPassword ? '建立帳號並寄送驗證碼' : '登入'}
+        <button className={`authSubmit ${isSubmitting ? 'isLoading' : ''}`} type="submit" disabled={isSubmitting}>
+          {isSubmitting && <span className="authButtonSpinner" aria-hidden="true" />}
+          <span>{isSubmitting ? '處理中…' : (isGoogleSetup ? '完成設定並登入' : isVerify ? '完成驗證並登入' : isForgot ? (resetRequested ? '確認重設密碼' : '寄送驗證碼') : isRegister ? '下一步' : isRegisterPassword ? '建立帳號並寄送驗證碼' : '登入')}</span>
         </button>
 
         {isLogin && (

@@ -709,8 +709,8 @@ function parseStudentIdLocal(studentId) {
 function normalizeCourseCatalogTerm(value) {
   const raw = String(value || '').trim()
   if (!raw || raw === '全部') return ''
-  if (/114\s*[_-]?\s*1|114\s*上|1141|114學年度上|上學期|1CLASS/i.test(raw)) return '1141CLASS'
-  if (/114\s*[_-]?\s*2|114\s*下|1142|114學年度下|下學期|2CLASS/i.test(raw)) return '1142CLASS'
+  if (/1142CLASS/i.test(raw) || /114\s*[_-]?\s*2/.test(raw) || /114\s*下/.test(raw) || /1142/.test(raw) || /114學年度下/.test(raw) || /下學期/.test(raw) || /2CLASS/i.test(raw)) return '1142CLASS'
+  if (/1141CLASS/i.test(raw) || /114\s*[_-]?\s*1/.test(raw) || /114\s*上/.test(raw) || /1141/.test(raw) || /114學年度上/.test(raw) || /上學期/.test(raw) || /1CLASS/i.test(raw)) return '1141CLASS'
   return raw
 }
 
@@ -738,9 +738,9 @@ function courseMatchesQuery(course, searchParams) {
   const grade = String(searchParams.get('grade') || '').trim()
   const weekday = String(searchParams.get('weekday') || '').trim()
   const period = String(searchParams.get('period') || '').trim()
-
   if (keyword && !courseHaystack(course).includes(keyword)) return false
-  if (semester && normalizeCourseCatalogTerm(course.semester_source || course.semester || course.term || course.source_term || course.catalog_term) !== semester) return false
+  const courseTerm = normalizeCourseCatalogTerm(course.semester_source || course.semester || course.term || course.source_term || course.catalog_term)
+  if (semester && courseTerm !== semester) return false
   if (department && department !== '全部' && String(course.department || '') !== department) return false
   if (grade && grade !== '全部' && String(course.grade || '') !== grade) return false
   const timeText = String(course.time_info || course.time_data || '')
@@ -749,30 +749,31 @@ function courseMatchesQuery(course, searchParams) {
   return true
 }
 
-async function loadStaticCoursePayload(request) {
-  const assetUrl = new URL('/data/courses.json', request.url)
-  const response = await fetch(assetUrl.toString(), { headers: { accept: 'application/json' } })
+async function loadStaticCoursePayload(request, env) {
+  const assetRequest = new Request(new URL('/data/courses.json', request.url).toString(), { headers: { accept: 'application/json' } })
+  const response = env?.ASSETS?.fetch ? await env.ASSETS.fetch(assetRequest) : await fetch(assetRequest)
   if (!response.ok) throw new Error(`讀取課程資料失敗：${response.status}`)
   return response.json()
 }
 
-async function handleCourses(request) {
+async function handleCourses(request, env) {
   const url = new URL(request.url)
-  const payload = await loadStaticCoursePayload(request)
+  const payload = await loadStaticCoursePayload(request, env)
   const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
   const data = list.filter((course) => courseMatchesQuery(course, url.searchParams)).slice(0, 500)
   return json({ ok: true, data, total: data.length, source: 'static-json-api' })
 }
 
-async function handleCourseMetadata(request) {
-  const payload = await loadStaticCoursePayload(request)
+async function handleCourseMetadata(request, env) {
+  const payload = await loadStaticCoursePayload(request, env)
   const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
   const unique = (values) => Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), 'zh-Hant'))
+  const notClass = (item) => !/^[A-ZＡ-Ｚ]班?$|^[甲乙丙丁戊己庚辛壬癸]班?$|^[A-Z]$/i.test(String(item || '').trim())
   return json({
     ok: true,
     data: {
-      departments: unique(list.map((course) => course.department)).filter((item) => !/^[A-Z]?班$|^[A-Z]$/i.test(String(item))),
-      majors: unique(list.map((course) => course.major)).filter((item) => !/^[A-Z]?班$|^[A-Z]$/i.test(String(item))),
+      departments: unique(list.map((course) => course.department)).filter(notClass),
+      majors: unique(list.map((course) => course.major)).filter(notClass),
       grades: unique(list.map((course) => String(course.grade || ''))),
       categories: unique(list.map((course) => course.category)),
       semesters: unique(list.map((course) => normalizeCourseCatalogTerm(course.semester_source || course.semester || course.term))).filter(Boolean),
@@ -788,10 +789,8 @@ export async function onRequest(context) {
     const path = `/${(params.path || []).join('/')}`.replace(/\/+/g, '/')
     const method = request.method.toUpperCase()
 
-    // Course catalog currently remains static JSON, but is served through /api
-    // so the frontend keeps one stable API contract before Neon course import.
-    if (method === 'GET' && path === '/courses') return handleCourses(request)
-    if (method === 'GET' && path === '/courses/metadata') return handleCourseMetadata(request)
+    if (method === 'GET' && path === '/courses') return handleCourses(request, env)
+    if (method === 'GET' && path === '/courses/metadata') return handleCourseMetadata(request, env)
 
     const sql = getSql(env)
     await ensureSchema(sql)

@@ -93,9 +93,7 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
 
   const sortedFilteredCourses = useMemo(() => {
     const list = (courses || []).filter((course) => {
-      // Course source is controlled by courseCatalogTerm and /api/courses.
-      // Do not filter by the currently edited timetable semester here, otherwise
-      // selecting 114 下學期 while the planner is on 大一上 will incorrectly show 0 courses.
+      if (!courseMatchesSemester(course, activeSemester)) return false
       if (searchOnlyAvailable && findConflict(course, plan[activeSemester] || [])) return false
       return true
     })
