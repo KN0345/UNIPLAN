@@ -124,7 +124,7 @@ export function safeBackgroundImageValue(value) {
   const raw = String(value || '')
   if (!raw || raw === 'none') return ''
   // Avoid locking the app if an old localStorage image is malformed or far too large.
-  if (!raw.startsWith('data:image/') || raw.length > 4_000_000) return ''
+  if (!raw.startsWith('data:image/') || raw.length > 8_000_000) return ''
   return raw
 }
 
