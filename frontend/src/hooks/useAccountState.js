@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchSchedule, fetchUserData, login, logout as apiLogout, parseStudentId, register, updateProfile } from '../api'
-import { DEFAULT_ACCOUNT_PROFILE, PUBLIC_GUEST_USER, applyAdminRole, loadProfileForUser, parseTkuStudentIdLocal, profileStorageKey, purgeRemovedStudentLocalData, readStorageJson } from '../utils/account'
+import { completeGoogleSetup, fetchMe, fetchUserData, login, logout as apiLogout, parseStudentId, register, requestPasswordReset, resendVerification, resetPassword, updateProfile, verifyEmail } from '../api'
+import { DEFAULT_ACCOUNT_PROFILE, PUBLIC_GUEST_USER, applyAdminRole, loadProfileForUser, loadBoundAcademicBundle, loginLocalAccount, parseTkuStudentIdLocal, profileStorageKey, purgeRemovedStudentLocalData, readStorageJson, registerLocalAccount, resetLocalPassword } from '../utils/account'
 import { download, makePlan, userKey } from '../utils/coursePlanning'
 
 function profileFromParsed(parsed) {
@@ -14,17 +14,31 @@ function profileFromParsed(parsed) {
   }
 }
 
+function decodeJwtPayload(token) {
+  try {
+    const payload = String(token || '').split('.')[1]
+    if (!payload) return {}
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4)
+    return JSON.parse(decodeURIComponent(escape(atob(padded))))
+  } catch {
+    return {}
+  }
+}
+
 export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandidates, setFavorites, setSnapshots, setLocalReviews, setTagVotes, currentBundle }) {
   purgeRemovedStudentLocalData()
   const [user, setUser] = useState(() => {
     const storedUser = readStorageJson('uniplan:user', null)
-    return storedUser && typeof storedUser === 'object' ? applyAdminRole({ role: 'student', ...storedUser }) : PUBLIC_GUEST_USER
+    return storedUser && typeof storedUser === 'object' ? applyAdminRole({ role: 'student', ...storedUser }) : null
   })
-  const [loginForm, setLoginForm] = useState({ studentId: '', password: '', displayName: '', email: '' })
+  const [loginForm, setLoginForm] = useState({ studentId: '', password: '', displayName: '', email: '', newPassword: '', confirmPassword: '', resetCode: '', verificationCode: '', googleSetupToken: '', googleEmail: '', googleName: '', googlePicture: '' })
   const [authMode, setAuthMode] = useState('login')
   const [studentIdPreview, setStudentIdPreview] = useState(null)
   const [authError, setAuthError] = useState('')
-  const [accountProfile, setAccountProfile] = useState(() => loadProfileForUser(readStorageJson('uniplan:user', null) || PUBLIC_GUEST_USER))
+  const [authNotice, setAuthNotice] = useState('')
+  const [resetRequested, setResetRequested] = useState(false)
+  const [accountProfile, setAccountProfile] = useState(() => loadProfileForUser(readStorageJson('uniplan:user', null)))
 
   useEffect(() => {
     const sid = loginForm.studentId.trim()
@@ -45,6 +59,12 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
   }, [user, accountProfile])
 
   useEffect(() => {
+    if (authMode !== 'forgot') setResetRequested(false)
+    setAuthNotice('')
+  }, [authMode])
+
+
+  useEffect(() => {
     if (!user?.studentId) return
     const detected = profileFromParsed(parseTkuStudentIdLocal(user.studentId))
     if (!detected.admissionYear && !detected.department) return
@@ -52,69 +72,232 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
     if (needsPatch) setAccountProfile((prev) => ({ ...prev, ...detected }))
   }, [user?.studentId])
 
+
+  function applyAuthenticatedRemote(remote, parsed, fallbackProfile = {}) {
+    const nextUser = applyAdminRole(remote.user)
+    setUser(nextUser)
+    localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+    const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...profileFromParsed(parsed), ...fallbackProfile, ...(remote.profile || {}) }
+    setAccountProfile(nextProfile)
+    localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
+    if (remote.data) applyRemoteBundle(remote.data)
+    return nextUser
+  }
+
+  function shouldFallbackToLocal(error) {
+    return !error?.response || error?.response?.status >= 500
+  }
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('google_token')
+    const setupToken = params.get('google_setup')
+    const googleError = params.get('google_error')
+    if (googleError) {
+      setAuthMode('login')
+      setAuthError(decodeURIComponent(googleError))
+      window.history.replaceState({}, document.title, window.location.pathname)
+      return
+    }
+    if (setupToken) {
+      const setup = decodeJwtPayload(setupToken)
+      setAuthMode('google-setup')
+      setLoginForm((prev) => ({
+        ...prev,
+        studentId: '',
+        password: '',
+        displayName: setup.googleName || setup.name || prev.displayName || '',
+        email: setup.email || prev.email || '',
+        googleEmail: setup.email || '',
+        googleName: setup.googleName || setup.name || '',
+        googlePicture: setup.googlePicture || setup.picture || '',
+        googleSetupToken: setupToken,
+      }))
+      setAuthNotice('Google 帳號已驗證，請補上學號完成 UniPlan 首次設定。')
+      window.history.replaceState({}, document.title, window.location.pathname)
+      return
+    }
+    if (!token) return
+    let cancelled = false
+    async function completeGoogleLogin() {
+      try {
+        localStorage.setItem('uniplan:token', token)
+        const me = await fetchMe()
+        const data = await fetchUserData().catch(() => null)
+        if (cancelled) return
+        const remote = { user: me.user, profile: me.profile || {}, data: data?.data || null }
+        applyAuthenticatedRemote(remote, parseTkuStudentIdLocal(me.user?.studentId || ''))
+        notify('Google 登入成功，已載入雲端資料')
+      } catch (error) {
+        localStorage.removeItem('uniplan:token')
+        setAuthMode('login')
+        setAuthError(error?.response?.data?.error || error?.message || 'Google 登入失敗')
+      } finally {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    }
+    completeGoogleLogin()
+    return () => { cancelled = true }
+  }, [])
+
+
   async function handleLogin(e) {
     e.preventDefault()
     setAuthError('')
+    setAuthNotice('')
+    const sid = loginForm.studentId.trim()
+    const parsed = studentIdPreview?.valid ? studentIdPreview : parseTkuStudentIdLocal(sid)
     try {
-      if (authMode === 'register' && loginForm.studentId !== 'admin' && loginForm.studentId !== 'super') {
-        const parsed = studentIdPreview || parseTkuStudentIdLocal(loginForm.studentId)
-        if (!parsed?.valid) {
-          setAuthError(parsed?.reason || '學號格式錯誤')
+      if (!sid) throw new Error(authMode === 'login' ? '請輸入學號或 Email' : '請輸入學號')
+      if (authMode === 'google-setup') {
+        if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
+        if (!loginForm.googleSetupToken) throw new Error('Google 首次設定憑證已失效，請重新使用 Google 登入')
+        const remote = await completeGoogleSetup(loginForm.googleSetupToken, {
+          student_id: sid,
+          displayName: loginForm.displayName || loginForm.googleName || sid,
+          email: loginForm.googleEmail || loginForm.email,
+          ...profileFromParsed(parsed),
+        })
+        applyAuthenticatedRemote(remote, parsed, { email: loginForm.googleEmail || loginForm.email, boundGoogle: true, boundEmail: true })
+        setAuthMode('login')
+        setLoginForm((prev) => ({ ...prev, googleSetupToken: '', googleEmail: '', googleName: '', googlePicture: '', password: '' }))
+        notify(remote?.message || 'Google 帳號已完成首次設定')
+        return
+      }
+      if (authMode === 'register') {
+        if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
+        if (!loginForm.email.trim()) throw new Error('請輸入 Email')
+        setAuthMode('register-password')
+        return
+      }
+      if (authMode === 'forgot') {
+        if (!resetRequested) {
+          if (!/^\d{9}$/.test(sid)) throw new Error('請輸入 9 碼學號')
+          if (!loginForm.email.trim()) throw new Error('請輸入註冊 Email')
+          const res = await requestPasswordReset(sid, loginForm.email.trim())
+          setResetRequested(true)
+          setAuthNotice(res?.message || '驗證碼已寄出，請檢查信箱')
+          notify('密碼重設驗證碼已送出')
+          return
+        }
+        if (!loginForm.resetCode || loginForm.resetCode.length !== 6) throw new Error('請輸入 6 碼驗證碼')
+        if (loginForm.newPassword.length < 6) throw new Error('新密碼至少需要 6 碼')
+        if (loginForm.newPassword !== loginForm.confirmPassword) throw new Error('兩次密碼輸入不一致')
+        await resetPassword(sid, loginForm.email.trim(), loginForm.resetCode, loginForm.newPassword)
+        setAuthMode('login')
+        setResetRequested(false)
+        setLoginForm((prev) => ({ ...prev, password: '', newPassword: '', confirmPassword: '', resetCode: '' }))
+        notify('密碼已重設，請使用新密碼登入')
+        return
+      }
+      if (authMode === 'verify') {
+        if (!/^\d{9}$/.test(sid)) throw new Error('請輸入 9 碼學號')
+        if (!loginForm.email.trim()) throw new Error('請輸入註冊 Email')
+        if (!loginForm.verificationCode || loginForm.verificationCode.length !== 6) throw new Error('請輸入 6 碼 Email 驗證碼')
+        const remote = await verifyEmail(sid, loginForm.email.trim(), loginForm.verificationCode)
+        applyAuthenticatedRemote(remote, parsed, { email: loginForm.email })
+        setAuthMode('login')
+        setLoginForm((prev) => ({ ...prev, password: '', verificationCode: '' }))
+        notify(remote?.message || 'Email 驗證完成，已登入')
+        return
+      }
+      if (authMode === 'register-password') {
+        if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
+        if (!loginForm.email.trim()) throw new Error('請輸入 Email')
+        if (loginForm.password.length < 6) throw new Error('密碼至少需要 6 碼')
+        if (loginForm.password !== loginForm.confirmPassword) throw new Error('兩次密碼輸入不一致')
+        const initialProfile = {
+          ...profileFromParsed(parsed),
+          displayName: loginForm.displayName || sid,
+          email: loginForm.email,
+        }
+        try {
+          const remote = await register(sid, loginForm.password, initialProfile)
+          setAuthMode('verify')
+          setAuthNotice(remote?.message || '驗證碼已寄出，請完成 Email 驗證後登入')
+          setLoginForm((prev) => ({ ...prev, verificationCode: '', password: '', confirmPassword: '' }))
+          notify('帳號已建立，請先完成 Email 驗證')
+          return
+        } catch (remoteError) {
+          if (!shouldFallbackToLocal(remoteError)) throw new Error(remoteError?.response?.data?.error || remoteError?.message || '註冊失敗')
+          const { user: nextUser, profile } = registerLocalAccount({
+            studentId: sid,
+            password: loginForm.password,
+            displayName: loginForm.displayName || sid,
+            email: loginForm.email,
+            profile: initialProfile,
+          })
+          setUser(nextUser)
+          localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+          setAccountProfile(profile)
+          localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(profile))
+          const boundBundle = loadBoundAcademicBundle(nextUser)
+          if (boundBundle) applyRemoteBundle(boundBundle)
+          notify('後端未連線，已建立本機帳號')
           return
         }
       }
-      const data = authMode === 'register'
-        ? await register(loginForm.studentId, loginForm.password, { display_name: loginForm.displayName })
-        : await login(loginForm.studentId, loginForm.password)
-      if (data?.token) localStorage.setItem('uniplan:token', data.token)
-      const remoteUser = data?.user || {}
-      const nextUser = applyAdminRole({ studentId: remoteUser.student_id || loginForm.studentId, role: remoteUser.role || 'student' })
-      setUser(nextUser)
-      localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
-      const parsedLoginProfile = studentIdPreview?.valid ? studentIdPreview : parseTkuStudentIdLocal(loginForm.studentId)
-      const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...loadProfileForUser(nextUser), ...(remoteUser.profile || {}), ...profileFromParsed(parsedLoginProfile) }
-      setAccountProfile(nextProfile)
-      localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
-      const cloud = await fetchUserData().catch(() => null)
-      if (cloud?.data && Object.keys(cloud.data).length) applyRemoteBundle(cloud.data)
-      else {
-        const schedule = await fetchSchedule(nextUser.studentId).catch(() => null)
-        if (schedule?.schedule_data) setPlan({ ...makePlan(), ...schedule.schedule_data })
+      try {
+        if (!loginForm.password) throw new Error('請輸入密碼')
+        const remote = await login(sid, loginForm.password)
+        applyAuthenticatedRemote(remote, parsed)
+        notify(remote.data ? '登入成功，已載入雲端課表' : '登入成功，尚未建立雲端課表')
+        return
+      } catch (remoteError) {
+        const apiError = remoteError?.response?.data
+        if (apiError?.code === 'EMAIL_NOT_VERIFIED') {
+          setAuthMode('verify')
+          setLoginForm((prev) => ({ ...prev, studentId: apiError.studentId || sid, email: apiError.email || prev.email, verificationCode: '', password: '' }))
+          setAuthNotice('此帳號尚未完成 Email 驗證。請輸入驗證碼，或重新寄送驗證碼。')
+          return
+        }
+        if (!shouldFallbackToLocal(remoteError)) throw new Error(apiError?.error || remoteError?.message || '登入失敗')
+        const { user: nextUser, profile } = loginLocalAccount(sid, loginForm.password)
+        setUser(nextUser)
+        localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+        const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...profile, ...profileFromParsed(parsed) }
+        setAccountProfile(nextProfile)
+        localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
+        const boundBundle = loadBoundAcademicBundle(nextUser)
+        if (boundBundle) applyRemoteBundle(boundBundle)
+        notify(boundBundle ? '後端未連線，已載入本機課表' : '後端未連線，已使用本機帳號登入')
       }
-      notify(authMode === 'register' ? '註冊並登入成功' : '登入成功')
     } catch (error) {
-      const isOffline = !error?.response
-      if (!isOffline) {
-        setAuthError(error?.response?.data?.detail || error?.response?.data?.message || error?.message || '登入失敗')
-        return
-      }
-      const parsed = parseTkuStudentIdLocal(loginForm.studentId)
-      if (authMode === 'register' && loginForm.studentId !== 'admin' && loginForm.studentId !== 'super' && !parsed?.valid) {
-        setAuthError(parsed?.reason || '學號格式錯誤')
-        return
-      }
-      const nextUser = applyAdminRole({ studentId: loginForm.studentId.trim(), role: 'student', offline: true })
-      setUser(nextUser)
-      localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
-      const nextProfile = {
-        ...DEFAULT_ACCOUNT_PROFILE,
-        ...loadProfileForUser(nextUser),
-        displayName: authMode === 'register' ? (loginForm.displayName || loginForm.studentId) : (loadProfileForUser(nextUser).displayName || loginForm.studentId),
-        ...profileFromParsed(parsed),
-      }
-      setAccountProfile(nextProfile)
-      localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
-      notify('後端未連線，已進入本機開發模式')
+      setAuthError(error?.message || '登入失敗')
     }
+  }
+
+
+  async function handleResendVerification() {
+    setAuthError('')
+    setAuthNotice('')
+    const sid = loginForm.studentId.trim()
+    try {
+      if (!/^\d{9}$/.test(sid)) throw new Error('請輸入 9 碼學號')
+      if (!loginForm.email.trim()) throw new Error('請輸入註冊 Email')
+      const res = await resendVerification(sid, loginForm.email.trim())
+      setAuthNotice(res?.message || 'Email 驗證碼已重新寄出')
+      notify('Email 驗證碼已重新寄出')
+    } catch (error) {
+      setAuthError(error?.response?.data?.error || error?.message || '重新寄送失敗')
+    }
+  }
+
+  function handleGuestLogin() {
+    const nextUser = PUBLIC_GUEST_USER
+    setUser(nextUser)
+    localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+    setAccountProfile({ ...DEFAULT_ACCOUNT_PROFILE, displayName: '本機使用者' })
+    notify('已進入訪客模式')
   }
 
   async function logout() {
     await apiLogout().catch(() => null)
-    setUser(PUBLIC_GUEST_USER)
+    setUser(null)
     setAccountProfile(DEFAULT_ACCOUNT_PROFILE)
     localStorage.removeItem('uniplan:user')
     localStorage.removeItem('uniplan:token')
-    notify?.('已回到本機模式')
+    notify?.('已登出')
   }
 
   function updateAccountProfile(patch) {
@@ -183,8 +366,8 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
   }
 
   return {
-    user, setUser, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError,
-    accountProfile, setAccountProfile, handleLogin, logout, updateAccountProfile, saveAccountProfile,
+    user, setUser, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError, authNotice, resetRequested, setResetRequested,
+    accountProfile, setAccountProfile, handleLogin, handleResendVerification, handleGuestLogin, logout, updateAccountProfile, saveAccountProfile,
     toggleEmailBinding, toggleGoogleBinding, toggleSyncEnabled, exportAccountBundle, importAccountBundle,
   }
 }

@@ -93,7 +93,9 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
 
   const sortedFilteredCourses = useMemo(() => {
     const list = (courses || []).filter((course) => {
-      if (!courseMatchesSemester(course, activeSemester)) return false
+      // Course source is controlled by courseCatalogTerm and /api/courses.
+      // Do not filter by the currently edited timetable semester here, otherwise
+      // selecting 114 下學期 while the planner is on 大一上 will incorrectly show 0 courses.
       if (searchOnlyAvailable && findConflict(course, plan[activeSemester] || [])) return false
       return true
     })
@@ -126,7 +128,20 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
   }, [courses, activeSemester, searchOnlyAvailable, searchSort, favorites, candidates, plan, searchFilters.tag, tagVotes, query])
 
   const majorOptions = useMemo(() => Array.from(new Set([...(metadata.majors || []), ...courses.map((course) => getCourse(course).major).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])
-  const departmentOptions = useMemo(() => Array.from(new Set([...(metadata.departments || []), ...courses.map((course) => getCourse(course).department).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])
+  const departmentOptions = useMemo(() => {
+    const isRealDepartment = (value) => {
+      const text = String(value || '').trim()
+      if (!text) return false
+      if (/^[A-ZＡ-Ｚ]班?$/.test(text)) return false
+      if (/^[甲乙丙丁戊己庚辛壬癸]班?$/.test(text)) return false
+      if (/^[ABCD]$/.test(text)) return false
+      return true
+    }
+    return Array.from(new Set([...(metadata.departments || []), ...courses.map((course) => getCourse(course).department).filter(Boolean)]))
+      .filter(isRealDepartment)
+      .sort((a, b) => String(a).localeCompare(String(b), 'zh-Hant'))
+      .slice(0, 300)
+  }, [metadata, courses])
   const gradeOptions = useMemo(() => Array.from(new Set([...(metadata.grades || []), ...courses.map((course) => getCourse(course).grade).filter(Boolean)])).filter(Boolean).slice(0, 120), [metadata, courses])
 
   return {

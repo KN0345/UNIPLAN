@@ -15,11 +15,41 @@ api.interceptors.request.use((config) => {
 
 export async function register(student_id, password, extra = {}) {
   const { data } = await api.post('/auth/register', { student_id, password, ...extra })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
   return data
 }
 
-export async function login(student_id, password) {
-  const { data } = await api.post('/auth/login', { student_id, password })
+export async function login(identifier, password) {
+  const { data } = await api.post('/auth/login', { identifier, student_id: identifier, password })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
+  return data
+}
+
+
+export async function completeGoogleSetup(setup_token, profile = {}) {
+  const { data } = await api.post('/auth/google/complete', { setup_token, ...profile })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
+  return data
+}
+
+export async function verifyEmail(student_id, email, code) {
+  const { data } = await api.post('/auth/verify-email', { student_id, email, code })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
+  return data
+}
+
+export async function resendVerification(student_id, email) {
+  const { data } = await api.post('/auth/verification/resend', { student_id, email })
+  return data
+}
+
+export async function requestPasswordReset(student_id, email) {
+  const { data } = await api.post('/auth/password/request', { student_id, email })
+  return data
+}
+
+export async function resetPassword(student_id, email, code, new_password) {
+  const { data } = await api.post('/auth/password/reset', { student_id, email, code, new_password })
   return data
 }
 
@@ -66,120 +96,57 @@ export async function syncUserData(bundle) {
 }
 
 
-
-function normalizeCourseSemester(value = '') {
+function normalizeCatalogTermForApi(value) {
   const raw = String(value || '').trim()
   if (!raw || raw === '全部') return ''
-  if (/114\s*學?年度?\s*下|114\s*下|1142|2CLASS|下學期/i.test(raw)) return '1142CLASS'
-  if (/114\s*學?年度?\s*上|114\s*上|1141|1CLASS|上學期/i.test(raw)) return '1141CLASS'
+  if (/114\s*[_-]?\s*1|114\s*上|1141|114學年度上|上學期|1CLASS/i.test(raw)) return '1141CLASS'
+  if (/114\s*[_-]?\s*2|114\s*下|1142|114學年度下|下學期|2CLASS/i.test(raw)) return '1142CLASS'
   return raw
 }
 
-function normalizeCourseText(value = '') {
-  return String(value || '').trim().toLowerCase()
-}
-
-function normalizeCourseRecord(course = {}) {
-  const semesterSource = normalizeCourseSemester(course.semester_source || course.semester || course.term || course.catalog_term)
-  return {
-    ...course,
-    semester_source: semesterSource || course.semester_source || '',
-  }
-}
-
 function matchesStaticCourse(course, params = {}) {
-  const c = normalizeCourseRecord(course)
-  const keyword = normalizeCourseText(params.keyword)
-  const semester = normalizeCourseSemester(params.semester)
+  const keyword = String(params.keyword || '').trim().toLowerCase()
+  const semester = normalizeCatalogTermForApi(params.semester || '')
   const department = String(params.department || '').trim()
   const grade = String(params.grade || '').trim()
   const weekday = String(params.weekday || '').trim()
   const period = String(params.period || '').trim()
-  const haystack = [
-    c.name,
-    c.course_name,
-    c.teacher,
-    c.instructor,
-    c.serial,
-    c.code,
-    c.department,
-    c.major,
-    c.category,
-    c.class_name,
-    c.className,
-  ].join(' ').toLowerCase()
+  const haystack = [course.name, course.teacher, course.serial, course.code, course.department, course.major, course.category, course.class_name].join(' ').toLowerCase()
   if (keyword && !haystack.includes(keyword)) return false
-  if (semester && c.semester_source !== semester) return false
-  if (department && department !== '全部' && c.department !== department) return false
-  if (grade && grade !== '全部' && String(c.grade || '') !== grade) return false
-  const timeText = String(c.time_info || c.time_data || c.time || '')
+  if (semester && normalizeCatalogTermForApi(course.semester_source || course.semester || course.term || course.catalog_term) !== semester) return false
+  if (department && department !== '全部' && course.department !== department) return false
+  if (grade && grade !== '全部' && String(course.grade || '') !== grade) return false
+  const timeText = String(course.time_info || course.time_data || '')
   if (weekday && weekday !== '全部' && !timeText.includes(weekday)) return false
   if (period && period !== '全部' && !timeText.includes(String(period))) return false
   return true
 }
 
-let staticCoursesCache = null
-let staticMetadataCache = null
-
-async function loadStaticCourses() {
-  if (staticCoursesCache) return staticCoursesCache
-  const response = await fetch('/data/courses.json', { cache: 'no-store' })
-  if (!response.ok) throw new Error(`static courses not found: ${response.status}`)
-  const payload = await response.json()
-  const list = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : []
-  staticCoursesCache = list.map(normalizeCourseRecord)
-  return staticCoursesCache
-}
-
 async function fetchStaticCourses(params = {}) {
-  const list = await loadStaticCourses()
-  const filtered = list.filter((course) => matchesStaticCourse(course, params)).slice(0, 500)
-  return { ok: true, source: 'static-json', data: filtered }
-}
-
-function buildMetadataFromCourses(list = []) {
-  const unique = (values) => Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), 'zh-Hant'))
-  return {
-    departments: unique(list.map((course) => course.department)),
-    categories: unique(list.map((course) => course.category)),
-    grades: unique(list.map((course) => course.grade)),
-    majors: unique(list.map((course) => course.major)),
-    semesters: unique(list.map((course) => course.semester_source)),
-  }
-}
-
-async function fetchStaticMetadata() {
-  if (staticMetadataCache) return staticMetadataCache
-  try {
-    const response = await fetch('/data/metadata.json', { cache: 'no-store' })
-    if (response.ok) {
-      const payload = await response.json()
-      staticMetadataCache = payload?.data || payload
-      return staticMetadataCache
-    }
-  } catch {}
-  const list = await loadStaticCourses()
-  staticMetadataCache = buildMetadataFromCourses(list)
-  return staticMetadataCache
+  const response = await fetch('/data/courses.json')
+  if (!response.ok) throw new Error('static courses not found')
+  const payload = await response.json()
+  const list = Array.isArray(payload?.data) ? payload.data : []
+  return { data: list.filter((course) => matchesStaticCourse(course, params)).slice(0, 500) }
 }
 
 export async function fetchCourses(params = {}) {
-  // 正式把課程搬進 Neon 前，課程搜尋必須以 public/data/courses.json 為主。
-  // 避免 /api/courses 在 Cloudflare Functions 尚未完整部署時回傳 404，導致 1142CLASS 顯示 0 門。
   try {
-    return await fetchStaticCourses(params)
-  } catch (staticError) {
     const { data } = await api.get('/courses', { params })
     return data
+  } catch (error) {
+    return fetchStaticCourses(params)
   }
 }
 
 export async function fetchMetadata() {
   try {
-    return await fetchStaticMetadata()
-  } catch (staticError) {
     const { data } = await api.get('/courses/metadata')
     return data
+  } catch (error) {
+    const response = await fetch('/data/metadata.json')
+    if (!response.ok) throw error
+    return response.json()
   }
 }
 
@@ -208,12 +175,8 @@ export async function saveSchedule(studentId, scheduleData) {
 }
 
 export async function fetchReviews(code) {
-  try {
-    const { data } = await api.get(`/reviews/${encodeURIComponent(code || '')}`)
-    return data
-  } catch (error) {
-    return { ok: true, data: [] }
-  }
+  const { data } = await api.get(`/reviews/${encodeURIComponent(code || '')}`)
+  return data
 }
 
 export async function addReview(payload) {
