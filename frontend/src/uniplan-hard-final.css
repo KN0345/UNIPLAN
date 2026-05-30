@@ -2239,3 +2239,137 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   .authV4Card{padding:26px 22px 22px!important;border-radius:24px!important;}
   .authV4Card h2{font-size:2rem!important;}
 }
+
+/* === 2026-05-30 Auth landing soft-balance fix ===
+   Reduce left hero dominance and move guest mode into the text-link row. */
+.login.authPage.authV4Page,
+.authV4Page{
+  grid-template-columns:minmax(520px, .92fr) minmax(360px, 456px)!important;
+  gap:clamp(58px, 8vw, 136px)!important;
+}
+.authV5Hero{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  min-height:auto!important;
+  max-width:740px!important;
+  padding:clamp(28px, 4vw, 46px)!important;
+  justify-content:center!important;
+}
+.authV5BrandRow{
+  justify-content:flex-start!important;
+  gap:18px!important;
+  margin-bottom:clamp(28px, 5vh, 52px)!important;
+}
+.authV5BrandMark{
+  min-height:38px!important;
+  padding:0 16px!important;
+  font-size:1rem!important;
+  background:rgba(255,255,255,.11)!important;
+  border-color:rgba(255,255,255,.15)!important;
+}
+.authV5SchoolTag{
+  font-size:.78rem!important;
+  letter-spacing:.13em!important;
+  opacity:.72!important;
+}
+.authV5HeroText{
+  margin-top:0!important;
+}
+.authV5Kicker{
+  margin-bottom:14px!important;
+  padding:7px 12px!important;
+  font-size:.84rem!important;
+  color:#dbe8ff!important;
+  background:rgba(76,132,235,.13)!important;
+  border-color:rgba(170,199,255,.18)!important;
+}
+.authV5Hero h1{
+  max-width:660px!important;
+  font-size:clamp(2.75rem, 4.8vw, 4.8rem)!important;
+  line-height:1.04!important;
+  letter-spacing:-.06em!important;
+}
+.authV5Lead{
+  max-width:620px!important;
+  margin-top:18px!important;
+  font-size:clamp(.98rem, 1.18vw, 1.12rem)!important;
+  line-height:1.72!important;
+  opacity:.88!important;
+}
+.authV5FeatureList{
+  max-width:590px!important;
+  margin-top:clamp(28px, 4vh, 42px)!important;
+  gap:10px 12px!important;
+}
+.authV5FeatureList span{
+  min-height:38px!important;
+  padding:8px 13px!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.055)!important;
+  border-color:rgba(210,228,255,.10)!important;
+  color:rgba(246,250,255,.86)!important;
+  font-size:.92rem!important;
+}
+.authV5FeatureList span::before{
+  width:20px!important;
+  height:20px!important;
+  background:rgba(70,132,255,.20)!important;
+}
+.authV5Stats{
+  max-width:520px!important;
+  margin-top:clamp(30px, 4vh, 44px)!important;
+  gap:10px!important;
+}
+.authV5Stats div{
+  min-height:76px!important;
+  padding:13px 14px!important;
+  border-radius:18px!important;
+  background:rgba(255,255,255,.06)!important;
+  border-color:rgba(210,228,255,.10)!important;
+}
+.authV5Stats strong{
+  font-size:1.55rem!important;
+}
+.authV5Stats span{
+  margin-top:7px!important;
+  font-size:.84rem!important;
+}
+.authV4Card{
+  max-width:456px!important;
+}
+.authV4Links{
+  gap:18px!important;
+  margin:18px 0 0!important;
+}
+.authV4Links button{
+  font-size:.98rem!important;
+  padding:6px 4px!important;
+  color:#2f62aa!important;
+  text-decoration:none!important;
+}
+.authV4Links button:hover{
+  background:rgba(47,98,170,.08)!important;
+}
+.authV4Card .authGuest{
+  display:none!important;
+}
+.authV4Card small{
+  margin-top:14px!important;
+  text-align:center!important;
+}
+@media (min-width:1181px) and (max-height:820px){
+  .authV5Hero{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    min-height:auto!important;
+    padding:28px 36px!important;
+  }
+  .authV5BrandRow{margin-bottom:28px!important;}
+  .authV5Hero h1{font-size:clamp(2.55rem, 4.35vw, 4.25rem)!important;}
+  .authV5Lead{font-size:.96rem!important;line-height:1.62!important;}
+  .authV5FeatureList{margin-top:24px!important;}
+  .authV5Stats{margin-top:24px!important;}
+}

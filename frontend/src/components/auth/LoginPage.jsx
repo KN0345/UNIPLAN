@@ -253,9 +253,9 @@ export default function LoginPage({
           {!isLogin && <button type="button" onClick={() => switchMode('login')}>返回登入</button>}
           {!isRegister && !isRegisterPassword && !isVerify && !isGoogleSetup && <button type="button" onClick={() => switchMode('register')}>建立帳號</button>}
           {!isForgot && !isVerify && !isRegisterPassword && !isGoogleSetup && <button type="button" onClick={() => switchMode('forgot')}>忘記密碼</button>}
+          {isLogin && <button type="button" onClick={handleGuestLogin}>訪客模式</button>}
         </div>
 
-        <button className="authGuest" type="button" onClick={handleGuestLogin}>先以訪客模式使用</button>
         <small>註冊需完成 Email 驗證；Google 登入會綁定相同 Email 的 UniPlan 帳號。</small>
       </form>
     </main>
