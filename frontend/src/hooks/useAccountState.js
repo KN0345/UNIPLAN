@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchMe, fetchUserData, login, logout as apiLogout, parseStudentId, register, requestPasswordReset, resendVerification, resetPassword, updateProfile, verifyEmail } from '../api'
+import { completeGoogleSetup, fetchMe, fetchUserData, login, logout as apiLogout, parseStudentId, register, requestPasswordReset, resendVerification, resetPassword, updateProfile, verifyEmail } from '../api'
 import { DEFAULT_ACCOUNT_PROFILE, PUBLIC_GUEST_USER, applyAdminRole, loadProfileForUser, loadBoundAcademicBundle, loginLocalAccount, parseTkuStudentIdLocal, profileStorageKey, purgeRemovedStudentLocalData, readStorageJson, registerLocalAccount, resetLocalPassword } from '../utils/account'
 import { download, makePlan, userKey } from '../utils/coursePlanning'
 
@@ -14,13 +14,25 @@ function profileFromParsed(parsed) {
   }
 }
 
+function decodeJwtPayload(token) {
+  try {
+    const payload = String(token || '').split('.')[1]
+    if (!payload) return {}
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4)
+    return JSON.parse(decodeURIComponent(escape(atob(padded))))
+  } catch {
+    return {}
+  }
+}
+
 export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandidates, setFavorites, setSnapshots, setLocalReviews, setTagVotes, currentBundle }) {
   purgeRemovedStudentLocalData()
   const [user, setUser] = useState(() => {
     const storedUser = readStorageJson('uniplan:user', null)
     return storedUser && typeof storedUser === 'object' ? applyAdminRole({ role: 'student', ...storedUser }) : null
   })
-  const [loginForm, setLoginForm] = useState({ studentId: '', password: '', displayName: '', email: '', newPassword: '', confirmPassword: '', resetCode: '', verificationCode: '' })
+  const [loginForm, setLoginForm] = useState({ studentId: '', password: '', displayName: '', email: '', newPassword: '', confirmPassword: '', resetCode: '', verificationCode: '', googleSetupToken: '', googleEmail: '', googleName: '', googlePicture: '' })
   const [authMode, setAuthMode] = useState('login')
   const [studentIdPreview, setStudentIdPreview] = useState(null)
   const [authError, setAuthError] = useState('')
@@ -79,10 +91,29 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('google_token')
+    const setupToken = params.get('google_setup')
     const googleError = params.get('google_error')
     if (googleError) {
       setAuthMode('login')
       setAuthError(decodeURIComponent(googleError))
+      window.history.replaceState({}, document.title, window.location.pathname)
+      return
+    }
+    if (setupToken) {
+      const setup = decodeJwtPayload(setupToken)
+      setAuthMode('google-setup')
+      setLoginForm((prev) => ({
+        ...prev,
+        studentId: '',
+        password: '',
+        displayName: setup.googleName || setup.name || prev.displayName || '',
+        email: setup.email || prev.email || '',
+        googleEmail: setup.email || '',
+        googleName: setup.googleName || setup.name || '',
+        googlePicture: setup.googlePicture || setup.picture || '',
+        googleSetupToken: setupToken,
+      }))
+      setAuthNotice('Google 帳號已驗證，請補上學號完成 UniPlan 首次設定。')
       window.history.replaceState({}, document.title, window.location.pathname)
       return
     }
@@ -118,6 +149,21 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
     const parsed = studentIdPreview?.valid ? studentIdPreview : parseTkuStudentIdLocal(sid)
     try {
       if (!sid) throw new Error(authMode === 'login' ? '請輸入學號或 Email' : '請輸入學號')
+      if (authMode === 'google-setup') {
+        if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
+        if (!loginForm.googleSetupToken) throw new Error('Google 首次設定憑證已失效，請重新使用 Google 登入')
+        const remote = await completeGoogleSetup(loginForm.googleSetupToken, {
+          student_id: sid,
+          displayName: loginForm.displayName || loginForm.googleName || sid,
+          email: loginForm.googleEmail || loginForm.email,
+          ...profileFromParsed(parsed),
+        })
+        applyAuthenticatedRemote(remote, parsed, { email: loginForm.googleEmail || loginForm.email, boundGoogle: true, boundEmail: true })
+        setAuthMode('login')
+        setLoginForm((prev) => ({ ...prev, googleSetupToken: '', googleEmail: '', googleName: '', googlePicture: '', password: '' }))
+        notify(remote?.message || 'Google 帳號已完成首次設定')
+        return
+      }
       if (authMode === 'register') {
         if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
         if (!loginForm.email.trim()) throw new Error('請輸入 Email')

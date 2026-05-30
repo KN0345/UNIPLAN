@@ -601,17 +601,24 @@ async function handleGoogleCallback(request, env, sql) {
     if (!code) return redirectToApp(request, { google_error: 'Google 未回傳授權碼' })
 
     const tokenData = await exchangeGoogleCode(request, env, code)
-    const profile = await fetchGoogleProfile(tokenData.access_token)
-    const googleId = String(profile.sub || '')
-    const email = normalizeEmail(profile.email)
+    const googleProfile = await fetchGoogleProfile(tokenData.access_token)
+    const googleId = String(googleProfile.sub || '')
+    const email = normalizeEmail(googleProfile.email)
     if (!googleId || !email) return redirectToApp(request, { google_error: 'Google 帳號缺少必要資料' })
-    if (profile.email_verified === false) return redirectToApp(request, { google_error: 'Google Email 尚未驗證，無法登入' })
+    if (googleProfile.email_verified === false) return redirectToApp(request, { google_error: 'Google Email 尚未驗證，無法登入' })
 
     let rows = await sql`select * from users where google_id = ${googleId} limit 1`
     if (!rows.length) {
       rows = await sql`select * from users where lower(email) = ${email} limit 1`
       if (!rows.length) {
-        return redirectToApp(request, { google_error: '找不到相同 Email 的 UniPlan 帳號，請先使用學號註冊並完成 Email 驗證' })
+        const setupToken = await signToken({
+          kind: 'google_setup',
+          googleId,
+          email,
+          googleName: googleProfile.name || '',
+          googlePicture: googleProfile.picture || '',
+        }, env.JWT_SECRET || 'uniplan-dev-secret')
+        return redirectToApp(request, { google_setup: setupToken })
       }
       const existing = rows[0]
       if (existing.google_id && existing.google_id !== googleId) {
@@ -619,7 +626,7 @@ async function handleGoogleCallback(request, env, sql) {
       }
       const updated = await sql`
         update users
-        set google_id = ${googleId}, email_verified = true, updated_at = now(), profile = coalesce(profile, '{}'::jsonb) || ${JSON.stringify({ googleName: profile.name || '', googlePicture: profile.picture || '', boundGoogle: true })}::jsonb
+        set google_id = ${googleId}, email_verified = true, updated_at = now(), profile = coalesce(profile, '{}'::jsonb) || ${JSON.stringify({ googleName: googleProfile.name || '', googlePicture: googleProfile.picture || '', boundGoogle: true })}::jsonb
         where id = ${existing.id}
         returning *
       `
@@ -638,6 +645,42 @@ async function handleGoogleCallback(request, env, sql) {
   } catch (err) {
     return redirectToApp(request, { google_error: err?.message || 'Google 登入失敗' })
   }
+}
+
+async function handleGoogleComplete(request, env, sql) {
+  const body = await readBody(request)
+  const setupToken = String(body.setup_token || body.setupToken || '')
+  const payload = await verifyToken(setupToken, env.JWT_SECRET || 'uniplan-dev-secret')
+  if (!payload || payload.kind !== 'google_setup' || !payload.googleId || !payload.email) return error('Google 首次設定憑證已失效，請重新使用 Google 登入', 401)
+
+  const studentId = normalizeStudentId(body.student_id || body.studentId)
+  const email = normalizeEmail(payload.email)
+  if (!/^\d{9}$/.test(studentId)) return error('請輸入 9 碼學號')
+  const exists = await sql`select id, student_id, email from users where student_id = ${studentId} or lower(email) = ${email} or google_id = ${payload.googleId} limit 1`
+  if (exists.length) return error('此學號、Email 或 Google 帳號已被註冊', 409)
+
+  const parsed = parseStudentIdLocal(studentId)
+  const profile = profileFromBody({
+    ...body,
+    displayName: body.displayName || body.display_name || payload.googleName || studentId,
+    email,
+    department: body.department || parsed.department_name || '',
+    grade: body.grade || parsed.start_grade || (parsed.program_code === '4' ? '大一' : ''),
+    admissionYear: body.admissionYear || body.admission_year || parsed.admission_year || '',
+    google_bound: true,
+    email_bound: true,
+  })
+  const role = ADMIN_STUDENT_IDS.has(studentId) ? 'super_admin' : 'student'
+  const salt = randomSalt()
+  const passwordHash = await hashPassword(randomSalt(), salt)
+  const rows = await sql`
+    insert into users (student_id, email, display_name, password_hash, password_salt, role, profile, google_id, email_verified, created_at, updated_at, last_login)
+    values (${studentId}, ${email}, ${profile.displayName || studentId}, ${passwordHash}, ${salt}, ${role}, ${JSON.stringify({ ...profile, googleName: payload.googleName || '', googlePicture: payload.googlePicture || '', boundGoogle: true, boundEmail: true })}, ${payload.googleId}, true, now(), now(), now())
+    returning *
+  `
+  const user = publicUser(rows[0])
+  const token = await signToken({ uid: user.id, sid: user.studentId }, env.JWT_SECRET || 'uniplan-dev-secret')
+  return json({ ok: true, token, user, profile: rows[0].profile || {}, data: await loadUserBundle(sql, user.id), message: 'Google 帳號已完成首次設定' })
 }
 
 const TKU_PROGRAMS = { '2': '進學班', '3': '未知學制', '4': '學士生', '6': '碩士生', '7': '碩士在職專班 / 轉入大二', '8': '博士生 / 轉入大三' }
@@ -673,6 +716,7 @@ export async function onRequest(context) {
 
     if (method === 'GET' && path === '/auth/google/start') return handleGoogleStart(request, env)
     if (method === 'GET' && path === '/auth/google/callback') return handleGoogleCallback(request, env, sql)
+    if (method === 'POST' && path === '/auth/google/complete') return handleGoogleComplete(request, env, sql)
     if (method === 'POST' && path === '/auth/register') return handleRegister(request, env, sql)
     if (method === 'POST' && path === '/auth/login') return handleLogin(request, env, sql)
     if (method === 'POST' && path === '/auth/logout') return json({ ok: true })

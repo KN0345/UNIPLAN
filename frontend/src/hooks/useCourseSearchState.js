@@ -126,7 +126,20 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
   }, [courses, activeSemester, searchOnlyAvailable, searchSort, favorites, candidates, plan, searchFilters.tag, tagVotes, query])
 
   const majorOptions = useMemo(() => Array.from(new Set([...(metadata.majors || []), ...courses.map((course) => getCourse(course).major).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])
-  const departmentOptions = useMemo(() => Array.from(new Set([...(metadata.departments || []), ...courses.map((course) => getCourse(course).department).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])
+  const departmentOptions = useMemo(() => {
+    const isRealDepartment = (value) => {
+      const text = String(value || '').trim()
+      if (!text) return false
+      if (/^[A-ZＡ-Ｚ]班?$/.test(text)) return false
+      if (/^[甲乙丙丁戊己庚辛壬癸]班?$/.test(text)) return false
+      if (/^[ABCD]$/.test(text)) return false
+      return true
+    }
+    return Array.from(new Set([...(metadata.departments || []), ...courses.map((course) => getCourse(course).department).filter(Boolean)]))
+      .filter(isRealDepartment)
+      .sort((a, b) => String(a).localeCompare(String(b), 'zh-Hant'))
+      .slice(0, 300)
+  }, [metadata, courses])
   const gradeOptions = useMemo(() => Array.from(new Set([...(metadata.grades || []), ...courses.map((course) => getCourse(course).grade).filter(Boolean)])).filter(Boolean).slice(0, 120), [metadata, courses])
 
   return {

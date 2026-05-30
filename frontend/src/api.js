@@ -25,6 +25,13 @@ export async function login(identifier, password) {
   return data
 }
 
+
+export async function completeGoogleSetup(setup_token, profile = {}) {
+  const { data } = await api.post('/auth/google/complete', { setup_token, ...profile })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
+  return data
+}
+
 export async function verifyEmail(student_id, email, code) {
   const { data } = await api.post('/auth/verify-email', { student_id, email, code })
   if (data?.token) localStorage.setItem('uniplan:token', data.token)

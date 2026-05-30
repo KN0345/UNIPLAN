@@ -16,6 +16,7 @@ export default function LoginPage({
   const isForgot = authMode === 'forgot'
   const isLogin = authMode === 'login'
   const isVerify = authMode === 'verify'
+  const isGoogleSetup = authMode === 'google-setup'
 
   function updateField(key, value) {
     setLoginForm({ ...loginForm, [key]: value })
@@ -39,6 +40,8 @@ export default function LoginPage({
 
   const title = isVerify
     ? 'Email 驗證'
+    : isGoogleSetup
+      ? '完成首次設定'
     : isForgot
       ? '重設密碼'
       : isRegister
@@ -49,6 +52,8 @@ export default function LoginPage({
 
   const description = isVerify
     ? '輸入信箱收到的 6 碼驗證碼，完成後即可登入。'
+    : isGoogleSetup
+      ? 'Google 帳號已驗證，請補上淡江學號並確認顯示名稱。'
     : isForgot
       ? (resetRequested ? '輸入驗證碼並設定新密碼。' : '輸入學號與註冊 Email，系統會寄出一次性驗證碼。')
       : isRegister
@@ -62,15 +67,15 @@ export default function LoginPage({
       <section className="authHero authV4Hero">
         <div className="authBrandMark">UniPlan</div>
         <h1>淡江四年排課助手</h1>
-        <p>雲端同步課表、暫存課程、收藏、主題設定與個人資料。帳號驗證後即可跨裝置使用。</p>
+        <p>把課表、收藏、學分進度與個人設定集中管理。登入後即可跨裝置同步，讓排課不再只存在單一瀏覽器。</p>
         <div className="authFeatureGrid">
-          <span>Neon 雲端同步</span>
-          <span>Email 驗證</span>
-          <span>Google 登入</span>
+          <span>課表雲端同步</span>
+          <span>學分規劃</span>
+          <span>Google 帳號連線</span>
         </div>
       </section>
 
-      <form className={`authCard authV4Card ${isRegister ? 'registerInfoMode' : ''} ${isRegisterPassword ? 'registerPasswordMode' : ''} ${isForgot ? 'forgotMode' : ''}`} onSubmit={handleLogin}>
+      <form className={`authCard authV4Card ${isRegister ? 'registerInfoMode' : ''} ${isRegisterPassword ? 'registerPasswordMode' : ''} ${isForgot ? 'forgotMode' : ''} ${isGoogleSetup ? 'googleSetupMode' : ''}`} onSubmit={handleLogin}>
         <div className="authV4Header">
           <span className="authV4Eyebrow">UniPlan Account</span>
           <h2>{title}</h2>
@@ -97,6 +102,26 @@ export default function LoginPage({
                 onChange={(e) => updateField('password', e.target.value)}
                 autoComplete="current-password"
               />
+            </label>
+          </>
+        )}
+
+        {isGoogleSetup && (
+          <>
+            <div className="authGoogleIdentity">
+              {loginForm.googlePicture && <img src={loginForm.googlePicture} alt="Google avatar" />}
+              <div>
+                <strong>{loginForm.googleName || 'Google 使用者'}</strong>
+                <span>{loginForm.googleEmail || loginForm.email}</span>
+              </div>
+            </div>
+            <label className="authField">
+              <span>顯示名稱</span>
+              <input placeholder="例如：KN" value={loginForm.displayName} onChange={(e) => updateField('displayName', e.target.value)} autoComplete="name" />
+            </label>
+            <label className="authField">
+              <span>淡江學號</span>
+              <input placeholder="9 碼學號" value={loginForm.studentId} onChange={(e) => updateField('studentId', e.target.value.replace(/\D/g, '').slice(0, 9))} autoComplete="username" />
             </label>
           </>
         )}
@@ -183,7 +208,7 @@ export default function LoginPage({
           </>
         )}
 
-        {(isRegister || isVerify || isRegisterPassword || (isForgot && !resetRequested)) && studentIdPreview && (
+        {(isRegister || isVerify || isRegisterPassword || isGoogleSetup || (isForgot && !resetRequested)) && studentIdPreview && (
           <p className={`studentIdHint ${studentIdPreview.valid ? 'ok' : 'bad'}`}>
             {studentIdPreview.valid ? `✓ ${studentIdPreview.department_name || '已辨識學生資料'}｜${studentIdPreview.start_grade || '大一'}` : `⚠ ${studentIdPreview.reason || '學號格式異常'}`}
           </p>
@@ -193,7 +218,7 @@ export default function LoginPage({
         {authNotice && <p className="authNotice">{authNotice}</p>}
 
         <button className="authSubmit" type="submit">
-          {isVerify ? '完成驗證並登入' : isForgot ? (resetRequested ? '確認重設密碼' : '寄送驗證碼') : isRegister ? '下一步' : isRegisterPassword ? '建立帳號並寄送驗證碼' : '登入'}
+          {isGoogleSetup ? '完成設定並登入' : isVerify ? '完成驗證並登入' : isForgot ? (resetRequested ? '確認重設密碼' : '寄送驗證碼') : isRegister ? '下一步' : isRegisterPassword ? '建立帳號並寄送驗證碼' : '登入'}
         </button>
 
         {isLogin && (
@@ -208,8 +233,8 @@ export default function LoginPage({
         <div className="authV4Links">
           {isRegisterPassword && <button type="button" onClick={() => setAuthMode('register')}>返回上一步</button>}
           {!isLogin && <button type="button" onClick={() => switchMode('login')}>返回登入</button>}
-          {!isRegister && !isRegisterPassword && !isVerify && <button type="button" onClick={() => switchMode('register')}>建立帳號</button>}
-          {!isForgot && !isVerify && !isRegisterPassword && <button type="button" onClick={() => switchMode('forgot')}>忘記密碼</button>}
+          {!isRegister && !isRegisterPassword && !isVerify && !isGoogleSetup && <button type="button" onClick={() => switchMode('register')}>建立帳號</button>}
+          {!isForgot && !isVerify && !isRegisterPassword && !isGoogleSetup && <button type="button" onClick={() => switchMode('forgot')}>忘記密碼</button>}
         </div>
 
         <button className="authGuest" type="button" onClick={handleGuestLogin}>先以訪客模式使用</button>
