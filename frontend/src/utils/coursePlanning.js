@@ -640,6 +640,71 @@ export async function stripExternalBackgroundsForExport(element) {
   }
 }
 
+export function getExportSafeBackgroundUrl(element) {
+  if (!(element instanceof Element)) return ''
+
+  const stored = localStorage.getItem('uniplan:timetableBg') || ''
+  if (stored.startsWith('data:image/')) return stored
+
+  const nodes = [element, ...Array.from(element.querySelectorAll('*'))]
+  for (const node of nodes) {
+    if (!(node instanceof HTMLElement)) continue
+    const bg = window.getComputedStyle(node).getPropertyValue('background-image') || ''
+    const urls = extractCssUrls(bg)
+    const safe = urls.find((url) => String(url || '').startsWith('data:image/'))
+    if (safe) return safe
+  }
+
+  return ''
+}
+
+export function clearBackgroundImagesInClone(clonedDocument) {
+  const clonedWindow = clonedDocument.defaultView
+  clonedDocument.querySelectorAll('*').forEach((node) => {
+    if (!(node instanceof clonedWindow.HTMLElement)) return
+    node.style.setProperty('background-image', 'none', 'important')
+  })
+}
+
+export function injectExportBackgroundImage(clonedDocument, safeBackgroundUrl) {
+  if (!safeBackgroundUrl) return
+  const clonedWindow = clonedDocument.defaultView
+  const clonedGrid = clonedDocument.querySelector('.exportScheduleCanvas .timetableGridClean')
+    || clonedDocument.querySelector('.timetableGridClean')
+    || clonedDocument.querySelector('.exportScheduleCanvas')
+
+  if (!(clonedGrid instanceof clonedWindow.HTMLElement)) return
+
+  clonedGrid.style.position = 'relative'
+  clonedGrid.style.overflow = 'hidden'
+  clonedGrid.style.backgroundImage = 'none'
+  clonedGrid.style.backgroundColor = '#0f172a'
+
+  const img = clonedDocument.createElement('img')
+  img.src = safeBackgroundUrl
+  img.setAttribute('alt', '')
+  img.setAttribute('aria-hidden', 'true')
+  img.style.position = 'absolute'
+  img.style.inset = '0'
+  img.style.width = '100%'
+  img.style.height = '100%'
+  img.style.objectFit = 'cover'
+  img.style.objectPosition = 'center center'
+  img.style.opacity = '1'
+  img.style.zIndex = '0'
+  img.style.pointerEvents = 'none'
+
+  clonedGrid.insertBefore(img, clonedGrid.firstChild)
+
+  Array.from(clonedGrid.children).forEach((child) => {
+    if (!(child instanceof clonedWindow.HTMLElement)) return
+    if (child === img) return
+    child.style.position = child.style.position || 'relative'
+    child.style.zIndex = '1'
+  })
+}
+
+
 export async function exportPngFromDom(element, semester = '課表') {
   if (!element) {
     alert('找不到目前課表畫面，無法匯出 PNG。')
@@ -651,11 +716,20 @@ export async function exportPngFromDom(element, semester = '課表') {
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 
   let restoreExternalBackgrounds = () => {}
+  const originalOverflow = document.body.style.overflow
+  const safeBackgroundUrl = getExportSafeBackgroundUrl(element)
 
   try {
-    // html2canvas captures the real DOM more faithfully than the old SVG foreignObject path.
-    // If old external image URLs are still present, temporarily remove them so export continues.
+    // DOM-only export: capture the actual rendered timetable. Background images are sanitized in
+    // the cloned document. Local uploaded images are re-injected as a normal <img>, which avoids
+    // CSS background / CORS / foreignObject failures while keeping the DOM layout as the source.
     restoreExternalBackgrounds = await stripExternalBackgroundsForExport(element)
+    document.body.style.overflow = 'visible'
+
+    const rect = element.getBoundingClientRect()
+    const width = Math.ceil(Math.max(element.scrollWidth, rect.width))
+    const height = Math.ceil(Math.max(element.scrollHeight, rect.height))
+
     const { default: html2canvas } = await import('html2canvas')
     const canvas = await html2canvas(element, {
       backgroundColor: null,
@@ -664,33 +738,105 @@ export async function exportPngFromDom(element, semester = '課表') {
       allowTaint: false,
       imageTimeout: 15000,
       logging: false,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: document.documentElement.scrollWidth,
-      windowHeight: document.documentElement.scrollHeight,
+      scrollX: -window.scrollX,
+      scrollY: -window.scrollY,
+      width,
+      height,
+      windowWidth: Math.max(document.documentElement.clientWidth, width),
+      windowHeight: Math.max(document.documentElement.clientHeight, height),
+      ignoreElements: (node) => node?.classList?.contains?.('exportIgnore'),
       onclone: (clonedDocument) => {
-        const clonedRoot = clonedDocument.body
-        clonedRoot?.querySelectorAll?.('*')?.forEach?.((node) => {
-          if (!(node instanceof clonedDocument.defaultView.HTMLElement)) return
-          const bg = clonedDocument.defaultView.getComputedStyle(node).getPropertyValue('background-image') || ''
-          const urls = extractCssUrls(bg)
-          if (urls.some((url) => {
-            if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('/') || url.startsWith('#')) return false
-            try {
-              const parsed = new URL(url, window.location.href)
-              return parsed.origin !== window.location.origin
-            } catch {
-              return false
-            }
-          })) {
-            node.style.setProperty('background-image', 'none', 'important')
+        const clonedWindow = clonedDocument.defaultView
+        const clonedElement = clonedDocument.querySelector('.exportScheduleCanvas')
+
+        clearBackgroundImagesInClone(clonedDocument)
+
+        const style = clonedDocument.createElement('style')
+        style.textContent = `
+          .exportScheduleCanvas,
+          .exportScheduleCanvas *{
+            animation:none!important;
+            transition:none!important;
+            caret-color:transparent!important;
+            -webkit-backdrop-filter:none!important;
+            backdrop-filter:none!important;
+            filter:none!important;
           }
-        })
+          .exportScheduleCanvas{
+            width:${width}px!important;
+            min-width:${width}px!important;
+            height:${height}px!important;
+            min-height:${height}px!important;
+            overflow:visible!important;
+            transform:none!important;
+            background:#0f172a!important;
+            color:#f8fafc!important;
+          }
+          .exportScheduleCanvas .semesterPanel,
+          .exportScheduleCanvas .activeSemesterPanel{
+            width:100%!important;
+            height:auto!important;
+            max-height:none!important;
+            overflow:visible!important;
+            transform:none!important;
+            background:#10213d!important;
+            border-color:rgba(147,197,253,.32)!important;
+            color:#f8fafc!important;
+          }
+          .exportScheduleCanvas .timetableGridClean{
+            overflow:hidden!important;
+            background:#0f172a!important;
+            border-color:rgba(147,197,253,.26)!important;
+          }
+          .exportScheduleCanvas .corner,
+          .exportScheduleCanvas .day,
+          .exportScheduleCanvas .period{
+            background:rgba(15,23,42,.62)!important;
+            color:#f8fafc!important;
+            border-color:rgba(147,197,253,.22)!important;
+          }
+          .exportScheduleCanvas .slot{
+            background:rgba(15,23,42,.30)!important;
+            border-color:rgba(147,197,253,.22)!important;
+          }
+          .exportScheduleCanvas .slot.busy{
+            background:rgba(37,99,235,.16)!important;
+          }
+          .exportScheduleCanvas .slotCourse,
+          .exportScheduleCanvas .glassCourse{
+            background:rgba(15,35,72,.72)!important;
+            border-color:rgba(191,219,254,.28)!important;
+            color:#fff!important;
+            box-shadow:0 14px 30px rgba(0,0,0,.24)!important;
+          }
+          .exportScheduleCanvas .slotCourse::before,
+          .exportScheduleCanvas .slotCourse::after,
+          .exportScheduleCanvas .glassCourse::before,
+          .exportScheduleCanvas .glassCourse::after,
+          .exportScheduleCanvas .semesterPanel::before,
+          .exportScheduleCanvas .semesterPanel::after,
+          .exportScheduleCanvas .timetableGridClean::before,
+          .exportScheduleCanvas .timetableGridClean::after{
+            display:none!important;
+            content:none!important;
+          }
+        `
+        clonedDocument.head.appendChild(style)
+
+        if (clonedElement instanceof clonedWindow.HTMLElement) {
+          clonedElement.classList.add('uniplanExportDomCapture')
+          clonedElement.style.width = `${width}px`
+          clonedElement.style.height = `${height}px`
+          clonedElement.style.overflow = 'visible'
+          clonedElement.style.transform = 'none'
+        }
+
+        injectExportBackgroundImage(clonedDocument, safeBackgroundUrl)
       },
     })
 
     const blob = await canvasToBlobSafe(canvas)
-    if (!blob) throw new Error('html2canvas produced unsafe canvas')
+    if (!blob) throw new Error('DOM 匯出產生的 canvas 無法輸出 PNG')
 
     const pngUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -702,9 +848,11 @@ export async function exportPngFromDom(element, semester = '課表') {
     URL.revokeObjectURL(pngUrl)
     return true
   } catch (error) {
-    console.error('DOM PNG export failed, fallback renderer will be used if available.', error)
+    console.error('DOM PNG export failed.', error)
+    alert('PNG 匯出失敗：DOM 擷取失敗。請先確認背景圖是本機上傳圖片，或暫時移除背景後再試。')
     return false
   } finally {
+    document.body.style.overflow = originalOverflow
     restoreExternalBackgrounds()
   }
 }
