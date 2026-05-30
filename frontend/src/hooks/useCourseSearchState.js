@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchCourses, fetchMetadata } from '../api'
-import { COURSE_CATALOG_TERMS, catalogTermForSemester, courseCatalogTermValue, courseSmartScore, extractCourseList, findConflict, getCourse, credits, courseKey, reviewKey } from '../utils/coursePlanning'
+import { COURSE_CATALOG_TERMS, catalogTermForSemester, courseCatalogTermValue, courseSmartScore, courseMatchesSemester, extractCourseList, findConflict, getCourse, credits, courseKey, reviewKey } from '../utils/coursePlanning'
 import { COURSE_TAGS, countCourseTagVotes } from '../data/courses/courseTags'
 
 
@@ -92,9 +92,10 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
   }, [courseCatalogTerm])
 
   const sortedFilteredCourses = useMemo(() => {
+    // 課程來源學期（1141CLASS / 1142CLASS）已經在搜尋 API 與靜態 fallback 階段過濾。
+    // 這裡不能再用目前課表頁籤 activeSemester 二次過濾，否則選 114 下學期時，
+    // 若目前課表停在大一上，就會把 1142CLASS 全部濾成 0 門。
     const list = (courses || []).filter((course) => {
-      // 課程來源篩選已經由 runCourseSearch 的 courseCatalogTerm 處理。
-      // 這裡不要再用目前課表學期 activeSemester 二次過濾，否則選 114 下學期但目前課表停在大一上時會被清成 0 筆。
       if (searchOnlyAvailable && findConflict(course, plan[activeSemester] || [])) return false
       return true
     })

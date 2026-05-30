@@ -287,96 +287,6 @@ async function saveUserBundle(sql, userId, bundle = {}) {
   }
 }
 
-
-function normalizeCatalogTermForApi(value) {
-  const raw = String(value || '').trim()
-  if (!raw || raw === '全部') return ''
-  if (/114\s*[_-]?\s*1|114\s*上|1141|114學年度上|上學期|1CLASS/i.test(raw)) return '1141CLASS'
-  if (/114\s*[_-]?\s*2|114\s*下|1142|114學年度下|下學期|2CLASS/i.test(raw)) return '1142CLASS'
-  return raw
-}
-
-function normalizeTextForCourseApi(value) {
-  return String(value || '').trim().toLowerCase()
-}
-
-function courseApiMatches(course, params = {}) {
-  const keyword = normalizeTextForCourseApi(params.keyword)
-  const semester = normalizeCatalogTermForApi(params.semester)
-  const department = String(params.department || '').trim()
-  const grade = String(params.grade || '').trim()
-  const weekday = String(params.weekday || '').trim()
-  const period = String(params.period || '').trim()
-  const haystack = [
-    course.name,
-    course.course_name,
-    course.teacher,
-    course.instructor,
-    course.serial,
-    course.code,
-    course.course_id,
-    course.department,
-    course.major,
-    course.category,
-    course.class_name,
-    course.classroom,
-    course.time_info,
-    course.time_data,
-  ].join(' ').toLowerCase()
-  if (keyword && !haystack.includes(keyword)) return false
-  const courseTerm = normalizeCatalogTermForApi(course.semester_source || course.semester || course.term || course.source_term || course.catalog_term)
-  if (semester && courseTerm && courseTerm !== semester) return false
-  if (department && department !== '全部' && String(course.department || '') !== department) return false
-  if (grade && grade !== '全部' && String(course.grade || '') !== grade) return false
-  const timeText = String(course.time_info || course.time_data || course.time || '')
-  if (weekday && weekday !== '全部' && !timeText.includes(weekday)) return false
-  if (period && period !== '全部' && !timeText.includes(String(period))) return false
-  return true
-}
-
-async function readStaticJsonAsset(request, env, assetPath) {
-  const assetUrl = new URL(assetPath, request.url)
-  let response = null
-  if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-    response = await env.ASSETS.fetch(new Request(assetUrl.toString(), request))
-  } else {
-    response = await fetch(assetUrl.toString())
-  }
-  if (!response.ok) throw new Error(`${assetPath} 載入失敗：${response.status}`)
-  return response.json()
-}
-
-async function handleStaticCourses(request, env) {
-  const url = new URL(request.url)
-  const payload = await readStaticJsonAsset(request, env, '/data/courses.json')
-  const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
-  const params = Object.fromEntries(url.searchParams.entries())
-  const filtered = list.filter((course) => courseApiMatches(course, params)).slice(0, 500)
-  return json({ ok: true, data: filtered, total: filtered.length, source: 'static-courses-json' })
-}
-
-async function handleStaticCourseMetadata(request, env) {
-  try {
-    const payload = await readStaticJsonAsset(request, env, '/data/metadata.json')
-    return json(payload?.data ? payload : { ok: true, data: payload })
-  } catch (err) {
-    const coursesPayload = await readStaticJsonAsset(request, env, '/data/courses.json')
-    const list = Array.isArray(coursesPayload?.data) ? coursesPayload.data : []
-    const unique = (values) => Array.from(new Set(values.map((item) => String(item || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'zh-Hant'))
-    return json({
-      ok: true,
-      data: {
-        departments: unique(list.map((course) => course.department)),
-        categories: unique(list.map((course) => course.category)),
-        grades: unique(list.map((course) => course.grade)),
-        majors: unique(list.map((course) => course.major)),
-        semesters: unique(list.map((course) => course.semester_source)),
-      },
-      source: 'static-courses-json-derived',
-    })
-  }
-}
-
 async function handleRegister(request, env, sql) {
   const body = await readBody(request)
   const studentId = normalizeStudentId(body.student_id || body.studentId)
@@ -773,6 +683,79 @@ async function handleGoogleComplete(request, env, sql) {
   return json({ ok: true, token, user, profile: rows[0].profile || {}, data: await loadUserBundle(sql, user.id), message: 'Google 帳號已完成首次設定' })
 }
 
+
+
+async function loadStaticJson(request, pathname) {
+  const url = new URL(request.url)
+  const assetUrl = new URL(pathname, `${url.protocol}//${url.host}`)
+  const response = await fetch(assetUrl.toString(), { cf: { cacheTtl: 60, cacheEverything: true } }).catch(() => null)
+  if (!response || !response.ok) throw new Error(`${pathname} not found`)
+  return response.json()
+}
+
+function normalizeCourseTerm(value) {
+  const raw = String(value || '').trim()
+  if (!raw || raw === '全部') return ''
+  if (/114\s*[_-]?\s*1|114\s*上|1141|114學年度上|上學期|1CLASS/i.test(raw)) return '1141CLASS'
+  if (/114\s*[_-]?\s*2|114\s*下|1142|114學年度下|下學期|2CLASS/i.test(raw)) return '1142CLASS'
+  return raw
+}
+
+function staticCourseMatches(course, params = {}) {
+  const keyword = String(params.keyword || '').trim().toLowerCase()
+  const semester = normalizeCourseTerm(params.semester)
+  const department = String(params.department || '').trim()
+  const grade = String(params.grade || '').trim()
+  const weekday = String(params.weekday || '').trim()
+  const period = String(params.period || '').trim()
+  const requirement = String(params.requirement || '').trim()
+  const category = String(params.category || '').trim()
+  const courseTerm = normalizeCourseTerm(course.semester_source || course.semester || course.term || course.source_term || course.catalog_term)
+  const haystack = [course.name, course.teacher, course.serial, course.code, course.department, course.major, course.category, course.class_name, course.time_info, course.classroom]
+    .join(' ')
+    .toLowerCase()
+  if (keyword && !haystack.includes(keyword)) return false
+  if (semester && courseTerm !== semester) return false
+  if (department && department !== '全部' && course.department !== department) return false
+  if (grade && grade !== '全部' && String(course.grade || '') !== grade) return false
+  if (requirement && requirement !== '全部' && String(course.category || '') !== requirement) return false
+  if (category && category !== '全部' && String(course.category || '') !== category) return false
+  const timeText = String(course.time_info || course.time_data || '')
+  if (weekday && weekday !== '全部' && !timeText.includes(weekday)) return false
+  if (period && period !== '全部' && !timeText.includes(String(period))) return false
+  return true
+}
+
+async function handleCourses(request) {
+  const url = new URL(request.url)
+  const payload = await loadStaticJson(request, '/data/courses.json')
+  const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+  const params = Object.fromEntries(url.searchParams.entries())
+  const data = list.filter((course) => staticCourseMatches(course, params)).slice(0, 500)
+  return json({ ok: true, data, total: data.length, source: 'static-json' })
+}
+
+async function handleCoursesMetadata(request) {
+  try {
+    const payload = await loadStaticJson(request, '/data/metadata.json')
+    return json(payload?.data ? payload : { ok: true, data: payload })
+  } catch (_) {
+    const coursesPayload = await loadStaticJson(request, '/data/courses.json')
+    const list = Array.isArray(coursesPayload?.data) ? coursesPayload.data : Array.isArray(coursesPayload) ? coursesPayload : []
+    const unique = (key) => Array.from(new Set(list.map((course) => course[key]).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), 'zh-Hant'))
+    return json({
+      ok: true,
+      data: {
+        departments: unique('department'),
+        categories: unique('category'),
+        grades: unique('grade'),
+        majors: unique('major'),
+        semesters: ['1141CLASS', '1142CLASS'],
+      },
+    })
+  }
+}
+
 const TKU_PROGRAMS = { '2': '進學班', '3': '未知學制', '4': '學士生', '6': '碩士生', '7': '碩士在職專班 / 轉入大二', '8': '博士生 / 轉入大三' }
 const TKU_IDENTITIES = { '0': '本地生', '1': '本地生', '2': '本地生', '3': '本地生', '4': '陸生', '5': '境外生', '6': '僑、港、澳生 / 身障生', '7': '轉學生（大二轉入）', '8': '轉學生（大三轉入）' }
 const TKU_DEPARTMENTS = { '73': ['教育科技學系', '教育學院'], '71': ['教育與未來設計學系', '教育學院'], '77': ['人工智慧學系', 'AI創智學院'] }
@@ -804,8 +787,6 @@ export async function onRequest(context) {
     const path = `/${(params.path || []).join('/')}`.replace(/\/+/g, '/')
     const method = request.method.toUpperCase()
 
-    if (method === 'GET' && path === '/courses') return handleStaticCourses(request, env)
-    if (method === 'GET' && path === '/courses/metadata') return handleStaticCourseMetadata(request, env)
     if (method === 'GET' && path === '/auth/google/start') return handleGoogleStart(request, env)
     if (method === 'GET' && path === '/auth/google/callback') return handleGoogleCallback(request, env, sql)
     if (method === 'POST' && path === '/auth/google/complete') return handleGoogleComplete(request, env, sql)
@@ -825,6 +806,8 @@ export async function onRequest(context) {
     if (method === 'POST' && path === '/schedule') return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/schedule/')) return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/student-id/parse/')) return json({ ok: true, data: parseStudentIdLocal(decodeURIComponent(path.slice('/student-id/parse/'.length))) })
+    if (method === 'GET' && path === '/courses') return handleCourses(request)
+    if (method === 'GET' && path === '/courses/metadata') return handleCoursesMetadata(request)
 
     return error(`API route not found: ${method} ${path}`, 404)
   } catch (err) {
