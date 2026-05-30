@@ -1,4 +1,4 @@
-import { Component, useRef, useState } from 'react'
+import { Component, useEffect, useRef, useState } from 'react'
 import './style.css'
 import './uniplan-hard-final.css'
 import ProgramsPage from './pages/ProgramsPage'
@@ -19,7 +19,8 @@ import SideNav from './components/layout/SideNav'
 import Topbar from './components/layout/Topbar'
 import GuideOverlay from './components/guide/GuideOverlay'
 import FeedbackPage from './pages/FeedbackPage'
-import { isSuperAdminUser } from './utils/account'
+import LoginPage from './components/auth/LoginPage'
+import { isSuperAdminUser, saveBoundAcademicBundle } from './utils/account'
 import { DEFAULT_RULES } from './data/graduation/graduationRulesPreview'
 import {
   COURSE_CATALOG_TERMS,
@@ -107,7 +108,7 @@ function App() {
   } = usePersistentAcademicState()
   const {
     user, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError,
-    accountProfile, handleLogin, logout,
+    accountProfile, handleLogin, handleGuestLogin, logout,
   } = useAccountState({
     notify,
     applyRemoteBundle,
@@ -210,6 +211,19 @@ function App() {
     notify,
     commit,
   })
+
+
+  useEffect(() => {
+    if (!user?.studentId || user.publicAlpha) return
+    const timer = window.setTimeout(() => {
+      saveBoundAcademicBundle(user, makeUserBundle())
+    }, 350)
+    return () => window.clearTimeout(timer)
+  }, [user?.studentId, user?.publicAlpha, plan, candidates, favorites, snapshots, localReviews, tagVotes])
+
+  if (!user) {
+    return <LoginPage authMode={authMode} setAuthMode={setAuthMode} loginForm={loginForm} setLoginForm={setLoginForm} studentIdPreview={studentIdPreview} authError={authError} handleLogin={handleLogin} handleGuestLogin={handleGuestLogin} />
+  }
 
   return (
     <div className="appShell">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchSchedule, fetchUserData, login, logout as apiLogout, parseStudentId, register, updateProfile } from '../api'
-import { DEFAULT_ACCOUNT_PROFILE, PUBLIC_GUEST_USER, applyAdminRole, loadProfileForUser, parseTkuStudentIdLocal, profileStorageKey, purgeRemovedStudentLocalData, readStorageJson } from '../utils/account'
+import { DEFAULT_ACCOUNT_PROFILE, PUBLIC_GUEST_USER, applyAdminRole, loadProfileForUser, loadBoundAcademicBundle, loginLocalAccount, parseTkuStudentIdLocal, profileStorageKey, purgeRemovedStudentLocalData, readStorageJson, registerLocalAccount, resetLocalPassword } from '../utils/account'
 import { download, makePlan, userKey } from '../utils/coursePlanning'
 
 function profileFromParsed(parsed) {
@@ -18,13 +18,13 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
   purgeRemovedStudentLocalData()
   const [user, setUser] = useState(() => {
     const storedUser = readStorageJson('uniplan:user', null)
-    return storedUser && typeof storedUser === 'object' ? applyAdminRole({ role: 'student', ...storedUser }) : PUBLIC_GUEST_USER
+    return storedUser && typeof storedUser === 'object' ? applyAdminRole({ role: 'student', ...storedUser }) : null
   })
-  const [loginForm, setLoginForm] = useState({ studentId: '', password: '', displayName: '', email: '' })
+  const [loginForm, setLoginForm] = useState({ studentId: '', password: '', displayName: '', email: '', newPassword: '' })
   const [authMode, setAuthMode] = useState('login')
   const [studentIdPreview, setStudentIdPreview] = useState(null)
   const [authError, setAuthError] = useState('')
-  const [accountProfile, setAccountProfile] = useState(() => loadProfileForUser(readStorageJson('uniplan:user', null) || PUBLIC_GUEST_USER))
+  const [accountProfile, setAccountProfile] = useState(() => loadProfileForUser(readStorageJson('uniplan:user', null)))
 
   useEffect(() => {
     const sid = loginForm.studentId.trim()
@@ -55,66 +55,64 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
   async function handleLogin(e) {
     e.preventDefault()
     setAuthError('')
+    const sid = loginForm.studentId.trim()
+    const parsed = studentIdPreview?.valid ? studentIdPreview : parseTkuStudentIdLocal(sid)
     try {
-      if (authMode === 'register' && loginForm.studentId !== 'admin' && loginForm.studentId !== 'super') {
-        const parsed = studentIdPreview || parseTkuStudentIdLocal(loginForm.studentId)
-        if (!parsed?.valid) {
-          setAuthError(parsed?.reason || '學號格式錯誤')
-          return
-        }
+      if (!sid) throw new Error('請輸入學號')
+      if (authMode === 'forgot') {
+        resetLocalPassword(sid, loginForm.email, loginForm.newPassword)
+        setAuthMode('login')
+        setLoginForm((prev) => ({ ...prev, password: '', newPassword: '' }))
+        notify('密碼已重設，請使用新密碼登入')
+        return
       }
-      const data = authMode === 'register'
-        ? await register(loginForm.studentId, loginForm.password, { display_name: loginForm.displayName })
-        : await login(loginForm.studentId, loginForm.password)
-      if (data?.token) localStorage.setItem('uniplan:token', data.token)
-      const remoteUser = data?.user || {}
-      const nextUser = applyAdminRole({ studentId: remoteUser.student_id || loginForm.studentId, role: remoteUser.role || 'student' })
+      if (authMode === 'register') {
+        if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
+        const { user: nextUser, profile } = registerLocalAccount({
+          studentId: sid,
+          password: loginForm.password,
+          displayName: loginForm.displayName || sid,
+          email: loginForm.email,
+          profile: profileFromParsed(parsed),
+        })
+        setUser(nextUser)
+        localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+        setAccountProfile(profile)
+        localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(profile))
+        const boundBundle = loadBoundAcademicBundle(nextUser)
+        if (boundBundle) applyRemoteBundle(boundBundle)
+        notify('本機帳號已建立，課表將綁定此帳號')
+        return
+      }
+      const { user: nextUser, profile } = loginLocalAccount(sid, loginForm.password)
       setUser(nextUser)
       localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
-      const parsedLoginProfile = studentIdPreview?.valid ? studentIdPreview : parseTkuStudentIdLocal(loginForm.studentId)
-      const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...loadProfileForUser(nextUser), ...(remoteUser.profile || {}), ...profileFromParsed(parsedLoginProfile) }
+      const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...profile, ...profileFromParsed(parsed) }
       setAccountProfile(nextProfile)
       localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
-      const cloud = await fetchUserData().catch(() => null)
-      if (cloud?.data && Object.keys(cloud.data).length) applyRemoteBundle(cloud.data)
-      else {
-        const schedule = await fetchSchedule(nextUser.studentId).catch(() => null)
-        if (schedule?.schedule_data) setPlan({ ...makePlan(), ...schedule.schedule_data })
-      }
-      notify(authMode === 'register' ? '註冊並登入成功' : '登入成功')
+      const boundBundle = loadBoundAcademicBundle(nextUser)
+      if (boundBundle) applyRemoteBundle(boundBundle)
+      notify(boundBundle ? '登入成功，已載入此帳號課表' : '登入成功，尚未建立綁定課表')
     } catch (error) {
-      const isOffline = !error?.response
-      if (!isOffline) {
-        setAuthError(error?.response?.data?.detail || error?.response?.data?.message || error?.message || '登入失敗')
-        return
-      }
-      const parsed = parseTkuStudentIdLocal(loginForm.studentId)
-      if (authMode === 'register' && loginForm.studentId !== 'admin' && loginForm.studentId !== 'super' && !parsed?.valid) {
-        setAuthError(parsed?.reason || '學號格式錯誤')
-        return
-      }
-      const nextUser = applyAdminRole({ studentId: loginForm.studentId.trim(), role: 'student', offline: true })
-      setUser(nextUser)
-      localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
-      const nextProfile = {
-        ...DEFAULT_ACCOUNT_PROFILE,
-        ...loadProfileForUser(nextUser),
-        displayName: authMode === 'register' ? (loginForm.displayName || loginForm.studentId) : (loadProfileForUser(nextUser).displayName || loginForm.studentId),
-        ...profileFromParsed(parsed),
-      }
-      setAccountProfile(nextProfile)
-      localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
-      notify('後端未連線，已進入本機開發模式')
+      setAuthError(error?.message || '登入失敗')
     }
+  }
+
+  function handleGuestLogin() {
+    const nextUser = PUBLIC_GUEST_USER
+    setUser(nextUser)
+    localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+    setAccountProfile({ ...DEFAULT_ACCOUNT_PROFILE, displayName: '本機使用者' })
+    notify('已進入訪客模式')
   }
 
   async function logout() {
     await apiLogout().catch(() => null)
-    setUser(PUBLIC_GUEST_USER)
+    setUser(null)
     setAccountProfile(DEFAULT_ACCOUNT_PROFILE)
     localStorage.removeItem('uniplan:user')
     localStorage.removeItem('uniplan:token')
-    notify?.('已回到本機模式')
+    notify?.('已登出')
   }
 
   function updateAccountProfile(patch) {
@@ -184,7 +182,7 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
 
   return {
     user, setUser, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError,
-    accountProfile, setAccountProfile, handleLogin, logout, updateAccountProfile, saveAccountProfile,
+    accountProfile, setAccountProfile, handleLogin, handleGuestLogin, logout, updateAccountProfile, saveAccountProfile,
     toggleEmailBinding, toggleGoogleBinding, toggleSyncEnabled, exportAccountBundle, importAccountBundle,
   }
 }

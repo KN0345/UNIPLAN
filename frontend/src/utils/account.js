@@ -178,3 +178,121 @@ export function loadProfileForUser(user) {
     return DEFAULT_ACCOUNT_PROFILE
   }
 }
+
+export const LOCAL_ACCOUNTS_KEY = 'uniplan:localAccounts'
+
+function normalizeStudentId(studentId) {
+  return String(studentId || '').trim()
+}
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase()
+}
+
+function readLocalAccounts() {
+  return readStorageJson(LOCAL_ACCOUNTS_KEY, {}) || {}
+}
+
+function writeLocalAccounts(accounts) {
+  localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts || {}))
+}
+
+function encodePassword(password) {
+  const raw = String(password || '')
+  try {
+    return btoa(unescape(encodeURIComponent(`uniplan-local:${raw}`)))
+  } catch {
+    return raw
+  }
+}
+
+function publicUserFromAccount(account) {
+  return applyAdminRole({
+    studentId: account.studentId,
+    role: account.role || 'student',
+    offline: true,
+    localAccount: true,
+  })
+}
+
+export function localAccountExists(studentId) {
+  const accounts = readLocalAccounts()
+  return Boolean(accounts[normalizeStudentId(studentId)])
+}
+
+export function registerLocalAccount({ studentId, password, displayName, email, profile = {} }) {
+  const sid = normalizeStudentId(studentId)
+  if (!sid) throw new Error('請輸入學號')
+  if (localAccountExists(sid)) throw new Error('此學號已建立本機帳號')
+  if (String(password || '').length < 6) throw new Error('密碼至少需要 6 碼')
+  const accounts = readLocalAccounts()
+  const account = {
+    studentId: sid,
+    passwordHash: encodePassword(password),
+    displayName: String(displayName || sid).trim(),
+    email: normalizeEmail(email),
+    role: ADMIN_STUDENT_IDS.includes(sid) ? 'super_admin' : 'student',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  accounts[sid] = account
+  writeLocalAccounts(accounts)
+  const user = publicUserFromAccount(account)
+  const nextProfile = {
+    ...DEFAULT_ACCOUNT_PROFILE,
+    ...profile,
+    displayName: account.displayName,
+    email: account.email,
+    boundEmail: Boolean(account.email),
+    syncEnabled: true,
+  }
+  localStorage.setItem(profileStorageKey(user), JSON.stringify(nextProfile))
+  return { user, profile: nextProfile }
+}
+
+export function loginLocalAccount(studentId, password) {
+  const sid = normalizeStudentId(studentId)
+  const account = readLocalAccounts()[sid]
+  if (!account) throw new Error('找不到此本機帳號，請先註冊')
+  if (account.passwordHash !== encodePassword(password)) throw new Error('密碼錯誤')
+  const user = publicUserFromAccount(account)
+  const profile = {
+    ...DEFAULT_ACCOUNT_PROFILE,
+    ...loadProfileForUser(user),
+    displayName: loadProfileForUser(user).displayName || account.displayName || sid,
+    email: loadProfileForUser(user).email || account.email || '',
+    boundEmail: Boolean(loadProfileForUser(user).boundEmail || account.email),
+  }
+  return { user, profile }
+}
+
+export function resetLocalPassword(studentId, email, newPassword) {
+  const sid = normalizeStudentId(studentId)
+  const accounts = readLocalAccounts()
+  const account = accounts[sid]
+  if (!account) throw new Error('找不到此本機帳號')
+  if (!account.email) throw new Error('此帳號尚未綁定 Email，無法使用本機忘記密碼')
+  if (normalizeEmail(email) !== normalizeEmail(account.email)) throw new Error('Email 與註冊資料不一致')
+  if (String(newPassword || '').length < 6) throw new Error('新密碼至少需要 6 碼')
+  accounts[sid] = { ...account, passwordHash: encodePassword(newPassword), updatedAt: new Date().toISOString() }
+  writeLocalAccounts(accounts)
+  return true
+}
+
+export function academicBundleStorageKey(user) {
+  return `uniplan:academic:${accountUserKey(user)}`
+}
+
+export function loadBoundAcademicBundle(user) {
+  if (!user) return null
+  return readStorageJson(academicBundleStorageKey(user), null)
+}
+
+export function saveBoundAcademicBundle(user, bundle) {
+  if (!user?.studentId || !bundle) return
+  localStorage.setItem(academicBundleStorageKey(user), JSON.stringify({
+    ...bundle,
+    boundStudentId: user.studentId,
+    updatedAt: new Date().toISOString(),
+  }))
+}
