@@ -16,7 +16,7 @@ export default function Topbar({ activeMenu, onOpenSettings, onLogout, user }) {
       </div>
       <div className="topActions">
         <button onClick={onOpenSettings}>外觀</button>
-        <button onClick={onLogout}>{user?.publicAlpha ? '回登入' : '登出'}</button>
+        {!user?.offline && <button onClick={onLogout}>登出</button>}
       </div>
     </header>
   )

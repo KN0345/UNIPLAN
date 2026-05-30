@@ -92,10 +92,8 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
   }, [courseCatalogTerm])
 
   const sortedFilteredCourses = useMemo(() => {
-    // 課程來源學期（1141CLASS / 1142CLASS）已經在搜尋 API 與靜態 fallback 階段過濾。
-    // 這裡不能再用目前課表頁籤 activeSemester 二次過濾，否則選 114 下學期時，
-    // 若目前課表停在大一上，就會把 1142CLASS 全部濾成 0 門。
     const list = (courses || []).filter((course) => {
+      if (!courseMatchesSemester(course, activeSemester)) return false
       if (searchOnlyAvailable && findConflict(course, plan[activeSemester] || [])) return false
       return true
     })
@@ -128,20 +126,7 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
   }, [courses, activeSemester, searchOnlyAvailable, searchSort, favorites, candidates, plan, searchFilters.tag, tagVotes, query])
 
   const majorOptions = useMemo(() => Array.from(new Set([...(metadata.majors || []), ...courses.map((course) => getCourse(course).major).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])
-  const departmentOptions = useMemo(() => {
-    const isRealDepartment = (value) => {
-      const text = String(value || '').trim()
-      if (!text) return false
-      if (/^[A-ZＡ-Ｚ]班?$/.test(text)) return false
-      if (/^[甲乙丙丁戊己庚辛壬癸]班?$/.test(text)) return false
-      if (/^[ABCD]$/.test(text)) return false
-      return true
-    }
-    return Array.from(new Set([...(metadata.departments || []), ...courses.map((course) => getCourse(course).department).filter(Boolean)]))
-      .filter(isRealDepartment)
-      .sort((a, b) => String(a).localeCompare(String(b), 'zh-Hant'))
-      .slice(0, 300)
-  }, [metadata, courses])
+  const departmentOptions = useMemo(() => Array.from(new Set([...(metadata.departments || []), ...courses.map((course) => getCourse(course).department).filter(Boolean)])).filter(Boolean).slice(0, 300), [metadata, courses])
   const gradeOptions = useMemo(() => Array.from(new Set([...(metadata.grades || []), ...courses.map((course) => getCourse(course).grade).filter(Boolean)])).filter(Boolean).slice(0, 120), [metadata, courses])
 
   return {

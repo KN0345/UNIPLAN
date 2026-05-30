@@ -1,6 +1,5 @@
-import { Component, useEffect, useRef, useState } from 'react'
+import { Component, useRef, useState } from 'react'
 import './style.css'
-import './uniplan-hard-final.css'
 import ProgramsPage from './pages/ProgramsPage'
 import AdminProgramsPage from './components/admin/AdminProgramsPage'
 import AdminDataConsolePanel from './components/admin/AdminDataConsole'
@@ -19,9 +18,7 @@ import SideNav from './components/layout/SideNav'
 import Topbar from './components/layout/Topbar'
 import GuideOverlay from './components/guide/GuideOverlay'
 import FeedbackPage from './pages/FeedbackPage'
-import LoginPage from './components/auth/LoginPage'
-import { syncUserData } from './api'
-import { isSuperAdminUser, saveBoundAcademicBundle } from './utils/account'
+import { isSuperAdminUser } from './utils/account'
 import { DEFAULT_RULES } from './data/graduation/graduationRulesPreview'
 import {
   COURSE_CATALOG_TERMS,
@@ -108,8 +105,8 @@ function App() {
     localReviews, setLocalReviews, tagVotes, setTagVotes, applyRemoteBundle, makeUserBundle,
   } = usePersistentAcademicState()
   const {
-    user, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError, authNotice, resetRequested,
-    accountProfile, handleLogin, handleResendVerification, handleGuestLogin, logout,
+    user, loginForm, setLoginForm, authMode, setAuthMode, studentIdPreview, authError,
+    accountProfile, handleLogin, logout,
   } = useAccountState({
     notify,
     applyRemoteBundle,
@@ -212,21 +209,6 @@ function App() {
     notify,
     commit,
   })
-
-
-  useEffect(() => {
-    if (!user?.studentId || user.publicAlpha) return
-    const timer = window.setTimeout(() => {
-      const bundle = makeUserBundle()
-      saveBoundAcademicBundle(user, bundle)
-      if (!user.offline && accountProfile?.syncEnabled !== false) syncUserData(bundle).catch(() => null)
-    }, 350)
-    return () => window.clearTimeout(timer)
-  }, [user?.studentId, user?.publicAlpha, plan, candidates, favorites, snapshots, localReviews, tagVotes])
-
-  if (!user) {
-    return <LoginPage authMode={authMode} setAuthMode={setAuthMode} loginForm={loginForm} setLoginForm={setLoginForm} studentIdPreview={studentIdPreview} authError={authError} authNotice={authNotice} resetRequested={resetRequested} handleLogin={handleLogin} handleResendVerification={handleResendVerification} handleGuestLogin={handleGuestLogin} />
-  }
 
   return (
     <div className="appShell">

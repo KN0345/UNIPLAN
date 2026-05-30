@@ -1,8 +1,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import './style.css'
-import './uniplan-ui-final.css'
-import './uniplan-hard-final.css'
 import App from './App.jsx'
 
 window.addEventListener('error', (event) => {

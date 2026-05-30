@@ -65,7 +65,7 @@ export default function CourseSearchPage(props) {
                 </form>
                 <div className="courseFilters">
                   <label>課程來源<select value={courseCatalogTerm} onChange={(e) => setCourseCatalogTerm(e.target.value)}>{COURSE_CATALOG_TERMS.map((term) => <option key={term.value} value={term.value}>{term.label}</option>)}</select></label>
-                  <label>科系<select value={searchFilters.department} onChange={(e) => setSearchFilters((f) => ({ ...f, department: e.target.value }))}><option>全部</option>{departmentOptions.map((item) => <option key={`dept-${item}`} value={item}>{item}</option>)}</select></label>
+                  <label>科系<select value={searchFilters.department} onChange={(e) => setSearchFilters((f) => ({ ...f, department: e.target.value }))}><option>全部</option>{majorOptions.length ? majorOptions.map((item) => <option key={`major-${item}`} value={item}>{item}</option>) : departmentOptions.map((item) => <option key={`dept-${item}`} value={item}>{item}</option>)}</select></label>
                   <label>必/選修<select value={searchFilters.requirement} onChange={(e) => setSearchFilters((f) => ({ ...f, requirement: e.target.value }))}><option>全部</option><option>必修</option><option>選修</option></select></label>
                   <label>年級<select value={searchFilters.grade} onChange={(e) => setSearchFilters((f) => ({ ...f, grade: e.target.value }))}><option>全部</option>{gradeOptions.map((item) => <option key={`grade-${item}`} value={item}>{item}</option>)}</select></label>
                   <label>星期<select value={searchFilters.weekday} onChange={(e) => setSearchFilters((f) => ({ ...f, weekday: e.target.value }))}><option>全部</option>{DAYS.map((day) => <option key={day}>{day}</option>)}</select></label>
