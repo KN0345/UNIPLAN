@@ -1006,3 +1006,109 @@ body[data-ui-theme] .compactAccentGrid button.active{
   .compareCourseCards{grid-template-columns:1fr!important;}
   .compareMatrixHeader,.compareMatrixRow{grid-template-columns:106px repeat(var(--compare-columns,4),minmax(170px,1fr))!important;min-width:720px!important;}
 }
+
+/* FINAL FIX 2026-05-30: simple comparison list with danger and tag colors */
+.comparePanel.comparePanelSimple,
+.comparePanelSimple{
+  width:min(1120px,calc(100vw - 40px))!important;
+  max-height:calc(100vh - 40px)!important;
+  padding:18px!important;
+}
+.comparePanelSimple .compareCourseCards,
+.comparePanelSimple .compareInsightPanel,
+.comparePanelSimple .compareMatrix{
+  display:none!important;
+}
+.compareSimpleGrid{
+  overflow:auto!important;
+  border:1px solid color-mix(in srgb,var(--border) 82%,var(--accent) 18%)!important;
+  border-radius:20px!important;
+  background:color-mix(in srgb,var(--panel) 94%,var(--accent) 6%)!important;
+}
+.compareSimpleRow{
+  display:grid!important;
+  grid-template-columns:128px repeat(var(--compare-columns,4),minmax(210px,1fr))!important;
+  min-width:820px!important;
+  border-bottom:1px solid color-mix(in srgb,var(--border) 86%,transparent)!important;
+}
+.compareSimpleRow:last-child{border-bottom:0!important;}
+.compareSimpleHeader{
+  position:sticky!important;
+  top:0!important;
+  z-index:2!important;
+  background:color-mix(in srgb,var(--accent) 18%,var(--panel2))!important;
+}
+.compareSimpleLabel,
+.compareSimpleHeader b,
+.compareSimpleRow p,
+.compareSimpleTags,
+.compareSimpleActions{
+  min-width:0!important;
+  padding:13px 16px!important;
+  margin:0!important;
+  color:var(--text)!important;
+  font-size:15px!important;
+  line-height:1.5!important;
+  word-break:break-word!important;
+  white-space:normal!important;
+}
+.compareSimpleLabel{
+  font-weight:950!important;
+  color:var(--muted)!important;
+  background:color-mix(in srgb,var(--panel2) 76%,transparent)!important;
+}
+.compareSimpleHeader b{
+  font-weight:950!important;
+  color:var(--text)!important;
+  font-size:16px!important;
+  line-height:1.35!important;
+}
+.compareSimpleRow p{
+  font-weight:780!important;
+}
+.compareSimpleRow p.compareValueDanger{
+  color:#ef4444!important;
+  font-weight:950!important;
+}
+.compareTagChips{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+}
+.compareTagChip,
+.compareNoTags{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:28px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  border:1px solid var(--border)!important;
+  background:color-mix(in srgb,var(--panel2) 82%,transparent)!important;
+  color:var(--muted)!important;
+}
+.compareTagChip.positive{
+  color:#22c55e!important;
+  border-color:color-mix(in srgb,#22c55e 45%,var(--border) 55%)!important;
+  background:color-mix(in srgb,#22c55e 12%,var(--panel) 88%)!important;
+}
+.compareTagChip.negative{
+  color:#ef4444!important;
+  border-color:color-mix(in srgb,#ef4444 45%,var(--border) 55%)!important;
+  background:color-mix(in srgb,#ef4444 12%,var(--panel) 88%)!important;
+}
+.compareSimpleActions button{
+  min-height:36px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border) 55%)!important;
+  background:color-mix(in srgb,var(--accent) 16%,var(--panel))!important;
+  color:var(--text)!important;
+  font-weight:950!important;
+}
+@media(max-width:760px){
+  .comparePanel.comparePanelSimple,.comparePanelSimple{width:100%!important;max-height:calc(100vh - 16px)!important;padding:14px!important;}
+  .compareSimpleRow{grid-template-columns:96px repeat(var(--compare-columns,4),minmax(170px,1fr))!important;min-width:680px!important;}
+  .compareSimpleLabel,.compareSimpleHeader b,.compareSimpleRow p,.compareSimpleTags,.compareSimpleActions{padding:11px 12px!important;font-size:13px!important;}
+}
