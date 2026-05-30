@@ -17,6 +17,15 @@ export function allTopTags(course, tagVotes = {}) {
     .slice(0, 4)
 }
 
+function cleanTeacherName(value) {
+  return String(value || '')
+    .replace(/（[^）]*\*{2,}[^）]*）/g, '')
+    .replace(/\([^)]*\*{2,}[^)]*\)/g, '')
+    .replace(/\s*,\s*/g, '、')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function compactTime(course) {
   const c = getCourse(course)
   return c.time_info || c.time || '未列時間'
@@ -57,8 +66,9 @@ export function compareCourseRows(courses = [], tagVotes = {}) {
     return {
       id: c.id || c.course_id || c.serial || c.code || c.name,
       name: c.name || '未命名課程',
-      teacher: c.teacher || c.instructor || '尚無資料',
+      teacher: cleanTeacherName(c.teacher || c.instructor) || '尚無資料',
       time: compactTime(c),
+      room: c.classroom || c.room || c.location || '未列',
       credits: `${creditValue} 學分`,
       creditValue,
       requirement: c.required_type || c.requiredType || c.type || c.category || '未列',

@@ -854,3 +854,155 @@ body[data-ui-theme] .compactAccentGrid button.active{
 .semesterScroller{
   padding-bottom:0!important;
 }
+
+/* FINAL FIX 2026-05-29: redesigned course comparison modal */
+.compareOverlay{
+  padding:18px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(2,6,23,.72)!important;
+  backdrop-filter:blur(8px)!important;
+}
+.comparePanel.comparePanelRedesign,
+.comparePanelRedesign{
+  width:min(1180px,calc(100vw - 36px))!important;
+  max-height:calc(100vh - 36px)!important;
+  overflow:auto!important;
+  border-radius:26px!important;
+  padding:20px!important;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 88%,var(--accent) 12%),var(--panel))!important;
+  border:1px solid var(--primary-border,var(--border))!important;
+  color:var(--text)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.38)!important;
+}
+.compareHeaderRedesign{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  padding:2px 2px 16px!important;
+  border-bottom:1px solid var(--border)!important;
+  margin-bottom:16px!important;
+}
+.compareHeaderRedesign h2{margin:2px 0 4px!important;font-size:28px!important;line-height:1.15!important;color:var(--text)!important;}
+.compareHeaderRedesign span{color:var(--muted)!important;font-size:14px!important;}
+.compareEyebrow{margin:0!important;font-size:12px!important;font-weight:900!important;letter-spacing:.06em!important;color:var(--accent)!important;}
+.compareCourseCards{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(245px,1fr))!important;
+  gap:12px!important;
+  margin-bottom:14px!important;
+}
+.compareCourseCard{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr)!important;
+  gap:12px!important;
+  min-height:172px!important;
+  padding:15px!important;
+  border-radius:20px!important;
+  border:1px solid color-mix(in srgb,var(--border) 76%,var(--accent) 24%)!important;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--panel2) 82%,var(--accent) 18%),color-mix(in srgb,var(--panel) 96%,var(--accent) 4%))!important;
+  box-shadow:0 12px 28px color-mix(in srgb,var(--accent) 10%,transparent)!important;
+}
+.compareCourseIndex{
+  width:34px!important;
+  height:34px!important;
+  border-radius:13px!important;
+  display:grid!important;
+  place-items:center!important;
+  font-weight:950!important;
+  color:#fff!important;
+  background:linear-gradient(135deg,var(--button-accent),var(--accent))!important;
+}
+.compareCourseCardBody{min-width:0!important;display:grid!important;gap:7px!important;padding-bottom:44px!important;}
+.compareCourseCard strong{
+  color:var(--text)!important;
+  font-size:16px!important;
+  line-height:1.28!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  overflow:hidden!important;
+}
+.compareCourseCard p{margin:0!important;color:var(--muted)!important;font-size:13px!important;line-height:1.35!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.compareCourseMetaChips{display:flex!important;flex-wrap:wrap!important;gap:6px!important;}
+.compareCourseMetaChips span{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:24px!important;
+  padding:0 9px!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  color:var(--text)!important;
+  background:color-mix(in srgb,var(--panel) 72%,var(--accent) 12%)!important;
+  border:1px solid var(--border)!important;
+}
+.compareCourseCard button{
+  position:absolute!important;
+  left:61px!important;
+  bottom:15px!important;
+  height:34px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  border:1px solid color-mix(in srgb,var(--accent) 42%,var(--border) 58%)!important;
+  background:color-mix(in srgb,var(--accent) 14%,var(--panel))!important;
+  color:var(--text)!important;
+  font-weight:900!important;
+}
+.compareInsightPanel{
+  margin:0 0 14px!important;
+  padding:14px!important;
+  border-radius:18px!important;
+  background:color-mix(in srgb,var(--accent) 8%,var(--panel2))!important;
+  border:1px solid var(--border)!important;
+}
+.compareInsightPanel>b{display:block!important;margin-bottom:10px!important;color:var(--text)!important;font-size:16px!important;}
+.compareInsightList{display:flex!important;flex-wrap:wrap!important;gap:8px!important;}
+.compareInsightList span{
+  display:inline-flex!important;
+  align-items:center!important;
+  max-width:100%!important;
+  padding:7px 11px!important;
+  border-radius:999px!important;
+  background:var(--panel)!important;
+  border:1px solid var(--border)!important;
+  color:var(--text)!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+}
+.compareMatrix{
+  overflow:auto!important;
+  border:1px solid var(--border)!important;
+  border-radius:20px!important;
+  background:var(--panel)!important;
+}
+.compareMatrixHeader,
+.compareMatrixRow{
+  display:grid!important;
+  grid-template-columns:130px repeat(var(--compare-columns,4),minmax(190px,1fr))!important;
+  min-width:820px!important;
+}
+.compareMatrixHeader{background:color-mix(in srgb,var(--accent) 18%,var(--panel2))!important;position:sticky!important;top:0!important;z-index:1!important;}
+.compareMatrixHeader span,
+.compareMatrixHeader b,
+.compareMatrixLabel,
+.compareMatrixRow p{
+  min-width:0!important;
+  padding:13px 16px!important;
+  border-bottom:1px solid var(--border)!important;
+  color:var(--text)!important;
+}
+.compareMatrixHeader span,
+.compareMatrixHeader b{font-size:14px!important;font-weight:950!important;line-height:1.3!important;}
+.compareMatrixLabel{font-weight:950!important;color:var(--muted)!important;background:color-mix(in srgb,var(--panel2) 68%,transparent)!important;}
+.compareMatrixRow p{margin:0!important;color:var(--text)!important;font-size:14px!important;line-height:1.45!important;white-space:normal!important;word-break:break-word!important;}
+.compareMatrixRow:last-child .compareMatrixLabel,
+.compareMatrixRow:last-child p{border-bottom:0!important;}
+@media(max-width:760px){
+  .compareOverlay{padding:8px!important;align-items:stretch!important;}
+  .comparePanelRedesign{width:100%!important;max-height:calc(100vh - 16px)!important;border-radius:20px!important;padding:14px!important;}
+  .compareCourseCards{grid-template-columns:1fr!important;}
+  .compareMatrixHeader,.compareMatrixRow{grid-template-columns:106px repeat(var(--compare-columns,4),minmax(170px,1fr))!important;min-width:720px!important;}
+}
