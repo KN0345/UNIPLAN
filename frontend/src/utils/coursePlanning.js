@@ -606,105 +606,106 @@ export function stripUnsafeExternalUrlsFromMarkup(markup) {
   }).replace(/\s(?:src|href)=(['"])(https?:\/\/|\/\/)[^'"]*\1/g, '')
 }
 
+export function isUnsafeExternalUrl(url = '') {
+  const raw = String(url || '').trim()
+  if (!raw || raw === 'none') return false
+  if (raw.startsWith('data:') || raw.startsWith('blob:')) return false
+  if (raw.startsWith('#')) return false
+  if (raw.startsWith('/')) return false
+  try {
+    const parsed = new URL(raw, window.location.href)
+    return parsed.origin !== window.location.origin
+  } catch {
+    return false
+  }
+}
+
+export async function stripExternalBackgroundsForExport(element) {
+  const touched = []
+  if (!(element instanceof Element)) return () => {}
+  const nodes = [element, ...Array.from(element.querySelectorAll('*'))]
+  nodes.forEach((node) => {
+    if (!(node instanceof HTMLElement)) return
+    const style = window.getComputedStyle(node)
+    const bg = style.getPropertyValue('background-image') || ''
+    const urls = extractCssUrls(bg)
+    if (!urls.some(isUnsafeExternalUrl)) return
+    touched.push({ node, backgroundImage: node.style.backgroundImage })
+    node.style.setProperty('background-image', 'none', 'important')
+  })
+  return () => {
+    touched.forEach(({ node, backgroundImage }) => {
+      node.style.backgroundImage = backgroundImage || ''
+    })
+  }
+}
+
 export async function exportPngFromDom(element, semester = '課表') {
   if (!element) {
     alert('找不到目前課表畫面，無法匯出 PNG。')
-    return
+    return false
   }
+
   await waitForImages(element)
+  if (document.fonts?.ready) await document.fonts.ready
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 
-  const rect = element.getBoundingClientRect()
-  const width = Math.ceil(rect.width)
-  const height = Math.ceil(rect.height)
-  const clone = element.cloneNode(true)
-  clone.classList.add('exportClone')
-  clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
-  inlineComputedStyles(element, clone)
-  await sanitizeExportCloneImages(element, clone)
-  clone.style.width = `${width}px`
-  clone.style.height = `${height}px`
-  clone.style.margin = '0'
-  clone.style.transform = 'none'
-  clone.style.position = 'relative'
-  clone.style.left = '0'
-  clone.style.top = '0'
+  let restoreExternalBackgrounds = () => {}
 
-  let serialized = new XMLSerializer().serializeToString(clone)
-  serialized = stripUnsafeExternalUrlsFromMarkup(serialized)
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-      <foreignObject width="100%" height="100%">${serialized}</foreignObject>
-    </svg>`
-  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
-  const url = URL.createObjectURL(svgBlob)
   try {
-    const img = await loadImage(url)
-    const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2))
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.round(width * scale)
-    canvas.height = Math.round(height * scale)
-    const ctx = canvas.getContext('2d')
-    ctx.setTransform(scale, 0, 0, scale, 0, 0)
-    ctx.clearRect(0, 0, width, height)
-    ctx.drawImage(img, 0, 0, width, height)
+    // html2canvas captures the real DOM more faithfully than the old SVG foreignObject path.
+    // If old external image URLs are still present, temporarily remove them so export continues.
+    restoreExternalBackgrounds = await stripExternalBackgroundsForExport(element)
+    const { default: html2canvas } = await import('html2canvas')
+    const canvas = await html2canvas(element, {
+      backgroundColor: null,
+      scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)),
+      useCORS: true,
+      allowTaint: false,
+      imageTimeout: 15000,
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight,
+      onclone: (clonedDocument) => {
+        const clonedRoot = clonedDocument.body
+        clonedRoot?.querySelectorAll?.('*')?.forEach?.((node) => {
+          if (!(node instanceof clonedDocument.defaultView.HTMLElement)) return
+          const bg = clonedDocument.defaultView.getComputedStyle(node).getPropertyValue('background-image') || ''
+          const urls = extractCssUrls(bg)
+          if (urls.some((url) => {
+            if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('/') || url.startsWith('#')) return false
+            try {
+              const parsed = new URL(url, window.location.href)
+              return parsed.origin !== window.location.origin
+            } catch {
+              return false
+            }
+          })) {
+            node.style.setProperty('background-image', 'none', 'important')
+          }
+        })
+      },
+    })
+
     const blob = await canvasToBlobSafe(canvas)
-    if (!blob) throw new Error('canvas export failed')
+    if (!blob) throw new Error('html2canvas produced unsafe canvas')
+
     const pngUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = pngUrl
     a.download = `${semester}_課表.png`
+    document.body.appendChild(a)
     a.click()
+    a.remove()
     URL.revokeObjectURL(pngUrl)
+    return true
   } catch (error) {
-    console.error(error)
-    try {
-      const safeClone = element.cloneNode(true)
-      safeClone.classList.add('exportClone')
-      safeClone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml')
-      inlineComputedStyles(element, safeClone)
-      safeClone.querySelectorAll('*').forEach((node) => {
-        if (node instanceof HTMLElement) {
-          node.style.backgroundImage = 'none'
-          node.style.setProperty('--timetable-bg-image', 'none')
-        }
-        if (node instanceof HTMLImageElement) node.removeAttribute('src')
-      })
-      safeClone.style.width = `${width}px`
-      safeClone.style.height = `${height}px`
-      safeClone.style.margin = '0'
-      safeClone.style.transform = 'none'
-      safeClone.style.position = 'relative'
-      safeClone.style.left = '0'
-      safeClone.style.top = '0'
-      let safeSerialized = new XMLSerializer().serializeToString(safeClone)
-      safeSerialized = stripUnsafeExternalUrlsFromMarkup(safeSerialized)
-      const safeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><foreignObject width="100%" height="100%">${safeSerialized}</foreignObject></svg>`
-      const safeUrl = URL.createObjectURL(new Blob([safeSvg], { type: 'image/svg+xml;charset=utf-8' }))
-      const safeImg = await loadImage(safeUrl)
-      const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2))
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.round(width * scale)
-      canvas.height = Math.round(height * scale)
-      const ctx = canvas.getContext('2d')
-      ctx.setTransform(scale, 0, 0, scale, 0, 0)
-      ctx.clearRect(0, 0, width, height)
-      ctx.drawImage(safeImg, 0, 0, width, height)
-      const blob = await canvasToBlobSafe(canvas)
-      URL.revokeObjectURL(safeUrl)
-      if (!blob) throw new Error('safe canvas export failed')
-      const pngUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = pngUrl
-      a.download = `${semester}_課表.png`
-      a.click()
-      URL.revokeObjectURL(pngUrl)
-    } catch (fallbackError) {
-      console.error(fallbackError)
-      alert('PNG 匯出失敗。已略過外部圖片仍無法輸出，請先移除背景圖片或改用本機匯入圖片。')
-    }
+    console.error('DOM PNG export failed, fallback renderer will be used if available.', error)
+    return false
   } finally {
-    URL.revokeObjectURL(url)
+    restoreExternalBackgrounds()
   }
 }
 
