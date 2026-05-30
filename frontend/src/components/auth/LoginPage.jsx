@@ -20,6 +20,34 @@ export default function LoginPage({
   const isVerify = authMode === 'verify'
   const isGoogleSetup = authMode === 'google-setup'
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [visiblePasswords, setVisiblePasswords] = useState({})
+
+  function togglePasswordVisible(key) {
+    setVisiblePasswords((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  function PasswordInput({ field, placeholder, autoComplete }) {
+    const visible = Boolean(visiblePasswords[field])
+    return (
+      <div className="authPasswordControl">
+        <input
+          placeholder={placeholder}
+          type={visible ? 'text' : 'password'}
+          value={loginForm[field] || ''}
+          onChange={(e) => updateField(field, e.target.value)}
+          autoComplete={autoComplete}
+        />
+        <button
+          type="button"
+          className="authPasswordToggle"
+          onClick={() => togglePasswordVisible(field)}
+          aria-label={visible ? '隱藏密碼' : '顯示密碼'}
+        >
+          {visible ? '隱藏' : '顯示'}
+        </button>
+      </div>
+    )
+  }
 
   async function submitWithLoading(event) {
     event.preventDefault()
@@ -127,13 +155,7 @@ export default function LoginPage({
             </label>
             <label className="authField">
               <span>密碼</span>
-              <input
-                placeholder="輸入密碼"
-                type="password"
-                value={loginForm.password}
-                onChange={(e) => updateField('password', e.target.value)}
-                autoComplete="current-password"
-              />
+              <PasswordInput field="password" placeholder="輸入密碼" autoComplete="current-password" />
             </label>
           </>
         )}
@@ -184,11 +206,11 @@ export default function LoginPage({
             </div>
             <label className="authField">
               <span>密碼</span>
-              <input placeholder="至少 6 碼" type="password" value={loginForm.password} onChange={(e) => updateField('password', e.target.value)} autoComplete="new-password" />
+              <PasswordInput field="password" placeholder="至少 6 碼" autoComplete="new-password" />
             </label>
             <label className="authField">
               <span>確認密碼</span>
-              <input placeholder="再次輸入密碼" type="password" value={loginForm.confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value)} autoComplete="new-password" />
+              <PasswordInput field="confirmPassword" placeholder="再次輸入密碼" autoComplete="new-password" />
             </label>
           </>
         )}
@@ -231,11 +253,11 @@ export default function LoginPage({
             </label>
             <label className="authField">
               <span>新密碼</span>
-              <input placeholder="至少 6 碼" type="password" value={loginForm.newPassword} onChange={(e) => updateField('newPassword', e.target.value)} autoComplete="new-password" />
+              <PasswordInput field="newPassword" placeholder="至少 6 碼" autoComplete="new-password" />
             </label>
             <label className="authField">
               <span>確認新密碼</span>
-              <input placeholder="再次輸入新密碼" type="password" value={loginForm.confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value)} autoComplete="new-password" />
+              <PasswordInput field="confirmPassword" placeholder="再次輸入新密碼" autoComplete="new-password" />
             </label>
           </>
         )}

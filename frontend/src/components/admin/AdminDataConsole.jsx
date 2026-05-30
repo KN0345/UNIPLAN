@@ -81,9 +81,13 @@ const COURSE_IMPORT_COLUMNS = [
   ['class_name', '班級'],
 ]
 
-function normalizeImportSemester(value) {
+function normalizeImportSemester(value, fallback = '') {
   const normalized = normalizeSemesterCode(value)
-  return normalized || '1141CLASS'
+  const safeFallback = String(fallback || '').trim().toUpperCase().replace(/\s+/g, '')
+  return normalized || safeFallback
+}
+function displayImportSemester(value) {
+  return String(value || '').toUpperCase().replace(/\s+/g, '')
 }
 
 function parseCsv(text) {
@@ -465,14 +469,14 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
             <div className="adminImportHead">
               <div>
                 <h3>課程匯入</h3>
-                <p className="muted">上傳教務處 HTML 課程表，預覽資料後寫入 Neon courses。學期可直接輸入新代碼，例如 1151CLASS。</p>
+                <p className="muted">上傳教務處 HTML 課程表，預覽資料後寫入 Neon courses。學期欄可自由輸入新代碼，例如 1151CLASS。</p>
               </div>
               <div className="adminImportControls">
                 <label>目標學期
                   <input
                     list="semesterImportPresets"
                     value={importSemester}
-                    onChange={(event) => setImportSemester(normalizeImportSemester(event.target.value))}
+                    onChange={(event) => setImportSemester(displayImportSemester(event.target.value))}
                     placeholder="例如 1151CLASS"
                   />
                   <datalist id="semesterImportPresets">

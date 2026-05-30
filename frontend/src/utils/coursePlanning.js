@@ -711,11 +711,10 @@ export async function exportPngFromDom(element, semester = '課表') {
 
 
 export async function exportCleanPng(plan, semester = '課表') {
-  const gridElement = document.querySelector('.semesterPanel.activeSemesterPanel .timetableGridClean')
-  if (gridElement) {
-    await exportPngFromDom(gridElement, semester)
-    return
-  }
+  // Use the deterministic canvas renderer as the primary export path.
+  // The previous DOM/foreignObject export was fragile with backdrop-filter,
+  // custom timetable backgrounds, overflow containers, and Cloudflare preview domains.
+  // Keeping the canvas path first prevents blank / clipped PNG output.
   const courses = plan[semester] || []
   const appearance = readCurrentAppearance()
   const width = 1420
@@ -874,15 +873,36 @@ export async function exportCleanPng(plan, semester = '課表') {
   ctx.lineWidth = 1.2
   ctx.stroke()
 
-  canvas.toBlob((blob) => {
-    if (!blob) return
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${semester}_課表.png`
-    a.click()
-    URL.revokeObjectURL(url)
-  }, 'image/png')
+  await new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${semester}_課表.png`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        resolve(true)
+        return
+      }
+
+      try {
+        const a = document.createElement('a')
+        a.href = canvas.toDataURL('image/png')
+        a.download = `${semester}_課表.png`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        resolve(true)
+      } catch (error) {
+        console.error(error)
+        alert('PNG 匯出失敗。請重新整理後再試一次。')
+        resolve(false)
+      }
+    }, 'image/png')
+  })
 }
 
 export function exportCalendar(plan, semester = '') {

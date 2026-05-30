@@ -342,12 +342,14 @@ async function loadUserBundle(sql, userId) {
   const settingRows = await sql`select theme, accent_color, settings_json, updated_at from user_settings where user_id = ${userId} order by updated_at desc limit 1`
   const latestPlan = timetableRows[0]?.timetable_json || null
   const settings = settingRows[0]?.settings_json || null
-  const favorites = favoriteRows.map((row) => row.course_key)
+  const favoriteKeys = favoriteRows.map((row) => row.course_key)
+  const storedFavorites = Array.isArray(latestPlan?.favorites) && latestPlan.favorites.length ? latestPlan.favorites : favoriteKeys
   return {
     ...(latestPlan || {}),
     plan: latestPlan?.plan || latestPlan || null,
     candidates: latestPlan?.candidates || [],
-    favorites,
+    favorites: storedFavorites,
+    favoriteKeys,
     snapshots: latestPlan?.snapshots || [],
     localReviews: latestPlan?.localReviews || {},
     tagVotes: latestPlan?.tagVotes || {},
@@ -358,18 +360,29 @@ async function loadUserBundle(sql, userId) {
   }
 }
 
+function cloudCourseKey(item) {
+  if (typeof item === 'string') return item
+  const c = item?.course || item || {}
+  const term = String(c.semester_source || c.semester || c.term || '').trim()
+  const base = String(c.serial || c.code || c.course_id || c.id || `${c.name || ''}-${c.teacher || ''}-${c.time_info || c.time || ''}`).trim()
+  return term && base ? `${term}:${base}` : base
+}
+
 async function saveUserBundle(sql, userId, bundle = {}) {
   const semester = String(bundle.semester || bundle.plan?.semester || bundle.currentSemester || 'default')
+
+  // 既有 Neon 表可能沒有 unique(user_id, semester) constraint。
+  // 不使用 ON CONFLICT，改成明確 delete + insert，避免 /api/user/data 500 導致課表與收藏完全無法寫入。
+  await sql`delete from user_timetables where user_id = ${userId} and semester = ${semester}`
   await sql`
     insert into user_timetables (user_id, semester, timetable_json, updated_at)
     values (${userId}, ${semester}, ${JSON.stringify(bundle)}, now())
-    on conflict (user_id, semester) do update set timetable_json = excluded.timetable_json, updated_at = now()
   `
 
   if (Array.isArray(bundle.favorites)) {
     await sql`delete from user_favorites where user_id = ${userId}`
     for (const item of bundle.favorites) {
-      const key = typeof item === 'string' ? item : (item?.id || item?.code || item?.serial || item?.course_key || JSON.stringify(item))
+      const key = cloudCourseKey(item)
       if (key) await sql`insert into user_favorites (user_id, course_key) values (${userId}, ${String(key)})`
     }
   }
