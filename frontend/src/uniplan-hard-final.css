@@ -2373,3 +2373,64 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   .authV5FeatureList{margin-top:24px!important;}
   .authV5Stats{margin-top:24px!important;}
 }
+
+/* === 2026-05-30 Auth landing left-top alignment final ===
+   Keep login card as main action and turn the left side into a quiet, upper-left product brief. */
+@media (min-width:1181px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    grid-template-columns:minmax(500px, .82fr) minmax(380px, 456px)!important;
+    align-items:center!important;
+    gap:clamp(72px, 9vw, 150px)!important;
+    padding:clamp(44px, 6vw, 82px) clamp(56px, 7vw, 112px)!important;
+  }
+  .authV5Hero{
+    align-self:stretch!important;
+    justify-content:flex-start!important;
+    align-items:flex-start!important;
+    padding:clamp(28px, 4vw, 52px) clamp(16px, 3vw, 42px)!important;
+    margin-top:clamp(8px, 2vh, 28px)!important;
+    max-width:680px!important;
+  }
+  .authV5BrandRow{
+    margin-bottom:clamp(34px, 6vh, 74px)!important;
+  }
+  .authV5HeroText{
+    max-width:640px!important;
+  }
+  .authV5Kicker{
+    margin-bottom:16px!important;
+  }
+  .authV5Hero h1{
+    font-size:clamp(2.7rem, 4.35vw, 4.65rem)!important;
+    max-width:640px!important;
+  }
+  .authV5Lead{
+    max-width:610px!important;
+  }
+  .authV5FeatureList{
+    max-width:560px!important;
+    margin-top:clamp(30px, 4.5vh, 48px)!important;
+  }
+  .authV5Stats{
+    max-width:500px!important;
+    margin-top:clamp(32px, 5vh, 56px)!important;
+  }
+}
+
+@media (min-width:1181px) and (max-height:820px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    align-items:center!important;
+    padding:28px clamp(46px, 6vw, 90px)!important;
+  }
+  .authV5Hero{
+    justify-content:flex-start!important;
+    margin-top:0!important;
+    padding:22px 30px!important;
+    max-width:620px!important;
+  }
+  .authV5BrandRow{margin-bottom:24px!important;}
+  .authV5FeatureList{margin-top:22px!important;}
+  .authV5Stats{margin-top:22px!important;}
+}
