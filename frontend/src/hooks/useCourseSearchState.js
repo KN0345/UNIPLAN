@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchCourses, fetchMetadata } from '../api'
-import { COURSE_CATALOG_TERMS, catalogTermForSemester, courseCatalogTermValue, courseSmartScore, courseMatchesSemester, extractCourseList, findConflict, getCourse, credits, courseKey, reviewKey } from '../utils/coursePlanning'
+import { COURSE_CATALOG_TERMS, catalogTermForSemester, courseCatalogTermValue, courseSmartScore,  extractCourseList, findConflict, getCourse, credits, courseKey, reviewKey } from '../utils/coursePlanning'
 import { COURSE_TAGS, countCourseTagVotes } from '../data/courses/courseTags'
 
 
@@ -92,8 +92,11 @@ export function useCourseSearchState({ activeSemester, favorites = [], candidate
   }, [courseCatalogTerm])
 
   const sortedFilteredCourses = useMemo(() => {
+    // Course source (114上/114下) is controlled by courseCatalogTerm and already
+    // filtered by /api/courses. Do not filter again by the target timetable semester
+    // here; otherwise selecting 114下 while the active timetable is 大一上 will
+    // incorrectly hide every 1142CLASS course.
     const list = (courses || []).filter((course) => {
-      if (!courseMatchesSemester(course, activeSemester)) return false
       if (searchOnlyAvailable && findConflict(course, plan[activeSemester] || [])) return false
       return true
     })

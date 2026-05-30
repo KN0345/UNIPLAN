@@ -756,17 +756,123 @@ async function loadStaticCoursePayload(request, env) {
   return response.json()
 }
 
+async function ensureCourseSchema(sql) {
+  await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto`
+  await sql`
+    CREATE TABLE IF NOT EXISTS courses (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      semester_source TEXT NOT NULL,
+      serial TEXT,
+      code TEXT,
+      name TEXT NOT NULL,
+      credits NUMERIC,
+      category TEXT,
+      teacher TEXT,
+      classroom TEXT,
+      capacity TEXT,
+      time_data JSONB,
+      time_info TEXT,
+      department TEXT,
+      grade TEXT,
+      major TEXT,
+      sem_seq TEXT,
+      class_name TEXT,
+      group_type TEXT,
+      notes TEXT,
+      raw_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE (semester_source, serial, code, class_name, name)
+    )
+  `
+  await sql`CREATE INDEX IF NOT EXISTS idx_courses_semester_source ON courses (semester_source)`
+  await sql`CREATE INDEX IF NOT EXISTS idx_courses_department ON courses (department)`
+  await sql`CREATE INDEX IF NOT EXISTS idx_courses_grade ON courses (grade)`
+  await sql`CREATE INDEX IF NOT EXISTS idx_courses_code ON courses (code)`
+  await sql`CREATE INDEX IF NOT EXISTS idx_courses_serial ON courses (serial)`
+  await sql`CREATE INDEX IF NOT EXISTS idx_courses_name ON courses (name)`
+}
+
+function dbCourseToClient(row) {
+  const raw = row.raw_json && typeof row.raw_json === 'object' ? row.raw_json : {}
+  return {
+    ...raw,
+    serial: row.serial || raw.serial || '',
+    code: row.code || raw.code || '',
+    name: row.name || raw.name || '',
+    credits: row.credits === null || row.credits === undefined ? raw.credits : Number(row.credits),
+    category: row.category || raw.category || '',
+    teacher: row.teacher || raw.teacher || '',
+    classroom: row.classroom || raw.classroom || '',
+    capacity: row.capacity || raw.capacity || '',
+    time_data: Array.isArray(row.time_data) ? JSON.stringify(row.time_data) : (row.time_data || raw.time_data || ''),
+    time_info: row.time_info || raw.time_info || '',
+    semester_source: row.semester_source || raw.semester_source || '',
+    grade: row.grade || raw.grade || '',
+    major: row.major || raw.major || '',
+    sem_seq: row.sem_seq || raw.sem_seq || '',
+    class_name: row.class_name || raw.class_name || '',
+    group_type: row.group_type || raw.group_type || '',
+    department: row.department || raw.department || '',
+    notes: row.notes || raw.notes || '',
+  }
+}
+
+async function loadDbCoursesIfAvailable(env, searchParams) {
+  if (!env.DATABASE_URL) return null
+  const sql = getSql(env)
+  await ensureCourseSchema(sql)
+  const countRows = await sql`SELECT COUNT(*)::int AS count FROM courses`
+  if (!Number(countRows?.[0]?.count || 0)) return null
+
+  const requestedSemester = normalizeCourseCatalogTerm(searchParams.get('semester') || searchParams.get('term') || searchParams.get('catalogTerm'))
+  const rows = requestedSemester
+    ? await sql`SELECT * FROM courses WHERE semester_source = ${requestedSemester} ORDER BY serial NULLS LAST, code NULLS LAST, name LIMIT 5000`
+    : await sql`SELECT * FROM courses ORDER BY semester_source, serial NULLS LAST, code NULLS LAST, name LIMIT 10000`
+  return rows.map(dbCourseToClient)
+}
+
 async function handleCourses(request, env) {
   const url = new URL(request.url)
-  const payload = await loadStaticCoursePayload(request, env)
-  const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+  let list = null
+  let source = 'neon-courses'
+  try {
+    list = await loadDbCoursesIfAvailable(env, url.searchParams)
+  } catch (err) {
+    list = null
+    source = `static-json-fallback:${err?.message || 'db unavailable'}`
+  }
+  if (!list) {
+    const payload = await loadStaticCoursePayload(request, env)
+    list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+    source = source.startsWith('static-json-fallback') ? source : 'static-json-api'
+  }
   const data = list.filter((course) => courseMatchesQuery(course, url.searchParams)).slice(0, 500)
-  return json({ ok: true, data, total: data.length, source: 'static-json-api' })
+  return json({ ok: true, data, total: data.length, source })
 }
 
 async function handleCourseMetadata(request, env) {
-  const payload = await loadStaticCoursePayload(request, env)
-  const list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+  let list = null
+  let source = 'neon-courses'
+  try {
+    const sql = env.DATABASE_URL ? getSql(env) : null
+    if (sql) {
+      await ensureCourseSchema(sql)
+      const countRows = await sql`SELECT COUNT(*)::int AS count FROM courses`
+      if (Number(countRows?.[0]?.count || 0)) {
+        const rows = await sql`SELECT semester_source, department, major, grade, category, raw_json FROM courses ORDER BY semester_source, department, name LIMIT 12000`
+        list = rows.map(dbCourseToClient)
+      }
+    }
+  } catch (err) {
+    list = null
+    source = `static-json-fallback:${err?.message || 'db unavailable'}`
+  }
+  if (!list) {
+    const payload = await loadStaticCoursePayload(request, env)
+    list = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+    source = source.startsWith('static-json-fallback') ? source : 'static-json-api'
+  }
   const unique = (values) => Array.from(new Set(values.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), 'zh-Hant'))
   const notClass = (item) => !/^[A-ZＡ-Ｚ]班?$|^[甲乙丙丁戊己庚辛壬癸]班?$|^[A-Z]$/i.test(String(item || '').trim())
   return json({
@@ -778,7 +884,7 @@ async function handleCourseMetadata(request, env) {
       categories: unique(list.map((course) => course.category)),
       semesters: unique(list.map((course) => normalizeCourseCatalogTerm(course.semester_source || course.semester || course.term))).filter(Boolean),
     },
-    source: 'static-json-api',
+    source,
   })
 }
 
