@@ -1316,3 +1316,81 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   .authHero{display:none;}
   .authCard{max-width:540px; width:100%; margin:auto;}
 }
+
+/* === Auth readability final fix ===
+   The login/register panel can inherit light theme surface styles from the app shell.
+   Keep the auth page readable regardless of current theme/accent selection. */
+.authPage.login,
+.login.authPage{
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--accent, #2f80ed) 26%, transparent), transparent 32%),
+    linear-gradient(135deg, #08172d 0%, #10284b 48%, #071426 100%)!important;
+  color:#f8fbff!important;
+}
+.login.authPage .authCard{
+  background:linear-gradient(180deg, rgba(246,250,255,.98) 0%, rgba(232,240,252,.98) 100%)!important;
+  color:#10233f!important;
+  border:1px solid rgba(130,166,215,.45)!important;
+  box-shadow:0 24px 70px rgba(3,15,32,.28)!important;
+}
+.login.authPage .authCard h2,
+.login.authPage .authCard > p,
+.login.authPage .authField,
+.login.authPage .authField span,
+.login.authPage .authSwitch button,
+.login.authPage .authCard small{
+  text-shadow:none!important;
+}
+.login.authPage .authCard h2{
+  color:#10233f!important;
+}
+.login.authPage .authCard > p{
+  color:#47617f!important;
+}
+.login.authPage .authSwitch{
+  background:rgba(220,231,248,.92)!important;
+  border:1px solid rgba(151,181,225,.48)!important;
+}
+.login.authPage .authSwitch button{
+  color:#4f6684!important;
+}
+.login.authPage .authSwitch button.active{
+  color:#ffffff!important;
+  background:linear-gradient(135deg, var(--accent, #2f80ed), color-mix(in srgb, var(--accent, #2f80ed) 72%, #ffffff))!important;
+}
+.login.authPage .authField{
+  color:#2d4461!important;
+}
+.login.authPage .authField input{
+  background:#ffffff!important;
+  color:#10233f!important;
+  border:1px solid rgba(116,148,191,.46)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72)!important;
+}
+.login.authPage .authField input::placeholder{
+  color:#7f91a8!important;
+  opacity:1!important;
+}
+.login.authPage .authSubmit{
+  color:#ffffff!important;
+  background:linear-gradient(135deg, var(--accent, #2f80ed), color-mix(in srgb, var(--accent, #2f80ed) 72%, #ffffff))!important;
+}
+.login.authPage .authGuest{
+  background:#ffffff!important;
+  color:#24405f!important;
+  border:1px solid rgba(151,181,225,.55)!important;
+}
+.login.authPage .authCard small{
+  color:#637a98!important;
+}
+.login.authPage .studentIdHint.ok{
+  color:#13733a!important;
+  background:rgba(34,197,94,.12)!important;
+  border-color:rgba(34,197,94,.28)!important;
+}
+.login.authPage .studentIdHint.bad,
+.login.authPage .authError{
+  color:#b42323!important;
+  background:rgba(239,68,68,.1)!important;
+  border-color:rgba(239,68,68,.24)!important;
+}

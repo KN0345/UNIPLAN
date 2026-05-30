@@ -20,6 +20,7 @@ import Topbar from './components/layout/Topbar'
 import GuideOverlay from './components/guide/GuideOverlay'
 import FeedbackPage from './pages/FeedbackPage'
 import LoginPage from './components/auth/LoginPage'
+import { syncUserData } from './api'
 import { isSuperAdminUser, saveBoundAcademicBundle } from './utils/account'
 import { DEFAULT_RULES } from './data/graduation/graduationRulesPreview'
 import {
@@ -216,7 +217,9 @@ function App() {
   useEffect(() => {
     if (!user?.studentId || user.publicAlpha) return
     const timer = window.setTimeout(() => {
-      saveBoundAcademicBundle(user, makeUserBundle())
+      const bundle = makeUserBundle()
+      saveBoundAcademicBundle(user, bundle)
+      if (!user.offline && accountProfile?.syncEnabled !== false) syncUserData(bundle).catch(() => null)
     }, 350)
     return () => window.clearTimeout(timer)
   }, [user?.studentId, user?.publicAlpha, plan, candidates, favorites, snapshots, localReviews, tagVotes])

@@ -68,31 +68,62 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
       }
       if (authMode === 'register') {
         if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
-        const { user: nextUser, profile } = registerLocalAccount({
-          studentId: sid,
-          password: loginForm.password,
+        const initialProfile = {
+          ...profileFromParsed(parsed),
           displayName: loginForm.displayName || sid,
           email: loginForm.email,
-          profile: profileFromParsed(parsed),
-        })
+        }
+        try {
+          const remote = await register(sid, loginForm.password, initialProfile)
+          const nextUser = applyAdminRole(remote.user)
+          const profile = { ...DEFAULT_ACCOUNT_PROFILE, ...initialProfile, ...(remote.profile || {}) }
+          setUser(nextUser)
+          localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+          setAccountProfile(profile)
+          localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(profile))
+          if (remote.data) applyRemoteBundle(remote.data)
+          notify('雲端帳號已建立，課表將自動同步')
+          return
+        } catch (remoteError) {
+          const { user: nextUser, profile } = registerLocalAccount({
+            studentId: sid,
+            password: loginForm.password,
+            displayName: loginForm.displayName || sid,
+            email: loginForm.email,
+            profile: initialProfile,
+          })
+          setUser(nextUser)
+          localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+          setAccountProfile(profile)
+          localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(profile))
+          const boundBundle = loadBoundAcademicBundle(nextUser)
+          if (boundBundle) applyRemoteBundle(boundBundle)
+          notify('後端未連線，已建立本機帳號')
+          return
+        }
+      }
+      try {
+        const remote = await login(sid, loginForm.password)
+        const nextUser = applyAdminRole(remote.user)
         setUser(nextUser)
         localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
-        setAccountProfile(profile)
-        localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(profile))
+        const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...profileFromParsed(parsed), ...(remote.profile || {}) }
+        setAccountProfile(nextProfile)
+        localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
+        if (remote.data) applyRemoteBundle(remote.data)
+        notify(remote.data ? '登入成功，已載入雲端課表' : '登入成功，尚未建立雲端課表')
+        return
+      } catch (remoteError) {
+        const { user: nextUser, profile } = loginLocalAccount(sid, loginForm.password)
+        setUser(nextUser)
+        localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
+        const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...profile, ...profileFromParsed(parsed) }
+        setAccountProfile(nextProfile)
+        localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
         const boundBundle = loadBoundAcademicBundle(nextUser)
         if (boundBundle) applyRemoteBundle(boundBundle)
-        notify('本機帳號已建立，課表將綁定此帳號')
-        return
+        notify(boundBundle ? '後端未連線，已載入本機課表' : '後端未連線，已使用本機帳號登入')
       }
-      const { user: nextUser, profile } = loginLocalAccount(sid, loginForm.password)
-      setUser(nextUser)
-      localStorage.setItem('uniplan:user', JSON.stringify(nextUser))
-      const nextProfile = { ...DEFAULT_ACCOUNT_PROFILE, ...profile, ...profileFromParsed(parsed) }
-      setAccountProfile(nextProfile)
-      localStorage.setItem(profileStorageKey(nextUser), JSON.stringify(nextProfile))
-      const boundBundle = loadBoundAcademicBundle(nextUser)
-      if (boundBundle) applyRemoteBundle(boundBundle)
-      notify(boundBundle ? '登入成功，已載入此帳號課表' : '登入成功，尚未建立綁定課表')
     } catch (error) {
       setAuthError(error?.message || '登入失敗')
     }

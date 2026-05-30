@@ -15,11 +15,13 @@ api.interceptors.request.use((config) => {
 
 export async function register(student_id, password, extra = {}) {
   const { data } = await api.post('/auth/register', { student_id, password, ...extra })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
   return data
 }
 
 export async function login(student_id, password) {
   const { data } = await api.post('/auth/login', { student_id, password })
+  if (data?.token) localStorage.setItem('uniplan:token', data.token)
   return data
 }
 
