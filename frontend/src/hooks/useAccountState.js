@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchSchedule, fetchUserData, login, logout as apiLogout, parseStudentId, register, requestPasswordReset, resendVerification, resetPassword, updateProfile, verifyEmail } from '../api'
+import { fetchMe, fetchUserData, login, logout as apiLogout, parseStudentId, register, requestPasswordReset, resendVerification, resetPassword, updateProfile, verifyEmail } from '../api'
 import { DEFAULT_ACCOUNT_PROFILE, PUBLIC_GUEST_USER, applyAdminRole, loadProfileForUser, loadBoundAcademicBundle, loginLocalAccount, parseTkuStudentIdLocal, profileStorageKey, purgeRemovedStudentLocalData, readStorageJson, registerLocalAccount, resetLocalPassword } from '../utils/account'
 import { download, makePlan, userKey } from '../utils/coursePlanning'
 
@@ -76,6 +76,40 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
     return !error?.response || error?.response?.status >= 500
   }
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('google_token')
+    const googleError = params.get('google_error')
+    if (googleError) {
+      setAuthMode('login')
+      setAuthError(decodeURIComponent(googleError))
+      window.history.replaceState({}, document.title, window.location.pathname)
+      return
+    }
+    if (!token) return
+    let cancelled = false
+    async function completeGoogleLogin() {
+      try {
+        localStorage.setItem('uniplan:token', token)
+        const me = await fetchMe()
+        const data = await fetchUserData().catch(() => null)
+        if (cancelled) return
+        const remote = { user: me.user, profile: me.profile || {}, data: data?.data || null }
+        applyAuthenticatedRemote(remote, parseTkuStudentIdLocal(me.user?.studentId || ''))
+        notify('Google 登入成功，已載入雲端資料')
+      } catch (error) {
+        localStorage.removeItem('uniplan:token')
+        setAuthMode('login')
+        setAuthError(error?.response?.data?.error || error?.message || 'Google 登入失敗')
+      } finally {
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
+    }
+    completeGoogleLogin()
+    return () => { cancelled = true }
+  }, [])
+
+
   async function handleLogin(e) {
     e.preventDefault()
     setAuthError('')
@@ -84,6 +118,12 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
     const parsed = studentIdPreview?.valid ? studentIdPreview : parseTkuStudentIdLocal(sid)
     try {
       if (!sid) throw new Error(authMode === 'login' ? '請輸入學號或 Email' : '請輸入學號')
+      if (authMode === 'register') {
+        if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
+        if (!loginForm.email.trim()) throw new Error('請輸入 Email')
+        setAuthMode('register-password')
+        return
+      }
       if (authMode === 'forgot') {
         if (!resetRequested) {
           if (!/^\d{9}$/.test(sid)) throw new Error('請輸入 9 碼學號')
@@ -115,7 +155,7 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
         notify(remote?.message || 'Email 驗證完成，已登入')
         return
       }
-      if (authMode === 'register') {
+      if (authMode === 'register-password') {
         if (!parsed?.valid) throw new Error(parsed?.reason || '學號格式錯誤')
         if (!loginForm.email.trim()) throw new Error('請輸入 Email')
         if (loginForm.password.length < 6) throw new Error('密碼至少需要 6 碼')

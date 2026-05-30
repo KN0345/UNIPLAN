@@ -532,6 +532,114 @@ async function handleSettings(request, env, sql, method) {
   return json({ ok: true })
 }
 
+
+function getOAuthBaseUrl(request) {
+  const url = new URL(request.url)
+  return `${url.protocol}//${url.host}`
+}
+
+function getGoogleRedirectUri(request, env) {
+  return env.GOOGLE_REDIRECT_URI || `${getOAuthBaseUrl(request)}/api/auth/google/callback`
+}
+
+function redirectToApp(request, params = {}) {
+  const url = new URL(request.url)
+  const target = new URL('/', `${url.protocol}//${url.host}`)
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') target.searchParams.set(key, String(value))
+  })
+  return Response.redirect(target.toString(), 302)
+}
+
+async function handleGoogleStart(request, env) {
+  if (!env.GOOGLE_CLIENT_ID) return redirectToApp(request, { google_error: '尚未設定 GOOGLE_CLIENT_ID' })
+  const redirectUri = getGoogleRedirectUri(request, env)
+  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+  authUrl.searchParams.set('client_id', env.GOOGLE_CLIENT_ID)
+  authUrl.searchParams.set('redirect_uri', redirectUri)
+  authUrl.searchParams.set('response_type', 'code')
+  authUrl.searchParams.set('scope', 'openid email profile')
+  authUrl.searchParams.set('prompt', 'select_account')
+  authUrl.searchParams.set('state', base64UrlEncode(redirectUri))
+  return Response.redirect(authUrl.toString(), 302)
+}
+
+async function exchangeGoogleCode(request, env, code) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) throw new Error('尚未設定 Google OAuth 環境變數')
+  const redirectUri = getGoogleRedirectUri(request, env)
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    }),
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(data?.error_description || data?.error || 'Google token exchange failed')
+  return data
+}
+
+async function fetchGoogleProfile(accessToken) {
+  const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { authorization: `Bearer ${accessToken}` },
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(data?.error_description || data?.error || 'Google profile fetch failed')
+  return data
+}
+
+async function handleGoogleCallback(request, env, sql) {
+  try {
+    const url = new URL(request.url)
+    const code = url.searchParams.get('code')
+    const oauthError = url.searchParams.get('error')
+    if (oauthError) return redirectToApp(request, { google_error: `Google 登入取消或失敗：${oauthError}` })
+    if (!code) return redirectToApp(request, { google_error: 'Google 未回傳授權碼' })
+
+    const tokenData = await exchangeGoogleCode(request, env, code)
+    const profile = await fetchGoogleProfile(tokenData.access_token)
+    const googleId = String(profile.sub || '')
+    const email = normalizeEmail(profile.email)
+    if (!googleId || !email) return redirectToApp(request, { google_error: 'Google 帳號缺少必要資料' })
+    if (profile.email_verified === false) return redirectToApp(request, { google_error: 'Google Email 尚未驗證，無法登入' })
+
+    let rows = await sql`select * from users where google_id = ${googleId} limit 1`
+    if (!rows.length) {
+      rows = await sql`select * from users where lower(email) = ${email} limit 1`
+      if (!rows.length) {
+        return redirectToApp(request, { google_error: '找不到相同 Email 的 UniPlan 帳號，請先使用學號註冊並完成 Email 驗證' })
+      }
+      const existing = rows[0]
+      if (existing.google_id && existing.google_id !== googleId) {
+        return redirectToApp(request, { google_error: '此 Email 已綁定其他 Google 帳號' })
+      }
+      const updated = await sql`
+        update users
+        set google_id = ${googleId}, email_verified = true, updated_at = now(), profile = coalesce(profile, '{}'::jsonb) || ${JSON.stringify({ googleName: profile.name || '', googlePicture: profile.picture || '', boundGoogle: true })}::jsonb
+        where id = ${existing.id}
+        returning *
+      `
+      rows = updated
+    }
+
+    const row = rows[0]
+    if (!row.email_verified) {
+      await sql`update users set email_verified = true, updated_at = now() where id = ${row.id}`
+      row.email_verified = true
+    }
+    await sql`update users set last_login = now(), updated_at = now() where id = ${row.id}`
+    const user = publicUser(row)
+    const token = await signToken({ uid: user.id, sid: user.studentId }, env.JWT_SECRET || 'uniplan-dev-secret')
+    return redirectToApp(request, { google_token: token })
+  } catch (err) {
+    return redirectToApp(request, { google_error: err?.message || 'Google 登入失敗' })
+  }
+}
+
 const TKU_PROGRAMS = { '2': '進學班', '3': '未知學制', '4': '學士生', '6': '碩士生', '7': '碩士在職專班 / 轉入大二', '8': '博士生 / 轉入大三' }
 const TKU_IDENTITIES = { '0': '本地生', '1': '本地生', '2': '本地生', '3': '本地生', '4': '陸生', '5': '境外生', '6': '僑、港、澳生 / 身障生', '7': '轉學生（大二轉入）', '8': '轉學生（大三轉入）' }
 const TKU_DEPARTMENTS = { '73': ['教育科技學系', '教育學院'], '71': ['教育與未來設計學系', '教育學院'], '77': ['人工智慧學系', 'AI創智學院'] }
@@ -563,6 +671,8 @@ export async function onRequest(context) {
     const path = `/${(params.path || []).join('/')}`.replace(/\/+/g, '/')
     const method = request.method.toUpperCase()
 
+    if (method === 'GET' && path === '/auth/google/start') return handleGoogleStart(request, env)
+    if (method === 'GET' && path === '/auth/google/callback') return handleGoogleCallback(request, env, sql)
     if (method === 'POST' && path === '/auth/register') return handleRegister(request, env, sql)
     if (method === 'POST' && path === '/auth/login') return handleLogin(request, env, sql)
     if (method === 'POST' && path === '/auth/logout') return json({ ok: true })
