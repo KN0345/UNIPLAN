@@ -1394,3 +1394,77 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   background:rgba(239,68,68,.1)!important;
   border-color:rgba(239,68,68,.24)!important;
 }
+
+/* === Auth viewport fit fix ===
+   Keep register/forgot submit buttons reachable on 1080p and smaller screens. */
+.login.authPage,
+.authPage.login,
+.authPage{
+  min-height:100svh!important;
+  height:100svh!important;
+  overflow-y:auto!important;
+  align-items:center!important;
+  padding:clamp(18px, 3.2vw, 44px)!important;
+}
+.login.authPage .authHero,
+.authHero{
+  align-self:center!important;
+}
+.login.authPage .authCard,
+.authCard{
+  max-height:calc(100svh - 48px)!important;
+  overflow-y:auto!important;
+  padding:clamp(22px, 2.4vw, 30px)!important;
+  scrollbar-width:thin;
+}
+.login.authPage .authCard h2,
+.authCard h2{
+  font-size:clamp(1.55rem, 2vw, 2rem)!important;
+  margin-bottom:6px!important;
+}
+.login.authPage .authCard > p,
+.authCard > p{
+  margin-bottom:14px!important;
+  line-height:1.45!important;
+}
+.login.authPage .authSwitch,
+.authSwitch{
+  margin-bottom:14px!important;
+}
+.login.authPage .authField,
+.authField{
+  gap:5px!important;
+  margin-bottom:11px!important;
+}
+.login.authPage .authField input,
+.authField input{
+  height:46px!important;
+}
+.login.authPage .authSubmit,
+.login.authPage .authGuest,
+.authSubmit,
+.authGuest{
+  min-height:48px!important;
+}
+.login.authPage .authCard small,
+.authCard small{
+  margin-top:10px!important;
+}
+@media (max-height: 760px){
+  .login.authPage,
+  .authPage.login,
+  .authPage{
+    align-items:start!important;
+    padding:14px 22px!important;
+  }
+  .login.authPage .authHero,
+  .authHero{
+    display:none!important;
+  }
+  .login.authPage .authCard,
+  .authCard{
+    max-width:560px!important;
+    margin:0 auto!important;
+    max-height:calc(100svh - 28px)!important;
+  }
+}

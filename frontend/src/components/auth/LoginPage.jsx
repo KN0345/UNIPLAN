@@ -20,17 +20,17 @@ export default function LoginPage({
       <section className="authHero">
         <div className="authBrandMark">UniPlan</div>
         <h1>淡江四年排課助手</h1>
-        <p>使用本機帳號保存個人課表、暫存課程、收藏與學分規劃。正式後端上線前，資料會先綁定在目前瀏覽器。</p>
+        <p>登入後可同步個人課表、暫存課程、收藏與主題設定。若雲端暫時無法連線，系統仍會保留本機備援。</p>
         <div className="authFeatureGrid">
-          <span>本機註冊</span>
-          <span>課表綁定</span>
+          <span>雲端註冊</span>
+          <span>課表同步</span>
           <span>忘記密碼</span>
         </div>
       </section>
 
       <form className="authCard" onSubmit={handleLogin}>
-        <h2>{isForgot ? '重設密碼' : isRegister ? '建立本機帳號' : '登入 UniPlan'}</h2>
-        <p>{isForgot ? '輸入學號與註冊 Email 後即可重設本機密碼。' : '登入後會載入此帳號綁定的課表與課程資料。'}</p>
+        <h2>{isForgot ? '重設密碼' : isRegister ? '建立 UniPlan 帳號' : '登入 UniPlan'}</h2>
+        <p>{isForgot ? '輸入學號與註冊 Email 後即可重設本機密碼。' : '登入後會載入此帳號綁定的課表、收藏與設定。'}</p>
 
         <div className="authSwitch">
           <button type="button" className={authMode === 'login' ? 'active' : ''} onClick={() => setAuthMode('login')}>登入</button>
@@ -82,7 +82,7 @@ export default function LoginPage({
         <button className="authSubmit" type="submit">{isForgot ? '重設密碼' : isRegister ? '建立帳號並登入' : '登入'}</button>
         <button className="authGuest" type="button" onClick={handleGuestLogin}>先以訪客模式使用</button>
 
-        <small>目前為本機帳號系統：帳號、密碼與課表只保存在這台裝置的瀏覽器。</small>
+        <small>目前為雲端帳號第一階段：資料會同步至資料庫，並保留本機備援。</small>
       </form>
     </main>
   )
