@@ -620,13 +620,16 @@ async function handleSettings(request, env, sql, method) {
     return json({ ok: true, settings: rows[0]?.settings_json || null })
   }
   const body = await readBody(request)
-  const settings = body.settings || body
+  const incoming = body.settings || body
+  const rows = await sql`select theme, accent_color, settings_json from user_settings where user_id = ${row.id} order by updated_at desc limit 1`
+  const current = rows[0]?.settings_json || {}
+  const settings = { ...current, ...incoming, appearance: { ...(current.appearance || {}), ...(incoming.appearance || {}) } }
   await sql`delete from user_settings where user_id = ${row.id}`
   await sql`
     insert into user_settings (user_id, theme, accent_color, settings_json, updated_at)
-    values (${row.id}, ${settings.theme || null}, ${settings.accentColor || null}, ${JSON.stringify(settings)}, now())
+    values (${row.id}, ${settings.theme || settings.uiTheme || rows[0]?.theme || null}, ${settings.accentColor || settings.accent || rows[0]?.accent_color || null}, ${JSON.stringify(settings)}, now())
   `
-  return json({ ok: true })
+  return json({ ok: true, settings })
 }
 
 

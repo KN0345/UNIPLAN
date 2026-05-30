@@ -20,7 +20,7 @@ import Topbar from './components/layout/Topbar'
 import GuideOverlay from './components/guide/GuideOverlay'
 import FeedbackPage from './pages/FeedbackPage'
 import LoginPage from './components/auth/LoginPage'
-import { completeWelcome, fetchWelcomeState, syncUserData } from './api'
+import { completeWelcome, fetchWelcomeState, fetchUserSettings, saveUserSettings, syncUserData } from './api'
 import { isSuperAdminUser, saveBoundAcademicBundle } from './utils/account'
 import { DEFAULT_RULES } from './data/graduation/graduationRulesPreview'
 import {
@@ -101,6 +101,8 @@ function App() {
   const [showGuide, setShowGuide] = useState(false)
   const [rules] = useState(DEFAULT_RULES)
   const scheduleExportRef = useRef(null)
+  const appearanceCloudLoadedRef = useRef(false)
+  const appearanceSaveTimerRef = useRef(null)
 
   const { toast, notify } = useToast()
   const {
@@ -131,6 +133,61 @@ function App() {
     theme, uiTheme, setUiTheme, accent, setAccent, buttonAccent, setButtonAccent, timetableTint, setTimetableTint,
     timetableOpacity, setTimetableOpacity, timetableBg, setTimetableBg, courseCardOpacity, setCourseCardOpacity,
   } = useAppearanceSettings()
+
+
+  useEffect(() => {
+    if (!user?.studentId || user.publicAlpha || user.offline) {
+      appearanceCloudLoadedRef.current = false
+      return
+    }
+    let cancelled = false
+    async function loadCloudAppearance() {
+      try {
+        const res = await fetchUserSettings()
+        const settings = res?.settings || {}
+        const appearance = settings.appearance || settings
+        if (cancelled || !appearance) return
+        if (appearance.uiTheme) setUiTheme(appearance.uiTheme)
+        if (appearance.accent) setAccent(appearance.accent)
+        if (appearance.accentColor) setAccent(appearance.accentColor)
+        if (appearance.buttonAccent) setButtonAccent(appearance.buttonAccent)
+        if (appearance.timetableTint) setTimetableTint(appearance.timetableTint)
+        if (appearance.timetableOpacity !== undefined) setTimetableOpacity(String(appearance.timetableOpacity))
+        if (appearance.timetableBg !== undefined) setTimetableBg(appearance.timetableBg || '')
+        if (appearance.courseCardOpacity !== undefined) setCourseCardOpacity(String(appearance.courseCardOpacity))
+      } catch {
+        // 雲端設定讀取失敗時保留本機外觀設定
+      } finally {
+        if (!cancelled) window.setTimeout(() => { appearanceCloudLoadedRef.current = true }, 250)
+      }
+    }
+    loadCloudAppearance()
+    return () => { cancelled = true }
+  }, [user?.studentId, user?.publicAlpha, user?.offline])
+
+  useEffect(() => {
+    if (!user?.studentId || user.publicAlpha || user.offline) return
+    if (!appearanceCloudLoadedRef.current) return
+    window.clearTimeout(appearanceSaveTimerRef.current)
+    appearanceSaveTimerRef.current = window.setTimeout(() => {
+      saveUserSettings({
+        appearance: {
+          uiTheme,
+          accent,
+          accentColor: accent,
+          buttonAccent,
+          timetableTint,
+          timetableOpacity,
+          timetableBg,
+          courseCardOpacity,
+        },
+        uiTheme,
+        theme: uiTheme,
+        accentColor: accent,
+      }).catch(() => null)
+    }, 500)
+    return () => window.clearTimeout(appearanceSaveTimerRef.current)
+  }, [user?.studentId, user?.publicAlpha, user?.offline, uiTheme, accent, buttonAccent, timetableTint, timetableOpacity, timetableBg, courseCardOpacity])
   const {
     coursePopover,
     setCoursePopover,

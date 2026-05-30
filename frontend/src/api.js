@@ -95,6 +95,16 @@ export async function syncUserData(bundle) {
   return data
 }
 
+export async function fetchUserSettings() {
+  const { data } = await api.get('/user/settings')
+  return data
+}
+
+export async function saveUserSettings(settings) {
+  const { data } = await api.put('/user/settings', { settings })
+  return data
+}
+
 
 function normalizeCatalogTermForApi(value) {
   const raw = String(value || '').trim()

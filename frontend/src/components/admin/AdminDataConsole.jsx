@@ -82,10 +82,8 @@ const COURSE_IMPORT_COLUMNS = [
 ]
 
 function normalizeImportSemester(value) {
-  const raw = String(value || '').trim()
-  if (/1142CLASS/i.test(raw) || /114\s*下|1142|下學期/.test(raw)) return '1142CLASS'
-  if (/1141CLASS/i.test(raw) || /114\s*上|1141|上學期/.test(raw)) return '1141CLASS'
-  return raw || '1141CLASS'
+  const normalized = normalizeSemesterCode(value)
+  return normalized || '1141CLASS'
 }
 
 function parseCsv(text) {
@@ -121,6 +119,88 @@ function parseCsv(text) {
   return rows.slice(1).map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] || ''])))
 }
 
+
+function decodeHtmlText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim()
+}
+
+function stripTeacherCode(value) {
+  return decodeHtmlText(value).replace(/\s*[（(]\d{3}\*{3}[）)]\s*/g, '').trim()
+}
+
+function extractRoomFromTimeInfo(value) {
+  const text = decodeHtmlText(value)
+  const parts = text.split(/[,，；;]+/).map((item) => item.trim()).filter(Boolean)
+  const rooms = []
+  parts.forEach((part) => {
+    const slashParts = part.split('/').map((item) => item.trim()).filter(Boolean)
+    if (slashParts.length >= 3) rooms.push(slashParts.slice(2).join(' / '))
+  })
+  return [...new Set(rooms)].join('；')
+}
+
+function normalizeSemesterCode(value) {
+  const raw = String(value || '').trim().toUpperCase().replace(/\s+/g, '')
+  if (!raw) return ''
+  if (/^\d{3}[12]CLASS$/.test(raw)) return raw
+  const compact = raw.replace(/學年度|學年|第|學期/g, '')
+  const yearMatch = compact.match(/(\d{3})/)
+  if (!yearMatch) return raw
+  const year = yearMatch[1]
+  if (/下|第二|2/.test(compact)) return `${year}2CLASS`
+  if (/上|第一|1/.test(compact)) return `${year}1CLASS`
+  return raw
+}
+
+function parseHtmlCourseImport(text, fileName, semester) {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(String(text || ''), 'text/html')
+  const titleText = decodeHtmlText(doc.body?.innerText || '')
+  const inferredSemester = normalizeSemesterCode(titleText) || normalizeImportSemester(semester)
+  const rows = []
+  let currentDepartment = ''
+
+  doc.querySelectorAll('tr').forEach((tr) => {
+    const cells = Array.from(tr.querySelectorAll('td,th')).map((cell) => decodeHtmlText(cell.textContent))
+    if (!cells.length) return
+
+    const joined = cells.join(' ')
+    const deptMatch = joined.match(/系別\(Department\)：\s*([^\s]+)\s*(.*)/i)
+    if (deptMatch) {
+      currentDepartment = decodeHtmlText(`${deptMatch[1]} ${deptMatch[2] || ''}`)
+      return
+    }
+
+    const serial = cells[1]
+    const name = cells[10]
+    if (!/^\d{3,5}$/.test(String(serial || '').trim()) || !name || /科目|名稱|Courses/i.test(name)) return
+
+    const timeInfo = cells.slice(13).filter(Boolean).join('；')
+    rows.push({
+      semester_source: normalizeImportSemester(semester || inferredSemester),
+      grade: cells[0] || '',
+      serial: cells[1] || '',
+      code: cells[2] || '',
+      sem_seq: cells[4] || '',
+      class_name: cells[5] || '',
+      group_type: cells[6] || '',
+      category: cells[7] || '',
+      credits: cells[8] || '',
+      major: cells[9] || '',
+      name: cells[10] || '',
+      capacity: cells[11] || '',
+      teacher: stripTeacherCode(cells[12] || ''),
+      time_info: timeInfo,
+      classroom: extractRoomFromTimeInfo(timeInfo),
+      department: currentDepartment,
+      notes: '',
+      raw_json: { source_file: fileName, cells },
+    })
+  })
+
+  return rows
+}
+
 function normalizeImportCourse(row, semester) {
   const pick = (...keys) => keys.map((key) => row[key]).find((value) => value !== undefined && value !== null && String(value).trim() !== '') || ''
   return {
@@ -145,6 +225,9 @@ function normalizeImportCourse(row, semester) {
 function parseCourseImportText(text, fileName, semester) {
   const trimmed = String(text || '').trim()
   if (!trimmed) return []
+  if (/\.html?$/i.test(fileName) || /<\s*html|<\s*table|系別\(Department\)/i.test(trimmed)) {
+    return parseHtmlCourseImport(trimmed, fileName, semester)
+  }
   let rows = []
   if (/\.json$/i.test(fileName) || trimmed.startsWith('{') || trimmed.startsWith('[')) {
     const payload = JSON.parse(trimmed)
@@ -292,21 +375,27 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
 
 
   async function handleCourseImportFile(event) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    setImportFileName(file.name)
+    const files = Array.from(event.target.files || [])
+    if (!files.length) return
+    setImportFileName(files.length === 1 ? files[0].name : `${files.length} 個 HTML 檔案`)
     setImportResult(null)
     try {
-      const text = await file.text()
-      const rows = parseCourseImportText(text, file.name, importSemester)
-      const errors = validateImportCourses(rows)
-      setImportRows(rows)
+      const parsedGroups = []
+      for (const file of files) {
+        const text = await file.text()
+        parsedGroups.push(...parseCourseImportText(text, file.name, importSemester))
+      }
+      const normalizedRows = parsedGroups.map((row) => ({ ...row, semester_source: normalizeImportSemester(row.semester_source || importSemester) }))
+      const errors = validateImportCourses(normalizedRows)
+      setImportRows(normalizedRows)
       setImportErrors(errors)
-      notify?.(`已讀取 ${rows.length} 筆課程資料`)
+      notify?.(`已讀取 ${files.length} 個檔案，共 ${normalizedRows.length} 筆課程資料`)
     } catch (error) {
       setImportRows([])
       setImportErrors([error?.message || '檔案解析失敗'])
       notify?.('課程檔案解析失敗')
+    } finally {
+      event.target.value = ''
     }
   }
 
@@ -376,26 +465,36 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
             <div className="adminImportHead">
               <div>
                 <h3>課程匯入</h3>
-                <p className="muted">上傳 CSV 或 JSON，預覽資料後寫入 Neon courses。建議先匯入少量測試資料，確認無誤後再正式匯入完整學期。</p>
+                <p className="muted">上傳教務處 HTML 課程表，預覽資料後寫入 Neon courses。學期可直接輸入新代碼，例如 1151CLASS。</p>
               </div>
               <div className="adminImportControls">
-                <label>目標學期<select value={importSemester} onChange={(event) => setImportSemester(event.target.value)}>
-                  <option value="1141CLASS">114 學年度上學期</option>
-                  <option value="1142CLASS">114 學年度下學期</option>
-                </select></label>
+                <label>目標學期
+                  <input
+                    list="semesterImportPresets"
+                    value={importSemester}
+                    onChange={(event) => setImportSemester(normalizeImportSemester(event.target.value))}
+                    placeholder="例如 1151CLASS"
+                  />
+                  <datalist id="semesterImportPresets">
+                    <option value="1141CLASS">114 學年度上學期</option>
+                    <option value="1142CLASS">114 學年度下學期</option>
+                    <option value="1151CLASS">115 學年度上學期</option>
+                    <option value="1152CLASS">115 學年度下學期</option>
+                  </datalist>
+                </label>
                 <label className="adminImportCheckbox"><input type="checkbox" checked={clearSemesterBeforeImport} onChange={(event) => setClearSemesterBeforeImport(event.target.checked)} /> 匯入前清空此學期</label>
               </div>
             </div>
             <div className="adminImportDropzone">
-              <input type="file" accept=".csv,.json,application/json,text/csv" onChange={handleCourseImportFile} />
-              <b>{importFileName || '選擇 CSV / JSON 課程檔案'}</b>
-              <span>支援欄位：課程名稱、學分、教師、時間、教室、開課系所、開課序號、課號。</span>
+              <input type="file" accept=".htm,.html,.csv,.json,text/html,application/json,text/csv" multiple webkitdirectory="" onChange={handleCourseImportFile} />
+              <b>{importFileName || '選擇或拖曳 HTML 課程檔案 / 資料夾'}</b>
+              <span>主要支援教務處 HTML 離線課程表，也保留 CSV / JSON 匯入。</span>
             </div>
             <div className="adminImportSummary">
               <article><b>{importRows.length}</b><span>預覽筆數</span></article>
               <article><b>{importErrors.length}</b><span>錯誤</span></article>
-              <article><b>{importRows.filter((row) => row.semester_source === '1141CLASS').length}</b><span>114 上</span></article>
-              <article><b>{importRows.filter((row) => row.semester_source === '1142CLASS').length}</b><span>114 下</span></article>
+              <article><b>{importRows.filter((row) => row.semester_source === normalizeImportSemester(importSemester)).length}</b><span>目標學期</span></article>
+              <article><b>{[...new Set(importRows.map((row) => row.semester_source).filter(Boolean))].length}</b><span>學期數</span></article>
             </div>
             {importErrors.length ? <div className="adminImportErrors"><b>匯入前檢查</b>{importErrors.map((message) => <p key={message}>{message}</p>)}</div> : null}
             {importRows.length ? <div className="adminImportPreview"><table><thead><tr>{COURSE_IMPORT_COLUMNS.slice(1, 9).map(([key, label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{importRows.slice(0, 8).map((row, index) => <tr key={`${row.serial}-${row.name}-${index}`}>{COURSE_IMPORT_COLUMNS.slice(1, 9).map(([key]) => <td key={key}>{row[key] || '—'}</td>)}</tr>)}</tbody></table></div> : <p className="muted">尚未選擇匯入檔案。</p>}
