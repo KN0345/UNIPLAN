@@ -64,14 +64,32 @@ export default function LoginPage({
 
   return (
     <main className="login authPage authV4Page">
-      <section className="authHero authV4Hero">
-        <div className="authBrandMark">UniPlan</div>
-        <h1>淡江四年排課助手</h1>
-        <p>把課表、收藏、學分進度與個人設定集中管理。登入後即可跨裝置同步，讓排課不再只存在單一瀏覽器。</p>
-        <div className="authFeatureGrid">
-          <span>課表雲端同步</span>
-          <span>學分規劃</span>
-          <span>Google 帳號連線</span>
+      <section className="authHero authV5Hero">
+        <div className="authV5BrandRow">
+          <span className="authV5BrandMark">UniPlan</span>
+          <span className="authV5SchoolTag">TKU Planner</span>
+        </div>
+
+        <div className="authV5HeroText">
+          <p className="authV5Kicker">淡江學生專用</p>
+          <h1>淡江四年排課助手</h1>
+          <p className="authV5Lead">
+            從大一到畢業，將課表、學程與畢業學分規劃整合在同一個工作區。
+          </p>
+        </div>
+
+        <div className="authV5FeatureList" aria-label="UniPlan 功能摘要">
+          <span>課表規劃</span>
+          <span>學程追蹤</span>
+          <span>畢業學分檢查</span>
+          <span>收藏與比較課程</span>
+          <span>雲端同步資料</span>
+        </div>
+
+        <div className="authV5Stats" aria-label="資料概況">
+          <div><strong>500+</strong><span>課程資料</span></div>
+          <div><strong>20+</strong><span>學程資料</span></div>
+          <div><strong>114</strong><span>學年度</span></div>
         </div>
       </section>
 
