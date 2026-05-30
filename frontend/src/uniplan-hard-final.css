@@ -2459,3 +2459,203 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   flex:0 0 auto!important;
 }
 @keyframes uniplanAuthSpin{to{transform:rotate(360deg)}}
+
+/* Admin course import UI */
+.adminImportSection{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.adminImportHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:22px;
+  background:rgba(255,255,255,.76);
+  box-shadow:0 16px 38px rgba(15,23,42,.08);
+}
+.adminImportHead h3{
+  margin:0 0 6px;
+  font-size:1.35rem;
+  color:#10233f;
+}
+.adminImportControls{
+  min-width:260px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.adminImportControls label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-weight:800;
+  color:#1f3658;
+}
+.adminImportControls select{
+  min-height:42px;
+  border:1px solid rgba(37,99,235,.18);
+  border-radius:14px;
+  padding:0 12px;
+  background:#fff;
+  color:#12233f;
+  font-weight:800;
+}
+.adminImportCheckbox{
+  flex-direction:row!important;
+  align-items:center;
+  font-size:.9rem;
+}
+.adminImportCheckbox input{ width:16px; height:16px; }
+.adminImportDropzone{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:132px;
+  border:2px dashed rgba(37,99,235,.28);
+  border-radius:24px;
+  background:linear-gradient(135deg,rgba(239,246,255,.9),rgba(255,255,255,.78));
+  color:#365270;
+  text-align:center;
+  overflow:hidden;
+}
+.adminImportDropzone input{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.adminImportDropzone b{
+  color:#10233f;
+  font-size:1.05rem;
+}
+.adminImportDropzone span{
+  max-width:680px;
+  font-size:.9rem;
+}
+.adminImportSummary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.adminImportSummary article{
+  padding:15px 16px;
+  border-radius:18px;
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(148,163,184,.18);
+  box-shadow:0 12px 30px rgba(15,23,42,.06);
+}
+.adminImportSummary b{
+  display:block;
+  font-size:1.45rem;
+  color:#123f86;
+}
+.adminImportSummary span{
+  color:#5b6b80;
+  font-size:.86rem;
+  font-weight:800;
+}
+.adminImportErrors,
+.adminImportResult{
+  padding:14px 16px;
+  border-radius:18px;
+  background:#fff7ed;
+  border:1px solid rgba(249,115,22,.25);
+  color:#9a3412;
+  font-weight:750;
+}
+.adminImportErrors p,
+.adminImportResult p{ margin:6px 0 0; }
+.adminImportResult{
+  background:#ecfdf5;
+  border-color:rgba(16,185,129,.25);
+  color:#047857;
+}
+.adminImportResult.error{
+  background:#fef2f2;
+  border-color:rgba(239,68,68,.25);
+  color:#b91c1c;
+}
+.adminImportPreview{
+  overflow:auto;
+  max-height:360px;
+  border-radius:20px;
+  border:1px solid rgba(148,163,184,.2);
+  background:rgba(255,255,255,.82);
+}
+.adminImportPreview table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:760px;
+}
+.adminImportPreview th,
+.adminImportPreview td{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(148,163,184,.16);
+  text-align:left;
+  color:#1f3658;
+  font-size:.9rem;
+}
+.adminImportPreview th{
+  position:sticky;
+  top:0;
+  background:#f8fbff;
+  color:#0f2851;
+  font-weight:900;
+}
+.adminImportActions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+}
+.adminImportActions button{
+  border:0;
+  border-radius:14px;
+  min-height:42px;
+  padding:0 16px;
+  font-weight:900;
+  cursor:pointer;
+  background:#e8eef8;
+  color:#15345f;
+}
+.adminImportActions button:first-child{
+  background:#2563eb;
+  color:white;
+  box-shadow:0 12px 28px rgba(37,99,235,.22);
+}
+.adminImportActions button:disabled{
+  opacity:.48;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+.dark .adminImportHead,
+.dark .adminImportSummary article,
+.dark .adminImportPreview{
+  background:rgba(15,23,42,.72);
+  border-color:rgba(148,163,184,.22);
+}
+.dark .adminImportHead h3,
+.dark .adminImportDropzone b,
+.dark .adminImportPreview th,
+.dark .adminImportPreview td{
+  color:#eef5ff;
+}
+.dark .adminImportControls label,
+.dark .adminImportSummary span{ color:#cbd5e1; }
+.dark .adminImportControls select{ background:#111827; color:#eef5ff; border-color:rgba(148,163,184,.25); }
+.dark .adminImportDropzone{ background:rgba(15,23,42,.55); border-color:rgba(96,165,250,.3); color:#cbd5e1; }
+.dark .adminImportPreview th{ background:#111827; }
+
+@media (max-width: 860px){
+  .adminImportHead{ flex-direction:column; }
+  .adminImportControls{ width:100%; min-width:0; }
+  .adminImportSummary{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .adminImportActions{ justify-content:stretch; flex-direction:column; }
+}

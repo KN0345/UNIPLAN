@@ -141,6 +141,103 @@ function getSql(env) {
   return neon(env.DATABASE_URL)
 }
 
+
+async function ensureCourseSchema(sql) {
+  await sql`create extension if not exists pgcrypto`
+  await sql`
+    create table if not exists courses (
+      id uuid primary key default gen_random_uuid(),
+      semester_source text not null,
+      serial text,
+      code text,
+      name text not null,
+      credits numeric,
+      category text,
+      teacher text,
+      classroom text,
+      capacity text,
+      time_data jsonb,
+      time_info text,
+      department text,
+      grade text,
+      major text,
+      sem_seq text,
+      class_name text,
+      group_type text,
+      notes text,
+      raw_json jsonb not null default '{}'::jsonb,
+      created_at timestamp default now(),
+      updated_at timestamp default now(),
+      unique (semester_source, serial, code, class_name, name)
+    )
+  `
+  await sql`create index if not exists idx_courses_semester_source on courses (semester_source)`
+  await sql`create index if not exists idx_courses_department on courses (department)`
+  await sql`create index if not exists idx_courses_grade on courses (grade)`
+  await sql`create index if not exists idx_courses_code on courses (code)`
+  await sql`create index if not exists idx_courses_serial on courses (serial)`
+  await sql`create index if not exists idx_courses_name on courses (name)`
+}
+
+function parseCourseTimeData(value) {
+  if (Array.isArray(value)) return value
+  if (!value) return []
+  try { return JSON.parse(String(value)) } catch { return [] }
+}
+
+function normalizeImportCourse(course = {}, fallbackSemester = '') {
+  return {
+    semester_source: normalizeCourseCatalogTerm(course.semester_source || course.semester || course.term || fallbackSemester),
+    serial: String(course.serial || course.開課序號 || course['開課序號'] || '').trim(),
+    code: String(course.code || course.course_code || course.course_id || course.課號 || course['課號'] || '').trim(),
+    name: String(course.name || course.course_name || course.課程名稱 || course['課程名稱'] || course.科目名稱 || course['科目名稱'] || '').trim(),
+    credits: Number.isFinite(Number(course.credits ?? course.credit ?? course.學分 ?? course['學分'])) ? Number(course.credits ?? course.credit ?? course.學分 ?? course['學分']) : null,
+    category: String(course.category || course.required_type || course.必選修 || course['必選修'] || '').trim(),
+    teacher: String(course.teacher || course.instructor || course.教師 || course['教師'] || '').trim(),
+    classroom: String(course.classroom || course.room || course.教室 || course['教室'] || '').trim(),
+    capacity: String(course.capacity || course.人數 || course['人數'] || '').trim(),
+    time_data: parseCourseTimeData(course.time_data),
+    time_info: String(course.time_info || course.time || course.時間 || course['時間'] || '').trim(),
+    department: String(course.department || course.開課系所 || course['開課系所'] || course.系所 || course['系所'] || '').trim(),
+    grade: String(course.grade || course.年級 || course['年級'] || '').trim(),
+    major: String(course.major || course.class_group || course.班別 || course['班別'] || '').trim(),
+    sem_seq: String(course.sem_seq || course.學期序 || course['學期序'] || '').trim(),
+    class_name: String(course.class_name || course.className || course.班級 || course['班級'] || '').trim(),
+    group_type: String(course.group_type || course.組別 || course['組別'] || '').trim(),
+    notes: String(course.notes || course.note || course.備註 || course['備註'] || '').trim(),
+    raw_json: course,
+  }
+}
+
+async function upsertCourseRow(sql, c) {
+  await sql`
+    insert into courses (
+      semester_source, serial, code, name, credits, category, teacher, classroom, capacity,
+      time_data, time_info, department, grade, major, sem_seq, class_name, group_type, notes, raw_json, updated_at
+    ) values (
+      ${c.semester_source}, ${c.serial}, ${c.code}, ${c.name}, ${c.credits}, ${c.category}, ${c.teacher}, ${c.classroom}, ${c.capacity},
+      ${JSON.stringify(c.time_data)}::jsonb, ${c.time_info}, ${c.department}, ${c.grade}, ${c.major}, ${c.sem_seq}, ${c.class_name}, ${c.group_type}, ${c.notes}, ${JSON.stringify(c.raw_json)}::jsonb, now()
+    )
+    on conflict (semester_source, serial, code, class_name, name)
+    do update set
+      credits = excluded.credits,
+      category = excluded.category,
+      teacher = excluded.teacher,
+      classroom = excluded.classroom,
+      capacity = excluded.capacity,
+      time_data = excluded.time_data,
+      time_info = excluded.time_info,
+      department = excluded.department,
+      grade = excluded.grade,
+      major = excluded.major,
+      sem_seq = excluded.sem_seq,
+      group_type = excluded.group_type,
+      notes = excluded.notes,
+      raw_json = excluded.raw_json,
+      updated_at = now()
+  `
+}
+
 async function ensureSchema(sql) {
   await sql`create extension if not exists pgcrypto`
   await sql`
@@ -533,6 +630,68 @@ async function handleSettings(request, env, sql, method) {
 }
 
 
+async function handleGetWelcome(request, env, sql) {
+  const row = await authUser(request, env, sql)
+  if (!row) return error('尚未登入', 401)
+  const rows = await sql`select settings_json from user_settings where user_id = ${row.id} order by updated_at desc limit 1`
+  const settings = rows[0]?.settings_json || {}
+  return json({ ok: true, hasSeenWelcome: Boolean(settings.hasSeenWelcome), settings })
+}
+
+async function handlePutWelcome(request, env, sql) {
+  const row = await authUser(request, env, sql)
+  if (!row) return error('尚未登入', 401)
+  const rows = await sql`select theme, accent_color, settings_json from user_settings where user_id = ${row.id} order by updated_at desc limit 1`
+  const current = rows[0]?.settings_json || {}
+  const nextSettings = { ...current, hasSeenWelcome: true, welcomeSeenAt: new Date().toISOString() }
+  await sql`delete from user_settings where user_id = ${row.id}`
+  await sql`
+    insert into user_settings (user_id, theme, accent_color, settings_json, updated_at)
+    values (${row.id}, ${rows[0]?.theme || nextSettings.theme || null}, ${rows[0]?.accent_color || nextSettings.accentColor || null}, ${JSON.stringify(nextSettings)}, now())
+  `
+  return json({ ok: true, hasSeenWelcome: true, settings: nextSettings })
+}
+
+async function handleAdminCourseImport(request, env, sql) {
+  const row = await authUser(request, env, sql)
+  if (!row) return error('尚未登入', 401)
+  const publicRow = publicUser(row)
+  if (publicRow.role !== 'super_admin') return error('沒有管理員權限', 403)
+
+  const body = await readBody(request)
+  const fallbackSemester = normalizeCourseCatalogTerm(body.semester || body.semester_source || '')
+  const rawCourses = Array.isArray(body.courses) ? body.courses : Array.isArray(body.data) ? body.data : []
+  const clearSemester = Boolean(body.clearSemester || body.clear_semester)
+  if (!rawCourses.length) return error('沒有可匯入的課程資料')
+
+  await ensureCourseSchema(sql)
+  if (clearSemester && fallbackSemester) {
+    await sql`delete from courses where semester_source = ${fallbackSemester}`
+  }
+
+  let imported = 0
+  const errors = []
+  const bySemester = {}
+  for (let index = 0; index < rawCourses.length; index += 1) {
+    const course = normalizeImportCourse(rawCourses[index], fallbackSemester)
+    if (!course.semester_source || !course.name) {
+      errors.push({ row: index + 1, message: '缺少學期或課程名稱' })
+      continue
+    }
+    try {
+      await upsertCourseRow(sql, course)
+      imported += 1
+      bySemester[course.semester_source] = (bySemester[course.semester_source] || 0) + 1
+    } catch (err) {
+      errors.push({ row: index + 1, message: err?.message || '匯入失敗' })
+      if (errors.length >= 20) break
+    }
+  }
+
+  return json({ ok: true, imported, failed: errors.length, errors, bySemester })
+}
+
+
 function getOAuthBaseUrl(request) {
   const url = new URL(request.url)
   return `${url.protocol}//${url.host}`
@@ -887,8 +1046,11 @@ export async function onRequest(context) {
     if (method === 'PUT' && path === '/auth/profile') return handleProfile(request, env, sql)
     if (method === 'GET' && path === '/user/data') return handleGetUserData(request, env, sql)
     if (method === 'PUT' && path === '/user/data') return handlePutUserData(request, env, sql)
+    if (method === 'GET' && path === '/user/welcome') return handleGetWelcome(request, env, sql)
+    if (method === 'PUT' && path === '/user/welcome') return handlePutWelcome(request, env, sql)
     if (path === '/user/favorites' && ['GET', 'PUT'].includes(method)) return handleFavorites(request, env, sql, method)
     if (path === '/user/settings' && ['GET', 'PUT'].includes(method)) return handleSettings(request, env, sql, method)
+    if (method === 'POST' && path === '/admin/courses/import') return handleAdminCourseImport(request, env, sql)
     if (method === 'POST' && path === '/schedule') return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/schedule/')) return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/student-id/parse/')) return json({ ok: true, data: parseStudentIdLocal(decodeURIComponent(path.slice('/student-id/parse/'.length))) })

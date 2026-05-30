@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { readStorageJson } from '../../utils/storage'
 import { PROGRAMS } from '../../data/programs/programData'
 import { GRADUATION_RULE_PREVIEW } from '../../data/graduation/graduationRulesPreview'
+import { importOfficialCourses } from '../../api'
 
 function getCourse(course) {
   return course?.course || course || {}
@@ -65,6 +66,104 @@ const FEEDBACK_ACTIONS = [
   { label: '完成', value: '已處理' },
 ]
 
+const COURSE_IMPORT_COLUMNS = [
+  ['semester_source', '學期'],
+  ['serial', '開課序號'],
+  ['code', '課號'],
+  ['name', '課程名稱'],
+  ['credits', '學分'],
+  ['category', '必選修'],
+  ['teacher', '教師'],
+  ['time_info', '時間'],
+  ['classroom', '教室'],
+  ['department', '開課系所'],
+  ['grade', '年級'],
+  ['class_name', '班級'],
+]
+
+function normalizeImportSemester(value) {
+  const raw = String(value || '').trim()
+  if (/1142CLASS/i.test(raw) || /114\s*下|1142|下學期/.test(raw)) return '1142CLASS'
+  if (/1141CLASS/i.test(raw) || /114\s*上|1141|上學期/.test(raw)) return '1141CLASS'
+  return raw || '1141CLASS'
+}
+
+function parseCsv(text) {
+  const rows = []
+  let row = []
+  let cell = ''
+  let quoted = false
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]
+    const next = text[i + 1]
+    if (ch === '"' && quoted && next === '"') {
+      cell += '"'
+      i += 1
+    } else if (ch === '"') {
+      quoted = !quoted
+    } else if (ch === ',' && !quoted) {
+      row.push(cell)
+      cell = ''
+    } else if ((ch === '\n' || ch === '\r') && !quoted) {
+      if (ch === '\r' && next === '\n') i += 1
+      row.push(cell)
+      if (row.some((value) => String(value || '').trim())) rows.push(row)
+      row = []
+      cell = ''
+    } else {
+      cell += ch
+    }
+  }
+  row.push(cell)
+  if (row.some((value) => String(value || '').trim())) rows.push(row)
+  if (rows.length < 2) return []
+  const headers = rows[0].map((header) => String(header || '').trim())
+  return rows.slice(1).map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] || ''])))
+}
+
+function normalizeImportCourse(row, semester) {
+  const pick = (...keys) => keys.map((key) => row[key]).find((value) => value !== undefined && value !== null && String(value).trim() !== '') || ''
+  return {
+    semester_source: normalizeImportSemester(pick('semester_source', 'semester', '學期') || semester),
+    serial: String(pick('serial', '開課序號')).trim(),
+    code: String(pick('code', 'course_code', '課號')).trim(),
+    name: String(pick('name', 'course_name', '課程名稱', '科目名稱')).trim(),
+    credits: String(pick('credits', 'credit', '學分')).trim(),
+    category: String(pick('category', 'required_type', '必選修')).trim(),
+    teacher: String(pick('teacher', 'instructor', '教師')).trim(),
+    time_info: String(pick('time_info', 'time', '時間')).trim(),
+    classroom: String(pick('classroom', 'room', '教室')).trim(),
+    department: String(pick('department', '開課系所', '系所')).trim(),
+    grade: String(pick('grade', '年級')).trim(),
+    class_name: String(pick('class_name', 'className', '班級')).trim(),
+    major: String(pick('major', '班別')).trim(),
+    notes: String(pick('notes', '備註')).trim(),
+    raw_json: row,
+  }
+}
+
+function parseCourseImportText(text, fileName, semester) {
+  const trimmed = String(text || '').trim()
+  if (!trimmed) return []
+  let rows = []
+  if (/\.json$/i.test(fileName) || trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    const payload = JSON.parse(trimmed)
+    rows = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : []
+  } else {
+    rows = parseCsv(trimmed)
+  }
+  return rows.map((row) => normalizeImportCourse(row, semester))
+}
+
+function validateImportCourses(courses) {
+  const errors = []
+  courses.forEach((course, index) => {
+    if (!course.semester_source) errors.push(`第 ${index + 1} 筆缺少學期`)
+    if (!course.name) errors.push(`第 ${index + 1} 筆缺少課程名稱`)
+  })
+  return errors.slice(0, 20)
+}
+
 function DetailModal({ title, children, onClose }) {
   if (!title) return null
   return <div className="adminModalOverlay" onClick={onClose}>
@@ -80,6 +179,13 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
   const [adminUsers, setAdminUsers] = useState(() => normalizeUsers(user, profile))
   const [feedbackItems, setFeedbackItems] = useState(() => readStorageJson('uniplan:feedbackItems', []))
   const [modal, setModal] = useState(null)
+  const [importSemester, setImportSemester] = useState('1142CLASS')
+  const [importFileName, setImportFileName] = useState('')
+  const [importRows, setImportRows] = useState([])
+  const [importErrors, setImportErrors] = useState([])
+  const [importBusy, setImportBusy] = useState(false)
+  const [importResult, setImportResult] = useState(null)
+  const [clearSemesterBeforeImport, setClearSemesterBeforeImport] = useState(false)
 
   useEffect(() => {
     setAdminUsers(normalizeUsers(user, profile))
@@ -184,6 +290,56 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
     notify?.('意見狀態已更新')
   }
 
+
+  async function handleCourseImportFile(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setImportFileName(file.name)
+    setImportResult(null)
+    try {
+      const text = await file.text()
+      const rows = parseCourseImportText(text, file.name, importSemester)
+      const errors = validateImportCourses(rows)
+      setImportRows(rows)
+      setImportErrors(errors)
+      notify?.(`已讀取 ${rows.length} 筆課程資料`)
+    } catch (error) {
+      setImportRows([])
+      setImportErrors([error?.message || '檔案解析失敗'])
+      notify?.('課程檔案解析失敗')
+    }
+  }
+
+  async function confirmCourseImport() {
+    if (!importRows.length) {
+      notify?.('請先選擇課程檔案')
+      return
+    }
+    const errors = validateImportCourses(importRows)
+    setImportErrors(errors)
+    if (errors.length) {
+      notify?.('仍有必要欄位缺漏，請修正後再匯入')
+      return
+    }
+    setImportBusy(true)
+    setImportResult(null)
+    try {
+      const result = await importOfficialCourses({
+        semester: importSemester,
+        courses: importRows,
+        clearSemester: clearSemesterBeforeImport,
+      })
+      setImportResult(result)
+      notify?.(`匯入完成：${result.imported || 0} 筆`)
+    } catch (error) {
+      const message = error?.response?.data?.error || error?.message || '匯入失敗'
+      setImportResult({ ok: false, error: message })
+      notify?.(message)
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
   return (
     <section className="pageCard adminConsolePage">
       <div className="pageHead"><div><h2>管理後台</h2><p className="muted">統計、意見回報與帳號管理。</p></div></div>
@@ -192,6 +348,7 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
           <button className={activeTab === 'feedback' ? 'active' : ''} onClick={() => setActiveTab('feedback')}>意見回報</button>
           <button className={activeTab === 'accounts' ? 'active' : ''} onClick={() => setActiveTab('accounts')}>帳號管理</button>
           <button className={activeTab === 'stats' ? 'active' : ''} onClick={() => setActiveTab('stats')}>資料中心</button>
+          <button className={activeTab === 'courseImport' ? 'active' : ''} onClick={() => setActiveTab('courseImport')}>課程匯入</button>
         </aside>
         <div className="adminConsoleContent">
           {activeTab === 'feedback' && <section className="adminSection">
@@ -213,6 +370,42 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
             <div className="accountCards">{adminUsers.map((item) => <article className="accountAdminCard" key={item.id}>
               <button className="adminCardHeader" onClick={() => setModal({ type: 'account', item })}><span><b>{item.name}</b><small>{item.studentId}｜{item.role === 'admin' ? '管理員' : '學生'}｜{item.status === 'active' ? '啟用' : '停用'}</small></span><em>管理</em></button>
             </article>)}</div>
+          </section>}
+
+          {activeTab === 'courseImport' && <section className="adminSection adminImportSection">
+            <div className="adminImportHead">
+              <div>
+                <h3>課程匯入</h3>
+                <p className="muted">上傳 CSV 或 JSON，預覽資料後寫入 Neon courses。建議先匯入少量測試資料，確認無誤後再正式匯入完整學期。</p>
+              </div>
+              <div className="adminImportControls">
+                <label>目標學期<select value={importSemester} onChange={(event) => setImportSemester(event.target.value)}>
+                  <option value="1141CLASS">114 學年度上學期</option>
+                  <option value="1142CLASS">114 學年度下學期</option>
+                </select></label>
+                <label className="adminImportCheckbox"><input type="checkbox" checked={clearSemesterBeforeImport} onChange={(event) => setClearSemesterBeforeImport(event.target.checked)} /> 匯入前清空此學期</label>
+              </div>
+            </div>
+            <div className="adminImportDropzone">
+              <input type="file" accept=".csv,.json,application/json,text/csv" onChange={handleCourseImportFile} />
+              <b>{importFileName || '選擇 CSV / JSON 課程檔案'}</b>
+              <span>支援欄位：課程名稱、學分、教師、時間、教室、開課系所、開課序號、課號。</span>
+            </div>
+            <div className="adminImportSummary">
+              <article><b>{importRows.length}</b><span>預覽筆數</span></article>
+              <article><b>{importErrors.length}</b><span>錯誤</span></article>
+              <article><b>{importRows.filter((row) => row.semester_source === '1141CLASS').length}</b><span>114 上</span></article>
+              <article><b>{importRows.filter((row) => row.semester_source === '1142CLASS').length}</b><span>114 下</span></article>
+            </div>
+            {importErrors.length ? <div className="adminImportErrors"><b>匯入前檢查</b>{importErrors.map((message) => <p key={message}>{message}</p>)}</div> : null}
+            {importRows.length ? <div className="adminImportPreview"><table><thead><tr>{COURSE_IMPORT_COLUMNS.slice(1, 9).map(([key, label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{importRows.slice(0, 8).map((row, index) => <tr key={`${row.serial}-${row.name}-${index}`}>{COURSE_IMPORT_COLUMNS.slice(1, 9).map(([key]) => <td key={key}>{row[key] || '—'}</td>)}</tr>)}</tbody></table></div> : <p className="muted">尚未選擇匯入檔案。</p>}
+            <div className="adminImportActions">
+              <button disabled={!importRows.length || importBusy || importErrors.length > 0} onClick={confirmCourseImport}>{importBusy ? '匯入中…' : '確認匯入 Neon'}</button>
+              <button type="button" onClick={() => { setImportRows([]); setImportErrors([]); setImportFileName(''); setImportResult(null) }}>清除預覽</button>
+            </div>
+            {importResult && <div className={importResult.ok === false ? 'adminImportResult error' : 'adminImportResult'}>
+              {importResult.ok === false ? <p>{importResult.error}</p> : <p>已匯入 / 更新 {importResult.imported || 0} 筆。{importResult.failed ? `失敗 ${importResult.failed} 筆。` : ''}</p>}
+            </div>}
           </section>}
 
           {activeTab === 'stats' && <section className="adminSection adminStatsDashboard">

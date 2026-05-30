@@ -123,32 +123,24 @@ function matchesStaticCourse(course, params = {}) {
   return true
 }
 
-async function fetchStaticCourses(params = {}) {
-  const response = await fetch('/data/courses.json')
-  if (!response.ok) throw new Error('static courses not found')
-  const payload = await response.json()
-  const list = Array.isArray(payload?.data) ? payload.data : []
-  return { data: list.filter((course) => matchesStaticCourse(course, params)).slice(0, 500) }
-}
-
 export async function fetchCourses(params = {}) {
-  try {
-    const { data } = await api.get('/courses', { params })
-    return data
-  } catch (error) {
-    return fetchStaticCourses(params)
-  }
+  const { data } = await api.get('/courses', { params })
+  return data
 }
 
 export async function fetchMetadata() {
-  try {
-    const { data } = await api.get('/courses/metadata')
-    return data
-  } catch (error) {
-    const response = await fetch('/data/metadata.json')
-    if (!response.ok) throw error
-    return response.json()
-  }
+  const { data } = await api.get('/courses/metadata')
+  return data
+}
+
+export async function fetchWelcomeState() {
+  const { data } = await api.get('/user/welcome')
+  return data
+}
+
+export async function completeWelcome() {
+  const { data } = await api.put('/user/welcome', { hasSeenWelcome: true })
+  return data
 }
 
 export async function submitPublicFeedback(payload) {

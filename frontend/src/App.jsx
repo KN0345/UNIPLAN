@@ -20,7 +20,7 @@ import Topbar from './components/layout/Topbar'
 import GuideOverlay from './components/guide/GuideOverlay'
 import FeedbackPage from './pages/FeedbackPage'
 import LoginPage from './components/auth/LoginPage'
-import { syncUserData } from './api'
+import { completeWelcome, fetchWelcomeState, syncUserData } from './api'
 import { isSuperAdminUser, saveBoundAcademicBundle } from './utils/account'
 import { DEFAULT_RULES } from './data/graduation/graduationRulesPreview'
 import {
@@ -98,7 +98,7 @@ function App() {
   const [activeSemester, setActiveSemester] = useState('大一上')
   const [semesterAnimKey, setSemesterAnimKey] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [showGuide, setShowGuide] = useState(() => localStorage.getItem('uniplan:guideSeen') !== '1')
+  const [showGuide, setShowGuide] = useState(false)
   const [rules] = useState(DEFAULT_RULES)
   const scheduleExportRef = useRef(null)
 
@@ -224,6 +224,46 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [user?.studentId, user?.publicAlpha, plan, candidates, favorites, snapshots, localReviews, tagVotes])
 
+
+  useEffect(() => {
+    if (!user?.studentId) {
+      setShowGuide(false)
+      return
+    }
+    let cancelled = false
+    async function resolveWelcomeState() {
+      if (user.publicAlpha || user.offline) {
+        const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
+        if (!cancelled) setShowGuide(localStorage.getItem(key) !== '1')
+        return
+      }
+      try {
+        const res = await fetchWelcomeState()
+        if (!cancelled) setShowGuide(!res?.hasSeenWelcome)
+      } catch {
+        const key = `uniplan:guideSeen:${user.studentId}`
+        if (!cancelled) setShowGuide(localStorage.getItem(key) !== '1')
+      }
+    }
+    resolveWelcomeState()
+    return () => { cancelled = true }
+  }, [user?.studentId, user?.publicAlpha, user?.offline])
+
+  async function closeWelcomeGuide() {
+    setShowGuide(false)
+    if (!user?.studentId) return
+    if (user.publicAlpha || user.offline) {
+      const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
+      localStorage.setItem(key, '1')
+      return
+    }
+    try {
+      await completeWelcome()
+    } catch {
+      localStorage.setItem(`uniplan:guideSeen:${user.studentId}`, '1')
+    }
+  }
+
   if (!user) {
     return <LoginPage authMode={authMode} setAuthMode={setAuthMode} loginForm={loginForm} setLoginForm={setLoginForm} studentIdPreview={studentIdPreview} authError={authError} authNotice={authNotice} resetRequested={resetRequested} handleLogin={handleLogin} handleResendVerification={handleResendVerification} handleGuestLogin={handleGuestLogin} />
   }
@@ -254,7 +294,7 @@ function App() {
         {infoOpen && <div className="infoOverlay" onMouseDown={(e) => { if (e.target.className === 'infoOverlay') setInfoOpen(false) }}><div className="infoDrawerPanel"><button className="closeInfo" onClick={() => setInfoOpen(false)}>關閉</button><CourseInfo course={selectedCourse} reviews={reviews} tagVotes={tagVotes} onTagVote={toggleTeacherTag} userId={userKey(user)} onAddReview={handleAddReview} onUpdateReview={updateLocalReview} onDeleteReview={deleteLocalReview} /></div></div>}
       </main>
       {toast && <div className="toast" role="status">{toast}</div>}
-      <GuideOverlay open={showGuide} onClose={() => { localStorage.setItem('uniplan:guideSeen', '1'); setShowGuide(false) }} />
+      <GuideOverlay open={showGuide} onClose={closeWelcomeGuide} />
       <AppearanceModal open={settingsOpen} onClose={() => setSettingsOpen(false)} uiTheme={uiTheme} setUiTheme={setUiTheme} accent={accent} setAccent={setAccent} buttonAccent={buttonAccent} setButtonAccent={setButtonAccent} timetableTint={timetableTint} setTimetableTint={setTimetableTint} timetableOpacity={timetableOpacity} setTimetableOpacity={setTimetableOpacity} timetableBg={timetableBg} setTimetableBg={setTimetableBg} courseCardOpacity={courseCardOpacity} setCourseCardOpacity={setCourseCardOpacity} />
     </div>
   )
