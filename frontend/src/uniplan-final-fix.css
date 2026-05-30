@@ -1,0 +1,326 @@
+/* UniPlan hard final override v4: loaded after style.css.
+   Purpose: fix course-card/program-card layout even when older CSS patches remain. */
+
+.searchPage .courseList{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;
+  gap:16px!important;
+  align-items:stretch!important;
+}
+
+.searchPage .courseList article.courseCard,
+.courseList article.courseCard,
+article.courseCard{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  box-sizing:border-box!important;
+  min-height:190px!important;
+  height:190px!important;
+  max-height:none!important;
+  padding:58px 16px 66px 18px!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+
+.searchPage .courseList article.courseCard .statusBadge,
+.courseList article.courseCard .statusBadge,
+article.courseCard .statusBadge{
+  position:absolute!important;
+  left:14px!important;
+  top:18px!important;
+  right:auto!important;
+  bottom:auto!important;
+  z-index:30!important;
+}
+
+.searchPage .courseList article.courseCard .courseTopBadges,
+.courseList article.courseCard .courseTopBadges,
+article.courseCard .courseTopBadges{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:40!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:7px!important;
+  width:auto!important;
+  max-width:calc(100% - 48px)!important;
+  min-width:0!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  pointer-events:none!important;
+  transform:none!important;
+}
+
+.searchPage .courseList article.courseCard .courseSerialPill,
+.searchPage .courseList article.courseCard .courseCreditPill,
+.courseList article.courseCard .courseSerialPill,
+.courseList article.courseCard .courseCreditPill,
+article.courseCard .courseSerialPill,
+article.courseCard .courseCreditPill{
+  position:static!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:110px!important;
+  height:26px!important;
+  min-height:26px!important;
+  padding:0 10px!important;
+  margin:0!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  opacity:1!important;
+  color:#f8fafc!important;
+  background:rgba(15,35,72,.62)!important;
+  border:1px solid rgba(226,232,240,.28)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 8px 18px rgba(15,23,42,.14)!important;
+  transform:none!important;
+}
+
+.searchPage .courseList article.courseCard .courseCreditPill,
+.courseList article.courseCard .courseCreditPill,
+article.courseCard .courseCreditPill{
+  background:rgba(37,99,235,.74)!important;
+  border-color:rgba(191,219,254,.42)!important;
+}
+
+.searchPage .courseList article.courseCard .cardHead,
+.courseList article.courseCard .cardHead,
+article.courseCard .cardHead{
+  position:relative!important;
+  z-index:5!important;
+  display:block!important;
+  width:100%!important;
+  min-height:46px!important;
+  max-height:50px!important;
+  padding:0!important;
+  margin:0 0 12px 0!important;
+  overflow:hidden!important;
+  transform:none!important;
+}
+
+.searchPage .courseList article.courseCard .cardHead strong,
+.courseList article.courseCard .cardHead strong,
+article.courseCard .cardHead strong{
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:normal!important;
+  font-size:17px!important;
+  line-height:1.32!important;
+  font-weight:900!important;
+  letter-spacing:-.02em!important;
+  color:#f8fafc!important;
+  text-shadow:0 1px 2px rgba(0,0,0,.2)!important;
+}
+
+.searchPage .courseList article.courseCard .courseCardDetails,
+.courseList article.courseCard .courseCardDetails,
+article.courseCard .courseCardDetails{
+  position:relative!important;
+  z-index:5!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+
+.searchPage .courseList article.courseCard .courseCardDetails p,
+.courseList article.courseCard .courseCardDetails p,
+article.courseCard .courseCardDetails p{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:12.5px!important;
+  line-height:1.35!important;
+  font-weight:700!important;
+  color:rgba(226,232,240,.82)!important;
+}
+
+.searchPage .courseList article.courseCard .searchCardActions,
+.courseList article.courseCard .searchCardActions,
+article.courseCard .searchCardActions{
+  position:absolute!important;
+  right:14px!important;
+  bottom:14px!important;
+  left:auto!important;
+  top:auto!important;
+  z-index:35!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:9px!important;
+  width:auto!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  transform:none!important;
+}
+
+.searchPage .courseList article.courseCard .searchCardActions button,
+.courseList article.courseCard .searchCardActions button,
+article.courseCard .searchCardActions button{
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  min-height:40px!important;
+  padding:0!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:13px!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:900!important;
+}
+
+/* Compatibility: if GitHub still has an older CourseCard.jsx, force old badges to the same position. */
+.searchPage .courseList article.courseCard .courseCreditsBadge,
+.courseList article.courseCard .courseCreditsBadge,
+article.courseCard .courseCreditsBadge{
+  position:absolute!important;
+  top:14px!important;
+  right:14px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:45!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  min-width:0!important;
+  height:26px!important;
+  padding:0 10px!important;
+  margin:0!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  color:#f8fafc!important;
+  background:rgba(37,99,235,.74)!important;
+  border:1px solid rgba(191,219,254,.42)!important;
+  transform:none!important;
+}
+.searchPage .courseList article.courseCard .cardHead span,
+.courseList article.courseCard .cardHead span,
+article.courseCard .cardHead span{
+  position:absolute!important;
+  top:-44px!important;
+  right:76px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:46!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:26px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  color:#f8fafc!important;
+  background:rgba(15,35,72,.62)!important;
+  border:1px solid rgba(226,232,240,.28)!important;
+}
+
+.programCourseRow{
+  position:relative!important;
+  min-height:128px!important;
+  overflow:hidden!important;
+}
+.programCourseMainButton{
+  position:relative!important;
+  min-height:128px!important;
+  padding:44px 46px 22px 16px!important;
+  overflow:hidden!important;
+}
+.programCourseMainButton strong{
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:3!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  white-space:normal!important;
+  line-height:1.35!important;
+}
+.programCourseCreditPill{
+  position:absolute!important;
+  top:12px!important;
+  right:14px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:30!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:26px!important;
+  min-height:26px!important;
+  width:auto!important;
+  min-width:0!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  color:inherit!important;
+  background:rgba(255,255,255,.20)!important;
+  border:1px solid rgba(255,255,255,.24)!important;
+}
+.programCourseInfoDot{
+  position:absolute!important;
+  right:12px!important;
+  bottom:12px!important;
+  top:auto!important;
+  left:auto!important;
+  z-index:32!important;
+}
+
+@media(max-width:720px){
+  .searchPage .courseList{grid-template-columns:1fr!important;}
+  .searchPage .courseList article.courseCard,
+  .courseList article.courseCard,
+  article.courseCard{height:196px!important;min-height:196px!important;padding:58px 14px 68px 16px!important;}
+  .searchPage .courseList article.courseCard .courseSerialPill,
+  .searchPage .courseList article.courseCard .courseCreditPill,
+  .courseList article.courseCard .courseSerialPill,
+  .courseList article.courseCard .courseCreditPill,
+  article.courseCard .courseSerialPill,
+  article.courseCard .courseCreditPill,
+  .searchPage .courseList article.courseCard .courseCreditsBadge,
+  .courseList article.courseCard .courseCreditsBadge,
+  article.courseCard .courseCreditsBadge{font-size:11px!important;height:24px!important;padding:0 8px!important;}
+}
