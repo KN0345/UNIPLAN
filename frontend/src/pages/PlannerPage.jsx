@@ -81,7 +81,6 @@ export default function PlannerPage(props) {
     tagVotes,
     importBackupFile,
     exportPngFromDom,
-    exportWallpaperPng,
     exportCleanPng,
     exportExcel,
     exportCalendar,
@@ -133,7 +132,7 @@ export default function PlannerPage(props) {
                 </div>
                 <aside className="plannerTools">
                   <section className="toolCard semesterPicker"><h3>切換學期</h3><div className="semesterButtons embedded">{SEMESTERS.map((sem) => <button key={sem} className={activeSemester === sem ? 'active' : ''} onClick={() => switchSemester(sem)}>{sem}</button>)}</div></section>
-                  <section className="toolCard quickActions"><h3>操作</h3><div className="toolButtons plannerActionGrid"><button onClick={undo} disabled={!history.length}>復原</button><button onClick={redo} disabled={!future.length}>重做</button><button onClick={() => { save(); setShowPlanSchemes(true); }}>儲存快照</button><button onClick={() => exportExcel(plan)}>匯出試算表</button><button onClick={importBackupFile}>匯入文字</button><button onClick={() => download('uniplan.json', JSON.stringify({ plan, candidates, favorites, snapshots, localReviews, tagVotes }, null, 2), 'application/json;charset=utf-8')}>匯出文字</button><button onClick={async () => { await exportPngFromDom(scheduleExportRef?.current, activeSemester); }}>匯出課表</button><button onClick={async () => { await exportWallpaperPng?.(scheduleExportRef?.current, activeSemester); }}>匯出桌布</button><button onClick={() => exportCalendar(plan, activeSemester)}>匯出行事曆</button><button className="wideToolButton" onClick={() => setShowManualCourse(true)}>新增自訂課程</button></div></section>
+                  <section className="toolCard quickActions"><h3>操作</h3><div className="toolButtons plannerActionGrid"><button onClick={undo} disabled={!history.length}>復原</button><button onClick={redo} disabled={!future.length}>重做</button><button onClick={() => { save(); setShowPlanSchemes(true); }}>儲存快照</button><button onClick={() => exportExcel(plan)}>匯出試算表</button><button onClick={importBackupFile}>匯入文字</button><button onClick={() => download('uniplan.json', JSON.stringify({ plan, candidates, favorites, snapshots, localReviews, tagVotes }, null, 2), 'application/json;charset=utf-8')}>匯出文字</button><button onClick={async () => { await exportCleanPng(plan, activeSemester); }}>匯出課表</button><button onClick={() => exportCalendar(plan, activeSemester)}>匯出行事曆</button><button className="wideToolButton" onClick={() => setShowManualCourse(true)}>新增自訂課程</button></div></section>
                   <section className="toolCard candidateRail sideCandidateRail" onDragOver={(e) => e.preventDefault()} onDrop={dropToCandidates}>
                     <div className="railHead"><h3>暫存區</h3><span>{candidates.length} 門</span></div>
                     <div className="candidateSummary noCategoryMenu"><input value={candidateSearch} onChange={(e) => setCandidateSearch(e.target.value)} placeholder="搜尋暫存課程" /><select value={candidateSort} onChange={(e) => setCandidateSort(e.target.value)}><option value="added">加入順序</option><option value="name">課名</option><option value="credits">學分</option><option value="time">時間</option></select></div>

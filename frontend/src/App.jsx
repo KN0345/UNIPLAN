@@ -1,4 +1,4 @@
-import { Component, useEffect, useRef, useState } from 'react'
+import { Component, useCallback, useEffect, useRef, useState } from 'react'
 import './style.css'
 import './uniplan-hard-final.css'
 import ProgramsPage from './pages/ProgramsPage'
@@ -38,7 +38,6 @@ import {
   exportCleanPng,
   exportExcel,
   exportPngFromDom,
-  exportWallpaperPng,
   findConflict,
   getCourse,
   isCourseAlreadyPlanned,
@@ -105,7 +104,10 @@ function App() {
   const appearanceCloudLoadedRef = useRef(false)
   const appearanceSaveTimerRef = useRef(null)
 
-  const { toast, notify } = useToast()
+  const { toast, notify: baseNotify } = useToast()
+  const notify = useCallback((message) => {
+    baseNotify(message)
+  }, [baseNotify])
   const {
     plan, setPlan, candidates, setCandidates, favorites, setFavorites, snapshots, setSnapshots,
     localReviews, setLocalReviews, tagVotes, setTagVotes, applyRemoteBundle, makeUserBundle,
@@ -290,17 +292,23 @@ function App() {
     }
     let cancelled = false
     async function resolveWelcomeState() {
+      const localKey = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
+      const localSeen = localStorage.getItem(localKey) === '1'
+      if (localSeen) {
+        if (!cancelled) setShowGuide(false)
+        return
+      }
       if (user.publicAlpha || user.offline) {
-        const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
-        if (!cancelled) setShowGuide(localStorage.getItem(key) !== '1')
+        if (!cancelled) setShowGuide(true)
         return
       }
       try {
         const res = await fetchWelcomeState()
-        if (!cancelled) setShowGuide(!res?.hasSeenWelcome)
+        const shouldShow = !res?.hasSeenWelcome
+        if (!shouldShow) localStorage.setItem(localKey, '1')
+        if (!cancelled) setShowGuide(shouldShow)
       } catch {
-        const key = `uniplan:guideSeen:${user.studentId}`
-        if (!cancelled) setShowGuide(localStorage.getItem(key) !== '1')
+        if (!cancelled) setShowGuide(!localSeen)
       }
     }
     resolveWelcomeState()
@@ -310,15 +318,13 @@ function App() {
   async function closeWelcomeGuide() {
     setShowGuide(false)
     if (!user?.studentId) return
-    if (user.publicAlpha || user.offline) {
-      const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
-      localStorage.setItem(key, '1')
-      return
-    }
+    const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
+    localStorage.setItem(key, '1')
+    if (user.publicAlpha || user.offline) return
     try {
       await completeWelcome()
     } catch {
-      localStorage.setItem(`uniplan:guideSeen:${user.studentId}`, '1')
+      // Local state has already been stored; do not re-open the guide on next refresh.
     }
   }
 
@@ -332,7 +338,7 @@ function App() {
       <main className="main">
         <Topbar activeMenu={activeMenu} user={user} onOpenSettings={() => setSettingsOpen(true)} onLogout={logout} />
 
-        {activeMenu === 'planner' && <PlannerPage CreditStrip={CreditStrip} plan={plan} rules={rules} scheduleExportRef={scheduleExportRef} activeSemester={activeSemester} semesterAnimKey={semesterAnimKey} SemesterGrid={SemesterGrid} handleDropCourse={handleDropCourse} autoPlace={autoPlace} openCoursePopover={openCoursePopover} searchEmptySlot={searchEmptySlot} deletePlannedCourse={deletePlannedCourse} movePlannedToCandidate={movePlannedToCandidate} SEMESTERS={SEMESTERS} switchSemester={switchSemester} save={save} undo={undo} history={history} redo={redo} future={future} download={download} candidates={candidates} favorites={favorites} snapshots={snapshots} setSnapshots={setSnapshots} restoreSnapshot={restoreSnapshot} localReviews={localReviews} tagVotes={tagVotes} importBackupFile={importBackupFile} exportPngFromDom={exportPngFromDom} exportWallpaperPng={exportWallpaperPng} exportCleanPng={exportCleanPng} exportExcel={exportExcel} exportCalendar={exportCalendar} createSnapshot={createSnapshot} dropToCandidates={dropToCandidates} candidateSearch={candidateSearch} setCandidateSearch={setCandidateSearch} candidateSort={candidateSort} setCandidateSort={setCandidateSort} filteredCandidates={filteredCandidates} getCourse={getCourse} uid={uid} openCourseInfo={openCourseInfo} credits={credits} courseMatchesSemester={courseMatchesSemester} courseTermLabel={courseTermLabel} addCourseToSemester={addCourseToSemester} removeCandidate={removeCandidate} dropDelete={dropDelete} />}
+        {activeMenu === 'planner' && <PlannerPage CreditStrip={CreditStrip} plan={plan} rules={rules} scheduleExportRef={scheduleExportRef} activeSemester={activeSemester} semesterAnimKey={semesterAnimKey} SemesterGrid={SemesterGrid} handleDropCourse={handleDropCourse} autoPlace={autoPlace} openCoursePopover={openCoursePopover} searchEmptySlot={searchEmptySlot} deletePlannedCourse={deletePlannedCourse} movePlannedToCandidate={movePlannedToCandidate} SEMESTERS={SEMESTERS} switchSemester={switchSemester} save={save} undo={undo} history={history} redo={redo} future={future} download={download} candidates={candidates} favorites={favorites} snapshots={snapshots} setSnapshots={setSnapshots} restoreSnapshot={restoreSnapshot} localReviews={localReviews} tagVotes={tagVotes} importBackupFile={importBackupFile} exportPngFromDom={exportPngFromDom} exportCleanPng={exportCleanPng} exportExcel={exportExcel} exportCalendar={exportCalendar} createSnapshot={createSnapshot} dropToCandidates={dropToCandidates} candidateSearch={candidateSearch} setCandidateSearch={setCandidateSearch} candidateSort={candidateSort} setCandidateSort={setCandidateSort} filteredCandidates={filteredCandidates} getCourse={getCourse} uid={uid} openCourseInfo={openCourseInfo} credits={credits} courseMatchesSemester={courseMatchesSemester} courseTermLabel={courseTermLabel} addCourseToSemester={addCourseToSemester} removeCandidate={removeCandidate} dropDelete={dropDelete} />}
 
         {activeMenu === 'search' && <CourseSearchPage searchTab={searchTab} setSearchTab={setSearchTab} favorites={favorites} runCourseSearch={runCourseSearch} query={query} setQuery={setQuery} searchLoading={searchLoading} courseCatalogTerm={courseCatalogTerm} setCourseCatalogTerm={setCourseCatalogTerm} COURSE_CATALOG_TERMS={COURSE_CATALOG_TERMS} searchFilters={searchFilters} setSearchFilters={setSearchFilters} majorOptions={majorOptions} departmentOptions={departmentOptions} gradeOptions={gradeOptions} DAYS={DAYS} PERIODS={PERIODS} setSearchOnlyAvailable={setSearchOnlyAvailable} setSearchSort={setSearchSort} searchSort={searchSort} searchOnlyAvailable={searchOnlyAvailable} activeSemester={activeSemester} searchError={searchError} sortedFilteredCourses={sortedFilteredCourses} CourseCard={CourseCard} uid={uid} openCourseInfo={openCourseInfo} addCandidate={addCandidate} toggleFavorite={toggleFavorite} candidates={candidates} courseKey={courseKey} isCourseAlreadyPlanned={isCourseAlreadyPlanned} plan={plan} courseRecommendationBadges={courseRecommendationBadges} findConflict={findConflict} tagVotes={tagVotes} courseTagOptions={courseTagOptions} />}
 
