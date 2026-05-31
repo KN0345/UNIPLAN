@@ -7307,30 +7307,3 @@ body[data-theme="dark"] .programTree{
   .programCourseMainButton{padding:40px 38px 18px 12px!important;}
   .programCourseCreditPill{top:9px!important;right:10px!important;font-size:10px!important;padding:4px 7px!important;}
 }
-
-
-/* ========================================================================== */
-/* UniPlan export/card correction: preserve image aspect ratio + real span     */
-/* ========================================================================== */
-.semesterPanel.activeSemesterPanel .timetableGridClean{
-  background-size:auto, cover, cover!important;
-  background-position:center center!important;
-  background-repeat:no-repeat!important;
-}
-.semesterPanel.activeSemesterPanel .timetableCourseTile,
-.semesterPanel.activeSemesterPanel .timetableConflictTile{
-  height:calc((100% * var(--tile-span, 1)) - 10px)!important;
-  min-height:calc((100% * var(--tile-span, 1)) - 10px)!important;
-  justify-content:flex-start!important;
-  padding-top:12px!important;
-}
-.semesterPanel.activeSemesterPanel .timetableCourseTile .tileTitle,
-.semesterPanel.activeSemesterPanel .timetableConflictTile strong{
-  flex:0 0 auto!important;
-}
-.semesterPanel.activeSemesterPanel .timetableCourseTile .tileMeta,
-.semesterPanel.activeSemesterPanel .timetableConflictTile small{
-  margin-top:4px!important;
-}
-
-.wallpaperCardModeBlock{display:grid;gap:10px;margin:10px 0 12px}.wallpaperCardModeGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.wallpaperCardModeGrid button{min-height:38px;border:1px solid rgba(255,255,255,.38);border-radius:14px;color:white;font-weight:900;text-shadow:0 1px 8px rgba(0,0,0,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 20px rgba(15,23,42,.12)}.wallpaperCardModeGrid button.active{outline:3px solid color-mix(in srgb,var(--accent) 30%,transparent);transform:translateY(-1px)}

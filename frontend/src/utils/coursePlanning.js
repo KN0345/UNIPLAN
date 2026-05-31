@@ -560,25 +560,6 @@ export function rgbaString([r, g, b, a = 1], alpha = a) {
   return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${Math.max(0, Math.min(1, alpha))})`
 }
 
-
-export function mixRgba(a, b, ratio = .5) {
-  const t = Math.max(0, Math.min(1, ratio))
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t,
-    1,
-  ]
-}
-
-export function brightenRgba(color, amount = .18) {
-  return mixRgba(color, [255, 255, 255, 1], amount)
-}
-
-export function darkenRgba(color, amount = .22) {
-  return mixRgba(color, [2, 6, 23, 1], amount)
-}
-
 export function readCurrentAppearance() {
   const bodyStyle = window.getComputedStyle(document.body)
   const rootStyle = window.getComputedStyle(document.documentElement)
@@ -793,25 +774,6 @@ function px(value, fallback = 0) {
 
 function makeExportText(value = '') {
   return String(value || '').replace(/\s+/g, ' ').trim()
-}
-
-function makeExportCourseName(value = '') {
-  // Export-only display cleanup. The original course data remains unchanged.
-  // This must run before any truncation, otherwise names such as 教育心理學(B班)
-  // become 教育心理學(… in wallpaper export.
-  let text = makeExportText(value)
-    .replace(/[（]/g, '(')
-    .replace(/[）]/g, ')')
-    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
-
-  const classToken = '[A-Za-z0-9一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]+'
-  const parenthesizedClass = new RegExp(`[\\s　]*\\(\\s*${classToken}班\\s*\\)[\\s　]*`, 'gu')
-  const trailingBareClass = new RegExp(`[\\s　]+${classToken}班$`, 'u')
-
-  // Remove every normal class suffix, not only B班: (A班), (B班), （C班）, (甲班), etc.
-  text = text.replace(parenthesizedClass, ' ').replace(trailingBareClass, '').trim()
-  text = text.replace(/[\s　]{2,}/g, ' ').trim()
-  return text || makeExportText(value)
 }
 
 function safeCourseTileTone(index = 0) {
@@ -1044,7 +1006,7 @@ function buildStableExportDom(element, semester = '課表') {
 
       const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
       const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
-      const titleText = makeExportCourseName(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
+      const titleText = makeExportText(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
       const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
       const [from, to] = safeCourseTileTone(courseIndex)
 
@@ -1076,6 +1038,340 @@ function buildStableExportDom(element, semester = '課表') {
 
   root.appendChild(gridEl)
   return { root, width: exportWidth, height: exportHeight }
+}
+
+
+function buildWallpaperExportDom(element, semester = '課表') {
+  const panel = element.querySelector('.semesterPanel') || element
+  const grid = panel.querySelector('.timetableGridClean') || panel.querySelector('.grid') || panel
+  const backgroundUrl = readBackgroundFromElement(panel)
+
+  const exportWidth = 1080
+  const exportHeight = 2400
+  const marginX = 58
+  const topSafe = 132
+  const headerH = 50
+  const gridTop = 212
+  const rowH = 124
+  const gridHeight = headerH + rowH * 10
+  const gridWidth = exportWidth - marginX * 2
+  const dayCount = 7
+  const dayW = gridWidth / dayCount
+
+  const root = document.createElement('section')
+  root.className = 'uniplanWallpaperExportRoot'
+  root.style.cssText = `
+    position:fixed;
+    left:-100000px;
+    top:0;
+    width:${exportWidth}px;
+    height:${exportHeight}px;
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    background:#07162b;
+    color:#f8fafc;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;
+  `
+
+  const style = document.createElement('style')
+  style.textContent = `
+    .uniplanWallpaperExportRoot, .uniplanWallpaperExportRoot *{
+      box-sizing:border-box!important;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif!important;
+      color:#f8fafc;
+      text-rendering:geometricPrecision;
+      letter-spacing:0!important;
+    }
+    .uniplanWallpaperBg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center center;
+      z-index:0;
+      pointer-events:none;
+    }
+    .uniplanWallpaperTint{
+      position:absolute;
+      inset:0;
+      z-index:1;
+      background:linear-gradient(180deg,rgba(4,14,31,.44),rgba(4,14,31,.30) 42%,rgba(4,14,31,.52));
+      pointer-events:none;
+    }
+    .uniplanWallpaperGrid{
+      position:absolute;
+      z-index:2;
+      left:${marginX}px;
+      top:${topSafe}px;
+      width:${gridWidth}px;
+      height:${gridHeight}px;
+      overflow:visible;
+    }
+    .uniplanWallpaperDay{
+      position:absolute;
+      top:0;
+      height:38px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.86);
+      font-size:22px;
+      font-weight:950;
+      text-shadow:0 1px 10px rgba(0,0,0,.25);
+    }
+    .uniplanWallpaperLineV,
+    .uniplanWallpaperLineH{
+      position:absolute;
+      background:rgba(205,225,255,.105);
+      pointer-events:none;
+    }
+    .uniplanWallpaperLineV{
+      top:${headerH}px;
+      width:1px;
+      height:${rowH * 10}px;
+    }
+    .uniplanWallpaperLineH{
+      left:0;
+      width:${gridWidth}px;
+      height:1px;
+    }
+    .uniplanWallpaperCourse{
+      position:absolute;
+      z-index:4;
+      overflow:hidden;
+      border-radius:22px;
+      padding:28px 22px 22px;
+      border:1px solid rgba(255,255,255,.22);
+      background:linear-gradient(160deg,rgba(118,161,255,.62),rgba(63,72,220,.56) 58%,rgba(38,48,170,.52));
+      box-shadow:0 22px 42px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.28),inset 0 -34px 52px rgba(8,17,56,.18);
+    }
+    .uniplanWallpaperCourse:before{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:0;
+      height:46%;
+      background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.03));
+      pointer-events:none;
+    }
+    .uniplanWallpaperCourse:after{
+      content:"";
+      position:absolute;
+      inset:2px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.10);
+      pointer-events:none;
+    }
+    .uniplanWallpaperCourseTitle{
+      position:relative;
+      z-index:1;
+      display:block;
+      color:#f8fbff;
+      font-size:24px;
+      line-height:1.22;
+      font-weight:950;
+      text-align:center;
+      text-shadow:0 2px 10px rgba(0,0,0,.28);
+      word-break:break-word;
+    }
+    .uniplanWallpaperCourseMeta{
+      position:absolute;
+      z-index:1;
+      left:16px;
+      right:16px;
+      bottom:24px;
+      color:rgba(255,255,255,.86);
+      font-size:18px;
+      line-height:1.35;
+      font-weight:900;
+      text-align:center;
+      text-shadow:0 1px 8px rgba(0,0,0,.24);
+      white-space:pre-line;
+    }
+    .uniplanWallpaperDot{
+      position:absolute;
+      left:18px;
+      top:18px;
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      background:#93c5fd;
+      box-shadow:0 0 0 4px rgba(147,197,253,.20);
+      z-index:2;
+    }
+  `
+  root.appendChild(style)
+
+  if (backgroundUrl) {
+    const img = document.createElement('img')
+    img.className = 'uniplanWallpaperBg'
+    img.src = backgroundUrl
+    img.alt = ''
+    root.appendChild(img)
+  }
+  const tint = document.createElement('div')
+  tint.className = 'uniplanWallpaperTint'
+  root.appendChild(tint)
+
+  const gridEl = document.createElement('div')
+  gridEl.className = 'uniplanWallpaperGrid'
+  root.appendChild(gridEl)
+
+  DAYS.forEach((day, index) => {
+    const pill = document.createElement('div')
+    pill.className = 'uniplanWallpaperDay'
+    pill.textContent = day
+    const pillW = Math.min(72, dayW - 16)
+    pill.style.left = `${dayW * index + (dayW - pillW) / 2}px`
+    pill.style.width = `${pillW}px`
+    gridEl.appendChild(pill)
+  })
+
+  for (let i = 0; i <= dayCount; i += 1) {
+    const line = document.createElement('div')
+    line.className = 'uniplanWallpaperLineV'
+    line.style.left = `${dayW * i}px`
+    gridEl.appendChild(line)
+  }
+  for (let i = 0; i <= 10; i += 1) {
+    const line = document.createElement('div')
+    line.className = 'uniplanWallpaperLineH'
+    line.style.top = `${headerH + rowH * i}px`
+    gridEl.appendChild(line)
+  }
+
+  const rows = Array.from(grid.querySelectorAll('.gridRow'))
+  let courseIndex = 0
+  rows.slice(0, 10).forEach((row, rowIndex) => {
+    const cells = Array.from(row.querySelectorAll('.timetableCell'))
+    cells.slice(0, 7).forEach((cell, dayIndex) => {
+      const tile = cell.querySelector('.timetableCourseTile, .slotCourse, .glassCourse')
+      if (!tile) return
+      const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
+      const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
+      const titleText = makeExportText(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
+      const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
+
+      const courseW = Math.max(112, dayW * 0.72)
+      const courseH = Math.max(86, rowH * span - 24)
+      const course = document.createElement('div')
+      course.className = 'uniplanWallpaperCourse'
+      course.style.left = `${dayW * dayIndex + (dayW - courseW) / 2}px`
+      course.style.top = `${headerH + rowH * rowIndex + 14}px`
+      course.style.width = `${courseW}px`
+      course.style.height = `${courseH}px`
+
+      if (courseIndex % 3 === 1) course.style.background = 'linear-gradient(160deg,rgba(112,152,255,.60),rgba(76,93,232,.54) 58%,rgba(49,63,180,.50))'
+      if (courseIndex % 3 === 2) course.style.background = 'linear-gradient(160deg,rgba(99,150,240,.58),rgba(48,104,215,.52) 58%,rgba(35,75,165,.48))'
+
+      const dot = document.createElement('i')
+      dot.className = 'uniplanWallpaperDot'
+      course.appendChild(dot)
+
+      const title = document.createElement('span')
+      title.className = 'uniplanWallpaperCourseTitle'
+      title.textContent = titleText || '課程'
+      course.appendChild(title)
+
+      const meta = document.createElement('span')
+      meta.className = 'uniplanWallpaperCourseMeta'
+      const periodLabel = span > 1 ? `第 ${rowIndex + 1}–${rowIndex + span} 節` : `第 ${rowIndex + 1} 節`
+      meta.textContent = `${periodLabel}\n${metaText || ''}`.trim()
+      course.appendChild(meta)
+
+      gridEl.appendChild(course)
+      courseIndex += 1
+    })
+  })
+
+  return { root, width: exportWidth, height: exportHeight }
+}
+
+async function exportBuiltDomPng(built, filename, errorLabel = 'PNG 匯出失敗') {
+  let iframe = null
+  let exportRoot = null
+  try {
+    exportRoot = built.root
+    iframe = document.createElement('iframe')
+    iframe.setAttribute('aria-hidden', 'true')
+    iframe.style.position = 'fixed'
+    iframe.style.left = '-100000px'
+    iframe.style.top = '0'
+    iframe.style.width = `${built.width}px`
+    iframe.style.height = `${built.height}px`
+    iframe.style.border = '0'
+    iframe.style.opacity = '0'
+    iframe.style.pointerEvents = 'none'
+    document.body.appendChild(iframe)
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+    if (!iframeDoc) throw new Error('無法建立匯出用 iframe')
+
+    iframeDoc.open()
+    iframeDoc.write(`<!doctype html><html><head><meta charset="utf-8"><style>
+      html, body { margin:0; padding:0; width:${built.width}px; height:${built.height}px; overflow:hidden; background:#07162b; }
+    </style></head><body></body></html>`)
+    iframeDoc.close()
+    iframeDoc.body.appendChild(exportRoot)
+    exportRoot.style.position = 'relative'
+    exportRoot.style.left = '0'
+    exportRoot.style.top = '0'
+
+    await waitForImages(exportRoot)
+    if (iframeDoc.fonts?.ready) await iframeDoc.fonts.ready
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+    const { default: html2canvas } = await import('html2canvas')
+    const canvas = await html2canvas(exportRoot, {
+      backgroundColor: '#07162b',
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      imageTimeout: 15000,
+      logging: false,
+      width: built.width,
+      height: built.height,
+      windowWidth: built.width,
+      windowHeight: built.height,
+      scrollX: 0,
+      scrollY: 0,
+    })
+
+    const blob = await canvasToBlobSafe(canvas)
+    if (!blob) throw new Error('匯出 canvas 無法輸出 PNG')
+    const pngUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = pngUrl
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(pngUrl)
+    return true
+  } catch (error) {
+    console.error(`${errorLabel}.`, error)
+    alert(`${errorLabel}，請回報 Console 錯誤。`)
+    return false
+  } finally {
+    if (iframe?.parentNode) iframe.parentNode.removeChild(iframe)
+    else if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
+  }
+}
+
+export async function exportWallpaperPng(element, semester = '課表') {
+  if (!element) {
+    alert('找不到目前課表畫面，無法匯出桌布。')
+    return false
+  }
+  const built = buildWallpaperExportDom(element, semester)
+  return exportBuiltDomPng(built, `${semester}_桌布.png`, '桌布 PNG 匯出失敗')
 }
 
 export async function exportPngFromDom(element, semester = '課表') {
@@ -1173,296 +1469,190 @@ export async function exportPngFromDom(element, semester = '課表') {
 
 
 export async function exportCleanPng(plan, semester = '課表') {
-  // Wallpaper Export V5: smart phone-wallpaper layout.
-  // Hides unused weekend columns, crops empty periods, and uses proportional widget cards that keep cross-period intuition.
-  const rawCourses = Array.isArray(plan?.[semester]) ? plan[semester] : []
-  const activeCourses = rawCourses.filter((course) => courseStatus(course) !== 'failed')
-  const allSlots = []
-  activeCourses.forEach((course) => {
-    slotsOf(course).forEach((slot) => {
-      const day = Number(slot.day)
-      const start = Number(slot.start)
-      const end = Number(slot.end || slot.start)
-      if (day >= 1 && day <= 7 && start >= 1 && start <= 14) {
-        allSlots.push({ course, day, start, end: Math.max(start, Math.min(14, end || start)) })
-      }
-    })
-  })
-
-  const hasSaturday = allSlots.some((slot) => slot.day === 6)
-  const hasSunday = allSlots.some((slot) => slot.day === 7)
-  const visibleDays = [1, 2, 3, 4, 5, ...(hasSaturday ? [6] : []), ...(hasSunday ? [7] : [])]
-  const dayToIndex = new Map(visibleDays.map((day, index) => [day, index]))
-
-  const minSlot = allSlots.length ? Math.min(...allSlots.map((slot) => slot.start)) : 1
-  const maxSlot = allSlots.length ? Math.max(...allSlots.map((slot) => slot.end)) : 10
-  let firstPeriod = Math.max(1, minSlot - 1)
-  let lastPeriod = Math.min(14, maxSlot + 1)
-  const minRows = allSlots.length ? 6 : 10
-  while ((lastPeriod - firstPeriod + 1) < minRows) {
-    if (firstPeriod > 1) firstPeriod -= 1
-    else if (lastPeriod < 14) lastPeriod += 1
-    else break
-  }
-  const visiblePeriods = Array.from({ length: lastPeriod - firstPeriod + 1 }, (_, i) => firstPeriod + i)
-
-  const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2))
-  const canvasW = 1440
-  const canvasH = 2560
-  const marginX = 42
-  const tableX = marginX
-  const tableY = 132
-  const tableW = canvasW - marginX * 2
-  const timeW = 62
-  const headH = 84
-  const idealRowH = visiblePeriods.length <= 6 ? 244 : visiblePeriods.length <= 8 ? 215 : 188
-  const maxTableH = canvasH - tableY - 132
-  const tableH = Math.min(maxTableH, headH + idealRowH * visiblePeriods.length)
-  const rowH = (tableH - headH) / visiblePeriods.length
-  const dayW = (tableW - timeW) / visibleDays.length
+  // Use the deterministic canvas renderer as the primary export path.
+  // The previous DOM/foreignObject export was fragile with backdrop-filter,
+  // custom timetable backgrounds, overflow containers, and Cloudflare preview domains.
+  // Keeping the canvas path first prevents blank / clipped PNG output.
+  const courses = plan[semester] || []
   const appearance = readCurrentAppearance()
-  const bgUrl = safeBackgroundImageValue(appearance.timetableBg || localStorage.getItem('uniplan:timetableBg') || '')
-  const bgImg = await loadImageSafe(bgUrl)
-
+  const width = 1420
+  const headerRowH = 58
+  const rowH = 76
+  const timeW = 92
+  const gridW = width
+  const gridH = headerRowH + rowH * 10
+  const dayW = (gridW - timeW) / DAYS.length
   const canvas = document.createElement('canvas')
-  canvas.width = canvasW * scale
-  canvas.height = canvasH * scale
+  canvas.width = gridW * 2
+  canvas.height = gridH * 2
   const ctx = canvas.getContext('2d')
-  ctx.scale(scale, scale)
+  ctx.scale(2, 2)
+  ctx.clearRect(0, 0, gridW, gridH)
 
   const roundRect = (x, y, w, h, r) => {
-    const radius = Math.min(r, w / 2, h / 2)
     ctx.beginPath()
-    ctx.moveTo(x + radius, y)
-    ctx.arcTo(x + w, y, x + w, y + h, radius)
-    ctx.arcTo(x + w, y + h, x, y + h, radius)
-    ctx.arcTo(x, y + h, x, y, radius)
-    ctx.arcTo(x, y, x + w, y, radius)
+    ctx.moveTo(x + r, y)
+    ctx.arcTo(x + w, y, x + w, y + h, r)
+    ctx.arcTo(x + w, y + h, x, y + h, r)
+    ctx.arcTo(x, y + h, x, y, r)
+    ctx.arcTo(x, y, x + w, y, r)
     ctx.closePath()
   }
-  const fillRound = (x, y, w, h, r, fillStyle) => {
-    roundRect(x, y, w, h, r)
-    ctx.fillStyle = fillStyle
-    ctx.fill()
+
+  const panel = cssColorToRgba(appearance.panel, [17, 29, 49, 1])
+  const panel2 = cssColorToRgba(appearance.panel2, [27, 42, 68, 1])
+  const text = cssColorToRgba(appearance.text, [239, 246, 255, 1])
+  const muted = cssColorToRgba(appearance.muted, [159, 176, 204, 1])
+  const border = cssColorToRgba(appearance.border, [47, 67, 98, 1])
+  const tint = cssColorToRgba(appearance.tint, panel)
+  const tableOpacity = Math.max(0, Math.min(1, appearance.timetableOpacity))
+  const frost = Math.max(0, Math.min(1, appearance.courseCardOpacity))
+
+  ctx.save()
+  roundRect(0, 0, gridW, gridH, 16)
+  ctx.clip()
+
+  const base = ctx.createLinearGradient(0, 0, gridW, gridH)
+  base.addColorStop(0, rgbaString(panel2, 1))
+  base.addColorStop(.62, rgbaString(panel, 1))
+  base.addColorStop(1, rgbaString(panel2, 1))
+  ctx.fillStyle = base
+  ctx.fillRect(0, 0, gridW, gridH)
+
+  const img = await loadImageSafe(appearance.timetableBg)
+  if (img) {
+    ctx.globalAlpha = Math.max(0, 1 - tableOpacity)
+    drawCoverImage(ctx, img, 0, 0, gridW, gridH)
+    ctx.globalAlpha = 1
+    ctx.fillStyle = rgbaString([8, 15, 28, 1], .34 * (1 - tableOpacity))
+    ctx.fillRect(0, 0, gridW, gridH)
   }
-  const strokeRound = (x, y, w, h, r, strokeStyle, lineWidth = 1) => {
-    roundRect(x, y, w, h, r)
-    ctx.strokeStyle = strokeStyle
-    ctx.lineWidth = lineWidth
-    ctx.stroke()
+
+  if (tableOpacity > 0) {
+    ctx.fillStyle = rgbaString(tint, tableOpacity)
+    ctx.fillRect(0, 0, gridW, gridH)
   }
-  const drawCenteredLines = (text, centerX, startY, maxWidth, lineHeight, maxLines = 2) => {
-    const source = String(text || '')
-    const lines = []
+
+  ctx.fillStyle = rgbaString([255, 255, 255, 1], .035)
+  ctx.fillRect(0, 0, gridW, headerRowH)
+  ctx.fillRect(0, 0, timeW, gridH)
+
+  ctx.strokeStyle = rgbaString(border, .58)
+  ctx.lineWidth = 1
+  for (let i = 0; i <= DAYS.length; i += 1) {
+    const x = timeW + i * dayW
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gridH); ctx.stroke()
+  }
+  ctx.beginPath(); ctx.moveTo(0, headerRowH); ctx.lineTo(gridW, headerRowH); ctx.stroke()
+  for (let r = 0; r <= 10; r += 1) {
+    const y = headerRowH + r * rowH
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(gridW, y); ctx.stroke()
+  }
+
+  ctx.fillStyle = rgbaString(text, .96)
+  ctx.font = '800 18px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText('節', 36, 36)
+  DAYS.forEach((d, i) => {
+    const x = timeW + i * dayW
+    ctx.fillText(`週${d}`, x + 20, 36)
+  })
+  ctx.font = '800 17px Inter, Noto Sans TC, sans-serif'
+  for (let r = 0; r < 10; r += 1) {
+    const y = headerRowH + r * rowH
+    ctx.fillText(`${r + 1}`, 36, y + 44)
+  }
+
+  const drawTextFit = (textValue, x, y, maxWidth, lineHeight, maxLines = 2) => {
+    const chars = String(textValue || '').split('')
     let line = ''
-    for (const ch of source) {
+    let lines = []
+    chars.forEach((ch) => {
       const test = line + ch
       if (ctx.measureText(test).width > maxWidth && line) {
         lines.push(line)
         line = ch
-      } else {
-        line = test
-      }
-    }
+      } else line = test
+    })
     if (line) lines.push(line)
-    const visible = lines.slice(0, maxLines)
-    const overflow = lines.length > maxLines
-    visible.forEach((ln, idx) => {
-      const value = overflow && idx === maxLines - 1 ? `${ln.slice(0, Math.max(1, ln.length - 1))}…` : ln
-      ctx.fillText(value, centerX, startY + idx * lineHeight)
+    const original = lines.join('')
+    lines = lines.slice(0, maxLines)
+    lines.forEach((ln, idx) => {
+      const clipped = idx === maxLines - 1 && original.length > lines.join('').length
+      ctx.fillText(clipped ? `${ln.slice(0, Math.max(1, ln.length - 1))}…` : ln, x, y + idx * lineHeight)
     })
   }
-  const wallpaperCardMode = localStorage.getItem('uniplan:wallpaperCardMode') || 'pink'
-  const wallpaperCardColor = localStorage.getItem('uniplan:wallpaperCardColor') || '#ec4899'
-  const palettesByMode = {
-    pink: [['#ff4fb8', '#7c3aed'], ['#ec4899', '#a855f7'], ['#f472b6', '#8b5cf6']],
-    accent: [[appearance.accent || '#2563eb', appearance.buttonAccent || appearance.accent || '#7c3aed']],
-    blue: [['#38bdf8', '#2563eb'], ['#60a5fa', '#4f46e5']],
-    purple: [['#a78bfa', '#7c3aed'], ['#c084fc', '#9333ea']],
-    green: [['#34d399', '#059669'], ['#22c55e', '#0f766e']],
-    orange: [['#fbbf24', '#ea580c'], ['#fb923c', '#dc2626']],
-    custom: [[wallpaperCardColor, appearance.accent || '#7c3aed']],
-    auto: [
-      ['#2563eb', '#7c3aed'],
-      ['#0ea5e9', '#2563eb'],
-      ['#14b8a6', '#0f766e'],
-      ['#8b5cf6', '#4338ca'],
-      ['#f59e0b', '#ea580c'],
-      ['#22c55e', '#15803d'],
-      ['#ec4899', '#7e22ce'],
-    ],
-  }
-  const coursePalette = palettesByMode[wallpaperCardMode] || palettesByMode.pink
-  const hashText = (value) => String(value || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
 
-  ctx.clearRect(0, 0, canvasW, canvasH)
-  if (bgImg) drawCoverImage(ctx, bgImg, 0, 0, canvasW, canvasH)
-  else {
-    const fallback = ctx.createLinearGradient(0, 0, canvasW, canvasH)
-    fallback.addColorStop(0, '#040b16')
-    fallback.addColorStop(.45, '#10213b')
-    fallback.addColorStop(1, '#050812')
-    ctx.fillStyle = fallback
-    ctx.fillRect(0, 0, canvasW, canvasH)
-  }
+  courses.filter((course) => courseStatus(course) !== 'failed').forEach((course) => {
+    const c = getCourse(course)
+    slotsOf(course).forEach((slot) => {
+      if (slot.start > 10 || !slot.day) return
+      const safeEnd = Math.min(10, slot.end || slot.start)
+      const span = Math.max(1, safeEnd - slot.start + 1)
+      const x = timeW + (slot.day - 1) * dayW + 10
+      const y = headerRowH + (slot.start - 1) * rowH + 10
+      const h = Math.max(48, span * rowH - 20)
+      const w = dayW - 20
+      const tone = STATUS[courseStatus(course)]?.tone || 'blue'
+      const dot = tone === 'green' ? '#34d399' : tone === 'red' ? '#fb7185' : tone === 'yellow' ? '#fbbf24' : appearance.accent || '#60a5fa'
 
-  const tint = cssColorToRgba(appearance.tint || '#07111f', [7, 17, 31, 1])
-  const veil = ctx.createLinearGradient(0, 0, 0, canvasH)
-  veil.addColorStop(0, rgbaString(tint, .22))
-  veil.addColorStop(.46, 'rgba(2,6,23,.22)')
-  veil.addColorStop(1, 'rgba(2,6,23,.58)')
-  ctx.fillStyle = veil
-  ctx.fillRect(0, 0, canvasW, canvasH)
+      roundRect(x, y, w, h, 12)
+      const cardGradient = ctx.createLinearGradient(x, y, x, y + h)
+      cardGradient.addColorStop(0, `rgba(54, 70, 105, ${0.40 + 0.34 * frost})`)
+      cardGradient.addColorStop(1, `rgba(18, 30, 58, ${0.32 + 0.26 * frost})`)
+      ctx.fillStyle = cardGradient
+      ctx.fill()
+      ctx.strokeStyle = `rgba(198, 214, 241, ${0.14 + 0.20 * frost})`
+      ctx.lineWidth = 1.1
+      ctx.stroke()
+      if (frost > 0) {
+        ctx.fillStyle = `rgba(255,255,255,${0.08 * frost})`
+        roundRect(x + 1, y + 1, w - 2, Math.max(10, h * .28), 10)
+        ctx.fill()
+      }
 
-  // Wallpaper mode intentionally omits UniPlan/semester title text; export keeps only the background image and timetable.
+      ctx.fillStyle = dot
+      ctx.beginPath()
+      ctx.arc(x + 17, y + 18, 5, 0, Math.PI * 2)
+      ctx.fill()
 
-  // Smart timetable plate.
-  const plate = ctx.createLinearGradient(tableX, tableY, tableX, tableY + tableH)
-  plate.addColorStop(0, 'rgba(15,23,42,.20)')
-  plate.addColorStop(1, 'rgba(15,23,42,.10)')
-  ctx.save()
-  ctx.shadowColor = 'rgba(0,0,0,.22)'
-  ctx.shadowBlur = 34
-  ctx.shadowOffsetY = 14
-  fillRound(tableX, tableY, tableW, tableH, 46, plate)
+      ctx.fillStyle = rgbaString(text, .98)
+      ctx.font = '900 15px Inter, Noto Sans TC, sans-serif'
+      drawTextFit(c.name || '課程', x + 30, y + 23, w - 44, 17, h > 70 ? 2 : 1)
+      ctx.font = '600 12px Inter, Noto Sans TC, sans-serif'
+      ctx.fillStyle = rgbaString(muted, .94)
+      const metaY = h > 70 ? y + Math.min(h - 18, 62) : y + 44
+      ctx.fillText(`${c.classroom || c.room || c.location || ''}`.slice(0, 22), x + 12, metaY)
+    })
+  })
+
   ctx.restore()
-  strokeRound(tableX, tableY, tableW, tableH, 46, 'rgba(255,255,255,.22)', 1.15)
-
-  ctx.save()
-  roundRect(tableX, tableY, tableW, tableH, 46)
-  ctx.clip()
-
-  ctx.fillStyle = 'rgba(255,255,255,.036)'
-  ctx.fillRect(tableX, tableY, tableW, headH)
-  ctx.textAlign = 'center'
-  ctx.font = '900 29px Inter, Noto Sans TC, sans-serif'
-  visibleDays.forEach((day, i) => {
-    const cx = tableX + timeW + i * dayW + dayW / 2
-    const cy = tableY + headH / 2
-    const capsuleW = Math.min(108, Math.max(76, dayW * .42))
-    fillRound(cx - capsuleW / 2, cy - 23, capsuleW, 46, 23, 'rgba(255,255,255,.11)')
-    ctx.fillStyle = 'rgba(255,255,255,.93)'
-    ctx.fillText(DAYS[day - 1], cx, cy + 10)
-  })
-
-  // Almost invisible guide lines; enough for time location, not enough to dominate the wallpaper.
-  ctx.strokeStyle = 'rgba(255,255,255,.052)'
-  ctx.lineWidth = 1
-  for (let i = 0; i <= visibleDays.length; i += 1) {
-    const x = tableX + timeW + i * dayW
-    ctx.beginPath(); ctx.moveTo(x, tableY + headH); ctx.lineTo(x, tableY + tableH); ctx.stroke()
-  }
-  for (let r = 0; r <= visiblePeriods.length; r += 1) {
-    const y = tableY + headH + r * rowH
-    ctx.beginPath(); ctx.moveTo(tableX + timeW, y); ctx.lineTo(tableX + tableW, y); ctx.stroke()
-  }
-
-  ctx.textAlign = 'center'
-  ctx.font = '900 23px Inter, Noto Sans TC, sans-serif'
-  visiblePeriods.forEach((period, r) => {
-    const y = tableY + headH + r * rowH + rowH / 2
-    fillRound(tableX + 13, y - 21, 38, 42, 20, 'rgba(255,255,255,.064)')
-    ctx.fillStyle = 'rgba(255,255,255,.68)'
-    ctx.fillText(`${period}`, tableX + 32, y + 8)
-  })
-
-  const placedKeys = new Set()
-  allSlots.forEach((slot) => {
-    if (!dayToIndex.has(slot.day) || slot.end < firstPeriod || slot.start > lastPeriod) return
-    const safeStart = Math.max(firstPeriod, slot.start)
-    const key = `${uid(slot.course)}-${slot.day}-${safeStart}`
-    if (placedKeys.has(key)) return
-    placedKeys.add(key)
-
-    const c = getCourse(slot.course)
-    const dayIndex = dayToIndex.get(slot.day)
-    const span = Math.max(1, Math.min(lastPeriod, slot.end) - safeStart + 1)
-    const baseX = tableX + timeW + dayIndex * dayW
-    const baseY = tableY + headH + (safeStart - firstPeriod) * rowH
-    const w = Math.max(150, dayW - 34)
-    const spanBlockH = rowH * span
-    const targetH = span === 1
-      ? rowH * .66
-      : span === 2
-        ? rowH * 1.28
-        : span === 3
-          ? rowH * 1.82
-          : rowH * 2.34
-    const h = Math.min(Math.max(132, targetH), Math.max(132, spanBlockH - 26))
-    const x = baseX + (dayW - w) / 2
-    const y = baseY + Math.max(13, (spanBlockH - h) / 2)
-    const displayName = makeExportCourseName(c.name || '課程')
-    const palette = coursePalette[hashText(displayName || c.code || c.serial) % coursePalette.length]
-    const baseA = cssColorToRgba(appearance.accent || palette[0], [37, 99, 235, 1])
-    const baseB = cssColorToRgba(palette[1], [124, 58, 237, 1])
-    const top = brightenRgba(baseA, .25)
-    const bottom = mixRgba(baseA, baseB, .58)
-    const deep = darkenRgba(bottom, .20)
-
-    ctx.save()
-    ctx.shadowColor = rgbaString(baseA, .52)
-    ctx.shadowBlur = 34
-    ctx.shadowOffsetY = 10
-    const glow = ctx.createRadialGradient(x + w / 2, y + h / 2, 12, x + w / 2, y + h / 2, Math.max(w, h))
-    glow.addColorStop(0, rgbaString(baseA, .22))
-    glow.addColorStop(1, 'rgba(255,255,255,0)')
-    fillRound(x - 8, y - 8, w + 16, h + 16, 38, glow)
-    const card = ctx.createLinearGradient(x, y, x + w, y + h)
-    card.addColorStop(0, rgbaString(top, .88))
-    card.addColorStop(.58, rgbaString(bottom, .78))
-    card.addColorStop(1, rgbaString(deep, .86))
-    fillRound(x, y, w, h, 34, card)
-    ctx.restore()
-    strokeRound(x, y, w, h, 34, 'rgba(255,255,255,.42)', 1.25)
-
-    ctx.save()
-    roundRect(x, y, w, h, 34)
-    ctx.clip()
-    const shine = ctx.createLinearGradient(x, y, x, y + h * .58)
-    shine.addColorStop(0, 'rgba(255,255,255,.34)')
-    shine.addColorStop(.7, 'rgba(255,255,255,.04)')
-    shine.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = shine
-    ctx.fillRect(x, y, w, h * .62)
-    ctx.fillStyle = 'rgba(2,6,23,.12)'
-    ctx.fillRect(x, y + h * .68, w, h * .32)
-    ctx.restore()
-
-    ctx.save()
-    ctx.textAlign = 'center'
-    ctx.shadowColor = 'rgba(0,0,0,.36)'
-    ctx.shadowBlur = 10
-    ctx.fillStyle = '#ffffff'
-    ctx.font = '900 30px Inter, Noto Sans TC, sans-serif'
-    const nameLines = w >= 210 ? 1 : 2
-    const nameY = y + (h >= 220 ? h * .39 : h * .43) - (nameLines === 2 ? 12 : 0)
-    drawCenteredLines(displayName || '課程', x + w / 2, nameY, w - 34, 32, nameLines)
-    const room = c.classroom || c.room || c.location || ''
-    const timeRange = span > 1 ? `第 ${safeStart}–${Math.min(lastPeriod, slot.end)} 節` : `第 ${safeStart} 節`
-    ctx.font = '850 22px Inter, Noto Sans TC, sans-serif'
-    ctx.fillStyle = 'rgba(255,255,255,.86)'
-    ctx.fillText(timeRange, x + w / 2, y + h - (room ? 58 : 30))
-    if (room) {
-      ctx.font = '850 21px Inter, Noto Sans TC, sans-serif'
-      ctx.fillStyle = 'rgba(255,255,255,.78)'
-      ctx.fillText(room, x + w / 2, y + h - 25)
-    }
-    ctx.restore()
-  })
-  ctx.restore()
-
+  roundRect(0, 0, gridW, gridH, 16)
+  ctx.strokeStyle = rgbaString(border, .70)
+  ctx.lineWidth = 1.2
+  ctx.stroke()
 
   await new Promise((resolve) => {
     canvas.toBlob((blob) => {
-      try {
-        const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
+      if (blob) {
+        const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `${semester}_手機桌布課表_V5.png`
+        a.download = `${semester}_課表.png`
         document.body.appendChild(a)
         a.click()
         a.remove()
-        if (blob) URL.revokeObjectURL(url)
+        URL.revokeObjectURL(url)
+        resolve(true)
+        return
+      }
+
+      try {
+        const a = document.createElement('a')
+        a.href = canvas.toDataURL('image/png')
+        a.download = `${semester}_課表.png`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
         resolve(true)
       } catch (error) {
         console.error(error)
