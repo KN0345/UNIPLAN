@@ -705,6 +705,67 @@ export function injectExportBackgroundImage(clonedDocument, safeBackgroundUrl) {
 }
 
 
+function applyExportSafeDomStyles(clonedElement, clonedWindow) {
+  if (!(clonedElement instanceof clonedWindow.HTMLElement)) return
+
+  const nodes = [clonedElement, ...Array.from(clonedElement.querySelectorAll('*'))]
+  nodes.forEach((node) => {
+    if (!(node instanceof clonedWindow.HTMLElement)) return
+
+    const cls = node.className ? String(node.className) : ''
+    const tag = node.tagName.toLowerCase()
+
+    node.style.setProperty('animation', 'none', 'important')
+    node.style.setProperty('transition', 'none', 'important')
+    node.style.setProperty('-webkit-backdrop-filter', 'none', 'important')
+    node.style.setProperty('backdrop-filter', 'none', 'important')
+    node.style.setProperty('filter', 'none', 'important')
+    node.style.setProperty('mix-blend-mode', 'normal', 'important')
+    node.style.setProperty('transform', 'none', 'important')
+    node.style.setProperty('text-shadow', 'none', 'important')
+    node.style.setProperty('caret-color', 'transparent', 'important')
+    node.style.setProperty('accent-color', '#2563eb', 'important')
+    node.style.setProperty('color', '#f8fafc', 'important')
+    node.style.setProperty('border-color', 'rgba(147,197,253,0.28)', 'important')
+    node.style.setProperty('outline-color', 'rgba(147,197,253,0.28)', 'important')
+    node.style.setProperty('fill', '#f8fafc', 'important')
+    node.style.setProperty('stroke', 'rgba(147,197,253,0.55)', 'important')
+
+    // html2canvas currently fails on modern color functions such as color(), oklch(),
+    // lab(), and color-mix(). Force every node in the export subtree to old CSS color
+    // syntax before html2canvas parses computed styles.
+    if (cls.includes('slotCourse') || cls.includes('glassCourse')) {
+      node.style.setProperty('background', 'rgba(15,35,72,0.78)', 'important')
+      node.style.setProperty('background-color', 'rgba(15,35,72,0.78)', 'important')
+      node.style.setProperty('box-shadow', '0 14px 30px rgba(0,0,0,0.24)', 'important')
+    } else if (cls.includes('corner') || cls.includes('day') || cls.includes('period')) {
+      node.style.setProperty('background', 'rgba(15,23,42,0.66)', 'important')
+      node.style.setProperty('background-color', 'rgba(15,23,42,0.66)', 'important')
+      node.style.setProperty('box-shadow', 'none', 'important')
+    } else if (cls.includes('slot')) {
+      node.style.setProperty('background', 'rgba(15,23,42,0.24)', 'important')
+      node.style.setProperty('background-color', 'rgba(15,23,42,0.24)', 'important')
+      node.style.setProperty('box-shadow', 'none', 'important')
+    } else if (cls.includes('timetableGridClean')) {
+      node.style.setProperty('background', '#0f172a', 'important')
+      node.style.setProperty('background-color', '#0f172a', 'important')
+      node.style.setProperty('box-shadow', 'none', 'important')
+    } else if (cls.includes('semesterPanel') || cls.includes('activeSemesterPanel') || cls.includes('exportScheduleCanvas')) {
+      node.style.setProperty('background', '#10213d', 'important')
+      node.style.setProperty('background-color', '#10213d', 'important')
+      node.style.setProperty('box-shadow', 'none', 'important')
+    } else if (tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea') {
+      node.style.setProperty('background', '#1d4ed8', 'important')
+      node.style.setProperty('background-color', '#1d4ed8', 'important')
+      node.style.setProperty('box-shadow', 'none', 'important')
+    } else {
+      node.style.setProperty('background-color', 'transparent', 'important')
+      node.style.setProperty('box-shadow', 'none', 'important')
+    }
+  })
+}
+
+
 export async function exportPngFromDom(element, semester = '課表') {
   if (!element) {
     alert('找不到目前課表畫面，無法匯出 PNG。')
@@ -829,9 +890,13 @@ export async function exportPngFromDom(element, semester = '課表') {
           clonedElement.style.height = `${height}px`
           clonedElement.style.overflow = 'visible'
           clonedElement.style.transform = 'none'
+          applyExportSafeDomStyles(clonedElement, clonedWindow)
         }
 
         injectExportBackgroundImage(clonedDocument, safeBackgroundUrl)
+        if (clonedElement instanceof clonedWindow.HTMLElement) {
+          applyExportSafeDomStyles(clonedElement, clonedWindow)
+        }
       },
     })
 
@@ -849,7 +914,7 @@ export async function exportPngFromDom(element, semester = '課表') {
     return true
   } catch (error) {
     console.error('DOM PNG export failed.', error)
-    alert('PNG 匯出失敗：DOM 擷取失敗。請先確認背景圖是本機上傳圖片，或暫時移除背景後再試。')
+    alert('PNG 匯出失敗：DOM 擷取失敗。已套用匯出安全色彩處理，若仍失敗請回報 Console 錯誤。')
     return false
   } finally {
     document.body.style.overflow = originalOverflow
