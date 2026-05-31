@@ -1135,22 +1135,25 @@ export async function exportPngFromDom(element, semester = '課表') {
 
 
 export async function exportCleanPng(plan, semester = '課表') {
-  // Export uses an independent presentation style instead of trying to clone the live timetable.
-  // This avoids background-image distortion, backdrop-filter mismatch, and DOM clipping issues.
+  // Phone-wallpaper export: keep the user's timetable background image, but draw it with object-fit: cover.
+  // Course tiles use a separate stable canvas style so browser glass/backdrop rendering will not squash or clip.
   const courses = Array.isArray(plan?.[semester]) ? plan[semester] : []
-  const scale = 2
-  const canvasW = 1600
-  const canvasH = 1060
-  const margin = 54
-  const headerH = 106
+  const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2))
+  const canvasW = 1440
+  const canvasH = 2560
+  const margin = 64
+  const titleY = 190
   const tableX = margin
-  const tableY = margin + headerH
+  const tableY = 430
   const tableW = canvasW - margin * 2
-  const tableH = canvasH - tableY - margin
-  const timeW = 86
-  const headH = 60
+  const tableH = 1520
+  const timeW = 84
+  const headH = 78
   const rowH = (tableH - headH) / 10
   const dayW = (tableW - timeW) / DAYS.length
+  const appearance = readCurrentAppearance()
+  const bgUrl = safeBackgroundImageValue(appearance.timetableBg || localStorage.getItem('uniplan:timetableBg') || '')
+  const bgImg = await loadImageSafe(bgUrl)
 
   const canvas = document.createElement('canvas')
   canvas.width = canvasW * scale
@@ -1159,12 +1162,13 @@ export async function exportCleanPng(plan, semester = '課表') {
   ctx.scale(scale, scale)
 
   const roundRect = (x, y, w, h, r) => {
+    const radius = Math.min(r, w / 2, h / 2)
     ctx.beginPath()
-    ctx.moveTo(x + r, y)
-    ctx.arcTo(x + w, y, x + w, y + h, r)
-    ctx.arcTo(x + w, y + h, x, y + h, r)
-    ctx.arcTo(x, y + h, x, y, r)
-    ctx.arcTo(x, y, x + w, y, r)
+    ctx.moveTo(x + radius, y)
+    ctx.arcTo(x + w, y, x + w, y + h, radius)
+    ctx.arcTo(x + w, y + h, x, y + h, radius)
+    ctx.arcTo(x, y + h, x, y, radius)
+    ctx.arcTo(x, y, x + w, y, radius)
     ctx.closePath()
   }
   const fillRound = (x, y, w, h, r, fillStyle) => {
@@ -1199,54 +1203,59 @@ export async function exportCleanPng(plan, semester = '課表') {
   }
 
   ctx.clearRect(0, 0, canvasW, canvasH)
-  const bg = ctx.createLinearGradient(0, 0, canvasW, canvasH)
-  bg.addColorStop(0, '#07111f')
-  bg.addColorStop(.48, '#0b1830')
-  bg.addColorStop(1, '#111827')
-  ctx.fillStyle = bg
-  ctx.fillRect(0, 0, canvasW, canvasH)
-
-  // restrained decorative lines; no imported photo, so export is stable and never squashed.
-  ctx.save()
-  ctx.globalAlpha = .22
-  ctx.strokeStyle = '#60a5fa'
-  ctx.lineWidth = 1
-  for (let i = -300; i < canvasW; i += 92) {
-    ctx.beginPath()
-    ctx.moveTo(i, canvasH)
-    ctx.lineTo(i + 620, 0)
-    ctx.stroke()
+  if (bgImg) {
+    drawCoverImage(ctx, bgImg, 0, 0, canvasW, canvasH)
+  } else {
+    const fallback = ctx.createLinearGradient(0, 0, canvasW, canvasH)
+    fallback.addColorStop(0, '#07111f')
+    fallback.addColorStop(.55, '#102544')
+    fallback.addColorStop(1, '#0b1220')
+    ctx.fillStyle = fallback
+    ctx.fillRect(0, 0, canvasW, canvasH)
   }
+
+  // Wallpaper readability layer. Keeps the photo visible but gives the timetable enough contrast.
+  ctx.save()
+  const tint = cssColorToRgba(appearance.tint || '#07111f', [7, 17, 31, 1])
+  const veil = ctx.createLinearGradient(0, 0, 0, canvasH)
+  veil.addColorStop(0, rgbaString(tint, .34))
+  veil.addColorStop(.46, 'rgba(7,12,24,.44)')
+  veil.addColorStop(1, 'rgba(7,12,24,.56)')
+  ctx.fillStyle = veil
+  ctx.fillRect(0, 0, canvasW, canvasH)
   ctx.restore()
 
-  const headerGrad = ctx.createLinearGradient(margin, margin, canvasW - margin, margin + headerH)
-  headerGrad.addColorStop(0, 'rgba(37,99,235,.28)')
-  headerGrad.addColorStop(1, 'rgba(14,165,233,.08)')
-  fillRound(margin, margin, canvasW - margin * 2, headerH, 28, headerGrad)
-  strokeRound(margin, margin, canvasW - margin * 2, headerH, 28, 'rgba(191,219,254,.28)', 1.2)
+  ctx.save()
+  ctx.globalAlpha = .24
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '900 18px Inter, Noto Sans TC, sans-serif'
+  ctx.letterSpacing = '4px'
+  ctx.fillText('UNIPLAN', margin + 4, 102)
+  ctx.restore()
 
-  ctx.fillStyle = '#eaf2ff'
-  ctx.font = '900 34px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText(`${semester} 課表`, margin + 34, margin + 46)
-  ctx.font = '700 15px Inter, Noto Sans TC, sans-serif'
-  ctx.fillStyle = 'rgba(226,232,240,.72)'
-  ctx.fillText('UniPlan Timetable Export', margin + 36, margin + 76)
-  ctx.textAlign = 'right'
-  ctx.fillStyle = 'rgba(226,232,240,.62)'
-  ctx.fillText(new Date().toLocaleDateString('zh-TW'), canvasW - margin - 36, margin + 62)
-  ctx.textAlign = 'left'
+  ctx.fillStyle = '#f8fbff'
+  ctx.font = '900 58px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText(`${semester} 課表`, margin + 4, titleY)
+  ctx.font = '700 24px Inter, Noto Sans TC, sans-serif'
+  ctx.fillStyle = 'rgba(241,245,249,.76)'
+  ctx.fillText('mobile wallpaper export', margin + 8, titleY + 48)
 
-  fillRound(tableX, tableY, tableW, tableH, 28, 'rgba(15,23,42,.74)')
-  strokeRound(tableX, tableY, tableW, tableH, 28, 'rgba(203,213,225,.28)', 1.2)
+  // Main timetable glass plate.
+  const plate = ctx.createLinearGradient(tableX, tableY, tableX, tableY + tableH)
+  plate.addColorStop(0, 'rgba(15,23,42,.36)')
+  plate.addColorStop(1, 'rgba(15,23,42,.22)')
+  fillRound(tableX, tableY, tableW, tableH, 36, plate)
+  strokeRound(tableX, tableY, tableW, tableH, 36, 'rgba(255,255,255,.30)', 1.4)
 
   ctx.save()
-  roundRect(tableX, tableY, tableW, tableH, 28)
+  roundRect(tableX, tableY, tableW, tableH, 36)
   ctx.clip()
-  ctx.fillStyle = 'rgba(255,255,255,.045)'
+  ctx.fillStyle = 'rgba(255,255,255,.075)'
   ctx.fillRect(tableX, tableY, tableW, headH)
+  ctx.fillStyle = 'rgba(255,255,255,.045)'
   ctx.fillRect(tableX, tableY, timeW, tableH)
 
-  ctx.strokeStyle = 'rgba(148,163,184,.26)'
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'
   ctx.lineWidth = 1
   for (let i = 0; i <= DAYS.length; i += 1) {
     const x = tableX + timeW + i * dayW
@@ -1256,22 +1265,21 @@ export async function exportCleanPng(plan, semester = '課表') {
     const y = tableY + headH + r * rowH
     ctx.beginPath(); ctx.moveTo(tableX, y); ctx.lineTo(tableX + tableW, y); ctx.stroke()
   }
-  ctx.beginPath(); ctx.moveTo(tableX, tableY + headH); ctx.lineTo(tableX + tableW, tableY + headH); ctx.stroke()
 
-  ctx.fillStyle = 'rgba(241,245,249,.96)'
-  ctx.font = '900 22px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText('節', tableX + 34, tableY + 39)
+  ctx.fillStyle = 'rgba(248,250,252,.95)'
+  ctx.font = '900 26px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText('節', tableX + 30, tableY + 49)
   DAYS.forEach((d, i) => {
     const x = tableX + timeW + i * dayW
     ctx.textAlign = 'center'
-    ctx.fillText(`週${d}`, x + dayW / 2, tableY + 39)
+    ctx.fillText(`週${d}`, x + dayW / 2, tableY + 49)
   })
   ctx.textAlign = 'left'
-  ctx.font = '900 20px Inter, Noto Sans TC, sans-serif'
+  ctx.font = '900 26px Inter, Noto Sans TC, sans-serif'
   for (let r = 0; r < 10; r += 1) {
     const y = tableY + headH + r * rowH
-    ctx.fillStyle = 'rgba(226,232,240,.92)'
-    ctx.fillText(`${r + 1}`, tableX + 35, y + rowH / 2 + 7)
+    ctx.fillStyle = 'rgba(248,250,252,.90)'
+    ctx.fillText(`${r + 1}`, tableX + 30, y + rowH / 2 + 9)
   }
 
   const placedKeys = new Set()
@@ -1284,37 +1292,49 @@ export async function exportCleanPng(plan, semester = '課表') {
       const key = `${uid(course)}-${slot.day}-${safeStart}`
       if (placedKeys.has(key)) return
       placedKeys.add(key)
+
       const span = Math.max(1, safeEnd - safeStart + 1)
-      const x = tableX + timeW + (slot.day - 1) * dayW + 14
+      const x = tableX + timeW + (slot.day - 1) * dayW + 12
       const y = tableY + headH + (safeStart - 1) * rowH + 12
-      const w = dayW - 28
-      const h = Math.max(54, span * rowH - 24)
-      const tone = STATUS[courseStatus(course)]?.tone || 'blue'
-      const accent = tone === 'green' ? '#34d399' : tone === 'red' ? '#fb7185' : '#60a5fa'
+      const w = dayW - 24
+      const h = Math.max(70, span * rowH - 24)
+      const statusTone = STATUS[courseStatus(course)]?.tone || 'blue'
+      const accent = statusTone === 'green' ? '#34d399' : statusTone === 'red' ? '#fb7185' : '#60a5fa'
+
       const card = ctx.createLinearGradient(x, y, x + w, y + h)
-      card.addColorStop(0, 'rgba(59,130,246,.72)')
-      card.addColorStop(1, 'rgba(30,64,175,.72)')
-      fillRound(x, y, w, h, 18, card)
-      strokeRound(x, y, w, h, 18, 'rgba(219,234,254,.46)', 1.2)
+      card.addColorStop(0, 'rgba(255,255,255,.28)')
+      card.addColorStop(1, 'rgba(255,255,255,.13)')
+      fillRound(x, y, w, h, 22, card)
+      strokeRound(x, y, w, h, 22, 'rgba(255,255,255,.42)', 1.4)
+
       ctx.save()
-      roundRect(x, y, w, h, 18)
+      roundRect(x, y, w, h, 22)
       ctx.clip()
-      ctx.fillStyle = 'rgba(255,255,255,.16)'
-      ctx.fillRect(x, y, w, Math.max(20, h * .30))
-      ctx.fillStyle = 'rgba(15,23,42,.16)'
-      ctx.fillRect(x, y + h - Math.max(22, h * .22), w, Math.max(22, h * .22))
+      ctx.fillStyle = 'rgba(15,23,42,.23)'
+      ctx.fillRect(x, y + h * .54, w, h * .46)
+      ctx.fillStyle = 'rgba(255,255,255,.12)'
+      ctx.fillRect(x, y, w, 30)
       ctx.restore()
+
       ctx.fillStyle = accent
-      ctx.beginPath(); ctx.arc(x + 20, y + 22, 6, 0, Math.PI * 2); ctx.fill()
-      ctx.fillStyle = '#f8fbff'
-      ctx.font = '900 17px Inter, Noto Sans TC, sans-serif'
-      drawTextFit(c.name || '課程', x + 35, y + 27, w - 48, 19, h >= 80 ? 2 : 1)
-      ctx.font = '800 13px Inter, Noto Sans TC, sans-serif'
-      ctx.fillStyle = 'rgba(239,246,255,.82)'
+      ctx.beginPath(); ctx.arc(x + 22, y + 26, 6, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#ffffff'
+      ctx.font = '900 21px Inter, Noto Sans TC, sans-serif'
+      drawTextFit(c.name || '課程', x + 38, y + 33, w - 52, 25, h >= 100 ? 2 : 1)
+      ctx.font = '800 17px Inter, Noto Sans TC, sans-serif'
+      ctx.fillStyle = 'rgba(248,250,252,.86)'
       const meta = [c.classroom || c.room || c.location, c.teacher].filter(Boolean).join('｜') || `${credits(course) || ''} 學分`
-      drawTextFit(meta, x + 16, y + h - 18, w - 32, 15, 1)
+      drawTextFit(meta, x + 18, y + h - 25, w - 36, 19, 1)
     })
   })
+  ctx.restore()
+
+  // Bottom safe area: useful when the image is used as a phone lock/home screen wallpaper.
+  ctx.save()
+  ctx.textAlign = 'center'
+  ctx.fillStyle = 'rgba(248,250,252,.56)'
+  ctx.font = '800 20px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText('Designed for phone wallpaper', canvasW / 2, canvasH - 150)
   ctx.restore()
 
   await new Promise((resolve) => {
@@ -1323,7 +1343,7 @@ export async function exportCleanPng(plan, semester = '課表') {
         const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
         const a = document.createElement('a')
         a.href = url
-        a.download = `${semester}_課表.png`
+        a.download = `${semester}_手機桌布課表.png`
         document.body.appendChild(a)
         a.click()
         a.remove()
