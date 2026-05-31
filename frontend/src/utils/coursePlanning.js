@@ -796,11 +796,19 @@ function makeExportText(value = '') {
 }
 
 function makeExportCourseName(value = '') {
-  // Keep the original course data untouched, but make exported timetable cards
-  // cleaner by removing class suffixes such as "(B班)" / "（B班）".
+  // Export-only display cleanup. The original course data remains unchanged.
   let text = makeExportText(value)
-  const classSuffix = /[\s　]*[（(]\s*[A-Za-zＡ-Ｚａ-ｚ0-9０-９一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]\s*班\s*[）)]\s*$/u
+    .replace(/[（]/g, '(')
+    .replace(/[）]/g, ')')
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+
+  // Remove class suffixes before truncation, e.g. 教育心理學(B班) -> 教育心理學.
+  // Also handles spaces and repeated suffixes: 課名 (B班) (實習班) etc.
+  const classSuffix = /[\s　]*\(\s*[^)]{0,12}?班\s*\)\s*$/u
   while (classSuffix.test(text)) text = text.replace(classSuffix, '').trim()
+
+  // Remove a trailing bare class marker if data was imported as 課名 B班.
+  text = text.replace(/[\s　]+[A-Za-z0-9一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]班\s*$/u, '').trim()
   return text || makeExportText(value)
 }
 
@@ -1441,12 +1449,6 @@ export async function exportCleanPng(plan, semester = '課表') {
   })
   ctx.restore()
 
-  ctx.save()
-  ctx.textAlign = 'center'
-  ctx.fillStyle = 'rgba(255,255,255,.42)'
-  ctx.font = '800 21px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText(`智慧桌布 V5 · ${visibleDays.length}日 / ${visiblePeriods[0]}-${visiblePeriods[visiblePeriods.length - 1]}節`, canvasW / 2, canvasH - 118)
-  ctx.restore()
 
   await new Promise((resolve) => {
     canvas.toBlob((blob) => {
