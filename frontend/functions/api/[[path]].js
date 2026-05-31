@@ -1039,9 +1039,7 @@ export async function onRequest(context) {
   const { request, env, params } = context
   if (request.method === 'OPTIONS') return new Response(null, { headers: jsonHeaders })
   try {
-    const routeParam = params.path
-    const routeParts = Array.isArray(routeParam) ? routeParam : String(routeParam || '').split('/').filter(Boolean)
-    const path = `/${routeParts.join('/')}`.replace(/\/+/g, '/')
+    const path = `/${(params.path || []).join('/')}`.replace(/\/+/g, '/')
     const method = request.method.toUpperCase()
 
     if (method === 'GET' && path === '/courses') return handleCourses(request, env)
@@ -1063,11 +1061,11 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/auth/me') return handleMe(request, env, sql)
     if (method === 'PUT' && path === '/auth/profile') return handleProfile(request, env, sql)
     if (method === 'GET' && path === '/user/data') return handleGetUserData(request, env, sql)
-    if ((method === 'PUT' || method === 'POST') && path === '/user/data') return handlePutUserData(request, env, sql)
+    if (method === 'PUT' && path === '/user/data') return handlePutUserData(request, env, sql)
     if (method === 'GET' && path === '/user/welcome') return handleGetWelcome(request, env, sql)
-    if ((method === 'PUT' || method === 'POST') && path === '/user/welcome') return handlePutWelcome(request, env, sql)
+    if (method === 'PUT' && path === '/user/welcome') return handlePutWelcome(request, env, sql)
     if (path === '/user/favorites' && ['GET', 'PUT'].includes(method)) return handleFavorites(request, env, sql, method)
-    if (path === '/user/settings' && ['GET', 'PUT', 'POST'].includes(method)) return handleSettings(request, env, sql, method === 'POST' ? 'PUT' : method)
+    if (path === '/user/settings' && ['GET', 'PUT'].includes(method)) return handleSettings(request, env, sql, method)
     if (method === 'POST' && path === '/admin/courses/import') return handleAdminCourseImport(request, env, sql)
     if (method === 'POST' && path === '/schedule') return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/schedule/')) return handleSchedule(request, env, sql, method)
@@ -1078,9 +1076,3 @@ export async function onRequest(context) {
     return error(err?.message || 'API 執行失敗', 500)
   }
 }
-
-
-export const onRequestGet = onRequest
-export const onRequestPost = onRequest
-export const onRequestPut = onRequest
-export const onRequestOptions = onRequest

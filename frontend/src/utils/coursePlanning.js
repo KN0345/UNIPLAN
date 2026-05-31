@@ -40,9 +40,9 @@ export const TIMETABLE_ROW_HEIGHT = 56
 
 export const PERIOD_CLOCK = {
   1: ['08:10', '09:00'], 2: ['09:10', '10:00'], 3: ['10:10', '11:00'], 4: ['11:10', '12:00'],
-  5: ['12:10', '13:00'], 6: ['13:10', '14:00'], 7: ['14:10', '15:00'], 8: ['15:10', '16:00'],
-  9: ['16:10', '17:00'], 10: ['17:10', '18:00'], 11: ['18:10', '19:00'], 12: ['19:10', '20:00'],
-  13: ['20:10', '21:00'], 14: ['21:10', '22:00'],
+  5: ['13:10', '14:00'], 6: ['14:10', '15:00'], 7: ['15:10', '16:00'], 8: ['16:10', '17:00'],
+  9: ['17:10', '18:00'], 10: ['18:10', '19:00'], 11: ['19:10', '20:00'], 12: ['20:10', '21:00'],
+  13: ['21:10', '22:00'], 14: ['22:10', '23:00'],
 }
 export const STATUS = {
   planned: { label: '正常排程', tone: 'blue' },
@@ -796,21 +796,11 @@ function makeExportText(value = '') {
 }
 
 function makeExportCourseName(value = '') {
-  // Export-only display cleanup. The original course data remains unchanged.
-  // This must run before any truncation, otherwise names such as 教育心理學(B班)
-  // become 教育心理學(… in wallpaper export.
+  // Keep the original course data untouched, but make exported timetable cards
+  // cleaner by removing class suffixes such as "(B班)" / "（B班）".
   let text = makeExportText(value)
-    .replace(/[（]/g, '(')
-    .replace(/[）]/g, ')')
-    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
-
-  const classToken = '[A-Za-z0-9一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]+'
-  const parenthesizedClass = new RegExp(`[\\s　]*\\(\\s*${classToken}班\\s*\\)[\\s　]*`, 'gu')
-  const trailingBareClass = new RegExp(`[\\s　]+${classToken}班$`, 'u')
-
-  // Remove every normal class suffix, not only B班: (A班), (B班), （C班）, (甲班), etc.
-  text = text.replace(parenthesizedClass, ' ').replace(trailingBareClass, '').trim()
-  text = text.replace(/[\s　]{2,}/g, ' ').trim()
+  const classSuffix = /[\s　]*[（(]\s*[A-Za-zＡ-Ｚａ-ｚ0-9０-９一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]\s*班\s*[）)]\s*$/u
+  while (classSuffix.test(text)) text = text.replace(classSuffix, '').trim()
   return text || makeExportText(value)
 }
 
@@ -1173,8 +1163,8 @@ export async function exportPngFromDom(element, semester = '課表') {
 
 
 export async function exportCleanPng(plan, semester = '課表') {
-  // Wallpaper Export V6: safe-area phone wallpaper layout.
-  // Removes the left period rail, writes actual time ranges inside cards, and centers the timetable for different phone screens.
+  // Wallpaper Export V5: smart phone-wallpaper layout.
+  // Hides unused weekend columns, crops empty periods, and uses proportional widget cards that keep cross-period intuition.
   const rawCourses = Array.isArray(plan?.[semester]) ? plan[semester] : []
   const activeCourses = rawCourses.filter((course) => courseStatus(course) !== 'failed')
   const allSlots = []
@@ -1209,19 +1199,18 @@ export async function exportCleanPng(plan, semester = '課表') {
   const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2))
   const canvasW = 1440
   const canvasH = 2560
-  const safeX = 96
-  const safeTop = 190
-  const safeBottom = 210
-  const tableX = safeX
-  const tableY = safeTop
-  const tableW = canvasW - safeX * 2
-  const timeW = 0
-  const headH = 78
+  const marginX = 42
+  const topY = 104
+  const tableX = marginX
+  const tableY = 226
+  const tableW = canvasW - marginX * 2
+  const timeW = 62
+  const headH = 84
   const idealRowH = visiblePeriods.length <= 6 ? 244 : visiblePeriods.length <= 8 ? 215 : 188
-  const maxTableH = canvasH - tableY - safeBottom
+  const maxTableH = canvasH - tableY - 210
   const tableH = Math.min(maxTableH, headH + idealRowH * visiblePeriods.length)
   const rowH = (tableH - headH) / visiblePeriods.length
-  const dayW = tableW / visibleDays.length
+  const dayW = (tableW - timeW) / visibleDays.length
   const appearance = readCurrentAppearance()
   const bgUrl = safeBackgroundImageValue(appearance.timetableBg || localStorage.getItem('uniplan:timetableBg') || '')
   const bgImg = await loadImageSafe(bgUrl)
@@ -1274,27 +1263,15 @@ export async function exportCleanPng(plan, semester = '課表') {
       ctx.fillText(value, centerX, startY + idx * lineHeight)
     })
   }
-  const wallpaperCardMode = localStorage.getItem('uniplan:wallpaperCardMode') || 'pink'
-  const wallpaperCardColor = localStorage.getItem('uniplan:wallpaperCardColor') || '#ec4899'
-  const palettesByMode = {
-    pink: [['#ff4fb8', '#7c3aed'], ['#ec4899', '#a855f7'], ['#f472b6', '#8b5cf6']],
-    accent: [[appearance.accent || '#2563eb', appearance.buttonAccent || appearance.accent || '#7c3aed']],
-    blue: [['#38bdf8', '#2563eb'], ['#60a5fa', '#4f46e5']],
-    purple: [['#a78bfa', '#7c3aed'], ['#c084fc', '#9333ea']],
-    green: [['#34d399', '#059669'], ['#22c55e', '#0f766e']],
-    orange: [['#fbbf24', '#ea580c'], ['#fb923c', '#dc2626']],
-    custom: [[wallpaperCardColor, appearance.accent || '#7c3aed']],
-    auto: [
-      ['#2563eb', '#7c3aed'],
-      ['#0ea5e9', '#2563eb'],
-      ['#14b8a6', '#0f766e'],
-      ['#8b5cf6', '#4338ca'],
-      ['#f59e0b', '#ea580c'],
-      ['#22c55e', '#15803d'],
-      ['#ec4899', '#7e22ce'],
-    ],
-  }
-  const coursePalette = palettesByMode[wallpaperCardMode] || palettesByMode.pink
+  const coursePalette = [
+    ['#2563eb', '#7c3aed'],
+    ['#0ea5e9', '#2563eb'],
+    ['#14b8a6', '#0f766e'],
+    ['#8b5cf6', '#4338ca'],
+    ['#f59e0b', '#ea580c'],
+    ['#22c55e', '#15803d'],
+    ['#ec4899', '#7e22ce'],
+  ]
   const hashText = (value) => String(value || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
 
   ctx.clearRect(0, 0, canvasW, canvasH)
@@ -1316,9 +1293,20 @@ export async function exportCleanPng(plan, semester = '課表') {
   ctx.fillStyle = veil
   ctx.fillRect(0, 0, canvasW, canvasH)
 
-  // Wallpaper mode intentionally omits UniPlan/semester title text; export keeps only the background image and timetable.
+  // Compact title; leaves the wallpaper center for the timetable/widget area.
+  ctx.save()
+  ctx.fillStyle = 'rgba(248,250,252,.62)'
+  ctx.font = '900 18px Inter, Noto Sans TC, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('UNIPLAN', marginX + 8, topY)
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '900 52px Inter, Noto Sans TC, sans-serif'
+  ctx.shadowColor = 'rgba(0,0,0,.36)'
+  ctx.shadowBlur = 18
+  ctx.fillText(`${semester}課表`, marginX + 6, topY + 66)
+  ctx.restore()
 
-  // Smart timetable plate. Kept inside wallpaper safe area to reduce cropping on different phones.
+  // Smart timetable plate.
   const plate = ctx.createLinearGradient(tableX, tableY, tableX, tableY + tableH)
   plate.addColorStop(0, 'rgba(15,23,42,.20)')
   plate.addColorStop(1, 'rgba(15,23,42,.10)')
@@ -1359,7 +1347,14 @@ export async function exportCleanPng(plan, semester = '課表') {
     ctx.beginPath(); ctx.moveTo(tableX + timeW, y); ctx.lineTo(tableX + tableW, y); ctx.stroke()
   }
 
-  // Left period numbers are intentionally hidden in wallpaper mode. Time is written on each course card.
+  ctx.textAlign = 'center'
+  ctx.font = '900 23px Inter, Noto Sans TC, sans-serif'
+  visiblePeriods.forEach((period, r) => {
+    const y = tableY + headH + r * rowH + rowH / 2
+    fillRound(tableX + 13, y - 21, 38, 42, 20, 'rgba(255,255,255,.064)')
+    ctx.fillStyle = 'rgba(255,255,255,.68)'
+    ctx.fillText(`${period}`, tableX + 32, y + 8)
+  })
 
   const placedKeys = new Set()
   allSlots.forEach((slot) => {
@@ -1388,10 +1383,8 @@ export async function exportCleanPng(plan, semester = '課表') {
     const y = baseY + Math.max(13, (spanBlockH - h) / 2)
     const displayName = makeExportCourseName(c.name || '課程')
     const palette = coursePalette[hashText(displayName || c.code || c.serial) % coursePalette.length]
-    // Wallpaper card color must follow the selected wallpaper mode directly.
-    // Previously palette[0] was overridden by the global accent color, so modes such as 青綠 / 橘紅 looked unchanged.
-    const baseA = cssColorToRgba(palette[0], [37, 99, 235, 1])
-    const baseB = cssColorToRgba(palette[1] || palette[0], [124, 58, 237, 1])
+    const baseA = cssColorToRgba(appearance.accent || palette[0], [37, 99, 235, 1])
+    const baseB = cssColorToRgba(palette[1], [124, 58, 237, 1])
     const top = brightenRgba(baseA, .25)
     const bottom = mixRgba(baseA, baseB, .58)
     const deep = darkenRgba(bottom, .20)
@@ -1435,9 +1428,7 @@ export async function exportCleanPng(plan, semester = '課表') {
     const nameY = y + (h >= 220 ? h * .39 : h * .43) - (nameLines === 2 ? 12 : 0)
     drawCenteredLines(displayName || '課程', x + w / 2, nameY, w - 34, 32, nameLines)
     const room = c.classroom || c.room || c.location || ''
-    const startClock = PERIOD_CLOCK[safeStart]?.[0] || `${safeStart}節`
-    const endClock = PERIOD_CLOCK[Math.min(lastPeriod, slot.end)]?.[1] || PERIOD_CLOCK[safeStart]?.[1] || ''
-    const timeRange = endClock ? `${startClock}–${endClock}` : startClock
+    const timeRange = span > 1 ? `第 ${safeStart}–${Math.min(lastPeriod, slot.end)} 節` : `第 ${safeStart} 節`
     ctx.font = '850 22px Inter, Noto Sans TC, sans-serif'
     ctx.fillStyle = 'rgba(255,255,255,.86)'
     ctx.fillText(timeRange, x + w / 2, y + h - (room ? 58 : 30))
@@ -1450,6 +1441,12 @@ export async function exportCleanPng(plan, semester = '課表') {
   })
   ctx.restore()
 
+  ctx.save()
+  ctx.textAlign = 'center'
+  ctx.fillStyle = 'rgba(255,255,255,.42)'
+  ctx.font = '800 21px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText(`智慧桌布 V5 · ${visibleDays.length}日 / ${visiblePeriods[0]}-${visiblePeriods[visiblePeriods.length - 1]}節`, canvasW / 2, canvasH - 118)
+  ctx.restore()
 
   await new Promise((resolve) => {
     canvas.toBlob((blob) => {
@@ -1457,7 +1454,7 @@ export async function exportCleanPng(plan, semester = '課表') {
         const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
         const a = document.createElement('a')
         a.href = url
-        a.download = `${semester}_手機桌布課表_V6.png`
+        a.download = `${semester}_手機桌布課表_V5.png`
         document.body.appendChild(a)
         a.click()
         a.remove()

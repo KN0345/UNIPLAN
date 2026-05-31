@@ -292,23 +292,17 @@ function App() {
     }
     let cancelled = false
     async function resolveWelcomeState() {
-      const localKey = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
-      const localSeen = localStorage.getItem(localKey) === '1'
-      if (localSeen) {
-        if (!cancelled) setShowGuide(false)
-        return
-      }
       if (user.publicAlpha || user.offline) {
-        if (!cancelled) setShowGuide(true)
+        const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
+        if (!cancelled) setShowGuide(localStorage.getItem(key) !== '1')
         return
       }
       try {
         const res = await fetchWelcomeState()
-        const shouldShow = !res?.hasSeenWelcome
-        if (!shouldShow) localStorage.setItem(localKey, '1')
-        if (!cancelled) setShowGuide(shouldShow)
+        if (!cancelled) setShowGuide(!res?.hasSeenWelcome)
       } catch {
-        if (!cancelled) setShowGuide(!localSeen)
+        const key = `uniplan:guideSeen:${user.studentId}`
+        if (!cancelled) setShowGuide(localStorage.getItem(key) !== '1')
       }
     }
     resolveWelcomeState()
@@ -318,13 +312,15 @@ function App() {
   async function closeWelcomeGuide() {
     setShowGuide(false)
     if (!user?.studentId) return
-    const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
-    localStorage.setItem(key, '1')
-    if (user.publicAlpha || user.offline) return
+    if (user.publicAlpha || user.offline) {
+      const key = user.publicAlpha ? 'uniplan:guideSeen:guest' : `uniplan:guideSeen:${user.studentId}`
+      localStorage.setItem(key, '1')
+      return
+    }
     try {
       await completeWelcome()
     } catch {
-      // Local state has already been stored; do not re-open the guide on next refresh.
+      localStorage.setItem(`uniplan:guideSeen:${user.studentId}`, '1')
     }
   }
 

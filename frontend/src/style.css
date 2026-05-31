@@ -7332,5 +7332,3 @@ body[data-theme="dark"] .programTree{
 .semesterPanel.activeSemesterPanel .timetableConflictTile small{
   margin-top:4px!important;
 }
-
-.wallpaperCardModeBlock{display:grid;gap:10px;margin:10px 0 12px}.wallpaperCardModeGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.wallpaperCardModeGrid button{min-height:38px;border:1px solid rgba(255,255,255,.38);border-radius:14px;color:white;font-weight:900;text-shadow:0 1px 8px rgba(0,0,0,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 20px rgba(15,23,42,.12)}.wallpaperCardModeGrid button.active{outline:3px solid color-mix(in srgb,var(--accent) 30%,transparent);transform:translateY(-1px)}

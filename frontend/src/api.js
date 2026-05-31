@@ -91,16 +91,8 @@ export async function fetchUserData() {
 }
 
 export async function syncUserData(bundle) {
-  try {
-    const { data } = await api.put('/user/data', { data: bundle })
-    return data
-  } catch (err) {
-    if (err?.response?.status === 405) {
-      const { data } = await api.post('/user/data', { data: bundle })
-      return data
-    }
-    throw err
-  }
+  const { data } = await api.put('/user/data', { data: bundle })
+  return data
 }
 
 export async function fetchUserSettings() {
@@ -109,16 +101,8 @@ export async function fetchUserSettings() {
 }
 
 export async function saveUserSettings(settings) {
-  try {
-    const { data } = await api.put('/user/settings', { settings })
-    return data
-  } catch (err) {
-    if (err?.response?.status === 405) {
-      const { data } = await api.post('/user/settings', { settings })
-      return data
-    }
-    throw err
-  }
+  const { data } = await api.put('/user/settings', { settings })
+  return data
 }
 
 
@@ -165,16 +149,8 @@ export async function fetchWelcomeState() {
 }
 
 export async function completeWelcome() {
-  try {
-    const { data } = await api.put('/user/welcome', { hasSeenWelcome: true })
-    return data
-  } catch (err) {
-    if (err?.response?.status === 405) {
-      const { data } = await api.post('/user/welcome', { hasSeenWelcome: true })
-      return data
-    }
-    throw err
-  }
+  const { data } = await api.put('/user/welcome', { hasSeenWelcome: true })
+  return data
 }
 
 export async function submitPublicFeedback(payload) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 
 const UI_THEMES = [
@@ -14,16 +14,6 @@ const ACCENT_COLORS = [
   '#ea580c', '#d97706', '#65a30d', '#16a34a',
   '#059669', '#0d9488', '#0891b2', '#0284c7',
   '#4f46e5', '#9333ea', '#475569', '#111827',
-]
-
-const WALLPAPER_CARD_MODES = [
-  { key: 'pink', label: '炫彩粉', colors: ['#ff4fb8', '#7c3aed'] },
-  { key: 'accent', label: '跟隨主色', colors: ['#2563eb', '#7c3aed'] },
-  { key: 'blue', label: '藍紫', colors: ['#38bdf8', '#2563eb'] },
-  { key: 'purple', label: '紫光', colors: ['#a78bfa', '#7c3aed'] },
-  { key: 'green', label: '青綠', colors: ['#34d399', '#059669'] },
-  { key: 'orange', label: '橘紅', colors: ['#fbbf24', '#ea580c'] },
-  { key: 'custom', label: '自訂', colors: ['#ec4899', '#7c3aed'] },
 ]
 
 function loadImageFromDataUrl(dataUrl) {
@@ -96,23 +86,6 @@ function AppearanceModal({
 }) {
   const [imageStatus, setImageStatus] = useState('')
   const [imageError, setImageError] = useState('')
-  const [wallpaperCardMode, setWallpaperCardMode] = useState(() => localStorage.getItem('uniplan:wallpaperCardMode') || 'pink')
-  const [wallpaperCardColor, setWallpaperCardColor] = useState(() => localStorage.getItem('uniplan:wallpaperCardColor') || '#ec4899')
-
-  useEffect(() => {
-    localStorage.setItem('uniplan:wallpaperCardMode', wallpaperCardMode)
-    localStorage.setItem('uniplan:wallpaperCardColor', wallpaperCardColor)
-  }, [wallpaperCardMode, wallpaperCardColor])
-
-  const applyWallpaperCardMode = (modeKey) => {
-    setWallpaperCardMode(modeKey)
-    localStorage.setItem('uniplan:wallpaperCardMode', modeKey)
-  }
-
-  const applyWallpaperCardColor = (colorValue) => {
-    setWallpaperCardColor(colorValue)
-    localStorage.setItem('uniplan:wallpaperCardColor', colorValue)
-  }
 
   if (!open) return null
 
@@ -217,29 +190,6 @@ function AppearanceModal({
               <span>課程卡霧面</span>
               <input type="range" min="0" max="1" step="0.05" value={courseCardOpacity} onChange={(event) => setCourseCardOpacity(event.target.value)} />
             </label>
-            <div className="wallpaperCardModeBlock">
-              <div className="inlineControl"><span>桌布卡片色</span><strong>{WALLPAPER_CARD_MODES.find((mode) => mode.key === wallpaperCardMode)?.label || '炫彩粉'}</strong></div>
-              <div className="wallpaperCardModeGrid">
-                {WALLPAPER_CARD_MODES.map((mode) => (
-                  <button
-                    key={mode.key}
-                    type="button"
-                    className={wallpaperCardMode === mode.key ? 'active' : ''}
-                    style={{ background: `linear-gradient(135deg, ${mode.colors[0]}, ${mode.colors[1]})` }}
-                    onClick={() => applyWallpaperCardMode(mode.key)}
-                  >
-                    {mode.label}
-                  </button>
-                ))}
-              </div>
-              {wallpaperCardMode === 'custom' && (
-                <label className="inlineControl">
-                  <span>自訂卡片色</span>
-                  <input type="color" value={wallpaperCardColor} onChange={(event) => applyWallpaperCardColor(event.target.value)} />
-                </label>
-              )}
-              <p className="appearanceHint">只影響手機桌布匯出的課程卡片，不改變原本網頁課表資料。</p>
-            </div>
             <div className="backgroundUploadBox">
               <label className="fileControl backgroundUploadControl">
                 <span>上傳本機背景圖片</span>
@@ -267,8 +217,6 @@ function AppearanceModal({
             setTimetableOpacity('0')
             setCourseCardOpacity('0.72')
             setTimetableBg('')
-            applyWallpaperCardMode('pink')
-            setWallpaperCardColor('#ec4899')
           }}>恢復預設</button>
           <button className="primary" type="button" onClick={onClose}>完成</button>
         </footer>
