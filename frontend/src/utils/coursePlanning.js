@@ -704,123 +704,63 @@ export function injectExportBackgroundImage(clonedDocument, safeBackgroundUrl) {
   })
 }
 
-function parseCssNumber(value) {
-  const raw = String(value || '').trim()
-  if (!raw) return null
-  if (raw.endsWith('%')) {
-    const n = Number.parseFloat(raw)
-    return Number.isFinite(n) ? Math.max(0, Math.min(255, n * 2.55)) : null
-  }
-  const n = Number.parseFloat(raw)
-  if (!Number.isFinite(n)) return null
-  return n <= 1 ? Math.max(0, Math.min(255, n * 255)) : Math.max(0, Math.min(255, n))
-}
+function copyExportLayoutInlineStyles(sourceElement, clonedElement, clonedWindow) {
+  if (!(sourceElement instanceof Element) || !(clonedElement instanceof clonedWindow.HTMLElement)) return
 
-function parseCssAlpha(value) {
-  const raw = String(value || '').trim()
-  if (!raw) return 1
-  if (raw.endsWith('%')) {
-    const n = Number.parseFloat(raw)
-    return Number.isFinite(n) ? Math.max(0, Math.min(1, n / 100)) : 1
-  }
-  const n = Number.parseFloat(raw)
-  return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1
-}
-
-function isModernUnsupportedCssColor(value = '') {
-  const raw = String(value || '').toLowerCase()
-  return raw.includes('color-mix(') || raw.includes('oklch(') || raw.includes('oklab(') || raw.includes('lab(') || raw.includes('lch(') || raw.includes('color(')
-}
-
-function normalizeCssColorForExport(value, fallback = 'rgba(248,250,252,1)') {
-  const raw = String(value || '').trim()
-  if (!raw) return fallback
-  if (raw === 'transparent') return 'rgba(0,0,0,0)'
-  if (/^#[0-9a-f]{3,8}$/i.test(raw)) return raw
-  if (/^rgba?\(/i.test(raw)) return raw
-
-  const modern = raw.match(/color\(\s*(?:srgb|display-p3)\s+([^\s,)]+)\s+([^\s,)]+)\s+([^\s,)]+)(?:\s*\/\s*([^\s,)]+))?\s*\)/i)
-  if (modern) {
-    const r = parseCssNumber(modern[1])
-    const g = parseCssNumber(modern[2])
-    const b = parseCssNumber(modern[3])
-    const a = parseCssAlpha(modern[4])
-    if ([r, g, b].every(Number.isFinite)) return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a})`
+  const unsafeValue = (value) => {
+    const raw = String(value || '').toLowerCase()
+    return raw.includes('color(') || raw.includes('color-mix(') || raw.includes('oklch(') || raw.includes('lab(') || raw.includes('lch(')
   }
 
-  if (isModernUnsupportedCssColor(raw)) return fallback
-  return raw
+  const layoutProps = [
+    'display', 'position', 'box-sizing', 'float', 'clear',
+    'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+    'top', 'right', 'bottom', 'left', 'inset', 'z-index',
+    'overflow', 'overflow-x', 'overflow-y',
+    'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+    'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+    'grid-template-columns', 'grid-template-rows', 'grid-column', 'grid-row',
+    'grid-column-start', 'grid-column-end', 'grid-row-start', 'grid-row-end',
+    'grid-auto-columns', 'grid-auto-rows', 'grid-auto-flow',
+    'gap', 'row-gap', 'column-gap',
+    'align-items', 'align-content', 'align-self',
+    'justify-items', 'justify-content', 'justify-self',
+    'flex', 'flex-basis', 'flex-direction', 'flex-grow', 'flex-shrink', 'flex-wrap',
+    'order',
+    'border-radius', 'border-top-left-radius', 'border-top-right-radius',
+    'border-bottom-right-radius', 'border-bottom-left-radius',
+    'border-width', 'border-style', 'border-top-width', 'border-right-width',
+    'border-bottom-width', 'border-left-width',
+    'font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch',
+    'line-height', 'letter-spacing', 'text-align', 'text-transform', 'white-space',
+    'word-break', 'overflow-wrap', 'text-overflow',
+    'opacity', 'object-fit', 'object-position', 'vertical-align',
+  ]
+
+  const applyOne = (src, dst) => {
+    if (!(src instanceof Element) || !(dst instanceof clonedWindow.HTMLElement)) return
+    const computed = window.getComputedStyle(src)
+    for (const prop of layoutProps) {
+      const value = computed.getPropertyValue(prop)
+      if (!value || unsafeValue(value)) continue
+      try { dst.style.setProperty(prop, value) } catch {}
+    }
+    dst.style.setProperty('animation', 'none', 'important')
+    dst.style.setProperty('transition', 'none', 'important')
+    dst.style.setProperty('-webkit-backdrop-filter', 'none', 'important')
+    dst.style.setProperty('backdrop-filter', 'none', 'important')
+    dst.style.setProperty('filter', 'none', 'important')
+    dst.style.setProperty('mix-blend-mode', 'normal', 'important')
+    dst.style.setProperty('transform', 'none', 'important')
+    dst.style.setProperty('text-shadow', 'none', 'important')
+  }
+
+  const sourceNodes = [sourceElement, ...Array.from(sourceElement.querySelectorAll('*'))]
+  const clonedNodes = [clonedElement, ...Array.from(clonedElement.querySelectorAll('*'))]
+  sourceNodes.forEach((src, index) => applyOne(src, clonedNodes[index]))
 }
 
-function normalizeShadowForExport(value) {
-  const raw = String(value || '').trim()
-  if (!raw || raw === 'none') return 'none'
-  return isModernUnsupportedCssColor(raw) ? 'none' : raw
-}
-
-function normalizeBackgroundImageForExport(value) {
-  const raw = String(value || '').trim()
-  if (!raw || raw === 'none') return 'none'
-  if (isModernUnsupportedCssColor(raw)) return 'none'
-  const urls = extractCssUrls(raw)
-  if (urls.some(isUnsafeExternalUrl)) return 'none'
-  return raw
-}
-
-const EXPORT_INLINE_PROPS = [
-  'display', 'position', 'box-sizing',
-  'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
-  'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-  'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-  'top', 'right', 'bottom', 'left', 'inset',
-  'grid-template-columns', 'grid-template-rows', 'grid-column-start', 'grid-column-end', 'grid-row-start', 'grid-row-end',
-  'column-gap', 'row-gap', 'gap',
-  'align-items', 'align-content', 'justify-items', 'justify-content', 'place-items',
-  'flex-direction', 'flex-wrap', 'flex-grow', 'flex-shrink', 'flex-basis', 'align-self', 'justify-self',
-  'overflow', 'overflow-x', 'overflow-y',
-  'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
-  'border-top-style', 'border-right-style', 'border-bottom-style', 'border-left-style',
-  'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius',
-  'font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing',
-  'text-align', 'white-space', 'word-break', 'overflow-wrap',
-  'opacity', 'z-index', 'vertical-align', 'object-fit', 'object-position'
-]
-
-function inlineExportSafeComputedStyles(source, target) {
-  if (!(source instanceof Element) || !(target instanceof Element)) return
-  const computed = window.getComputedStyle(source)
-
-  EXPORT_INLINE_PROPS.forEach((prop) => {
-    const value = computed.getPropertyValue(prop)
-    if (value) target.style.setProperty(prop, value)
-  })
-
-  target.style.setProperty('color', normalizeCssColorForExport(computed.color, '#f8fafc'), 'important')
-  target.style.setProperty('background-color', normalizeCssColorForExport(computed.backgroundColor, 'rgba(0,0,0,0)'), 'important')
-  target.style.setProperty('border-top-color', normalizeCssColorForExport(computed.borderTopColor, 'rgba(147,197,253,.28)'), 'important')
-  target.style.setProperty('border-right-color', normalizeCssColorForExport(computed.borderRightColor, 'rgba(147,197,253,.28)'), 'important')
-  target.style.setProperty('border-bottom-color', normalizeCssColorForExport(computed.borderBottomColor, 'rgba(147,197,253,.28)'), 'important')
-  target.style.setProperty('border-left-color', normalizeCssColorForExport(computed.borderLeftColor, 'rgba(147,197,253,.28)'), 'important')
-  target.style.setProperty('outline-color', normalizeCssColorForExport(computed.outlineColor, 'rgba(147,197,253,.28)'), 'important')
-  target.style.setProperty('text-decoration-color', normalizeCssColorForExport(computed.textDecorationColor, '#f8fafc'), 'important')
-  target.style.setProperty('background-image', normalizeBackgroundImageForExport(computed.backgroundImage), 'important')
-  target.style.setProperty('box-shadow', normalizeShadowForExport(computed.boxShadow), 'important')
-  target.style.setProperty('text-shadow', 'none', 'important')
-  target.style.setProperty('filter', 'none', 'important')
-  target.style.setProperty('backdrop-filter', 'none', 'important')
-  target.style.setProperty('-webkit-backdrop-filter', 'none', 'important')
-  target.style.setProperty('mix-blend-mode', 'normal', 'important')
-  target.style.setProperty('animation', 'none', 'important')
-  target.style.setProperty('transition', 'none', 'important')
-  target.style.setProperty('transform', computed.transform && computed.transform !== 'none' ? 'none' : 'none', 'important')
-  target.style.setProperty('accent-color', '#2563eb', 'important')
-
-  const sourceChildren = Array.from(source.children)
-  const targetChildren = Array.from(target.children)
-  sourceChildren.forEach((child, index) => inlineExportSafeComputedStyles(child, targetChildren[index]))
-}
-
-function stripCloneStyleSheets(clonedDocument) {
+function removeProblematicStylesheetsFromClone(clonedDocument) {
   clonedDocument.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => node.remove())
 }
 
@@ -931,9 +871,10 @@ export async function exportPngFromDom(element, semester = '課表') {
         const clonedElement = clonedDocument.querySelector('.exportScheduleCanvas')
 
         if (clonedElement instanceof clonedWindow.HTMLElement) {
-          inlineExportSafeComputedStyles(element, clonedElement)
+          copyExportLayoutInlineStyles(element, clonedElement, clonedWindow)
         }
-        stripCloneStyleSheets(clonedDocument)
+
+        removeProblematicStylesheetsFromClone(clonedDocument)
         clearBackgroundImagesInClone(clonedDocument)
 
         const style = clonedDocument.createElement('style')
