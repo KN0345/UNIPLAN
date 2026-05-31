@@ -1210,14 +1210,13 @@ export async function exportCleanPng(plan, semester = '課表') {
   const canvasW = 1440
   const canvasH = 2560
   const marginX = 42
-  const topY = 104
   const tableX = marginX
-  const tableY = 226
+  const tableY = 132
   const tableW = canvasW - marginX * 2
   const timeW = 62
   const headH = 84
   const idealRowH = visiblePeriods.length <= 6 ? 244 : visiblePeriods.length <= 8 ? 215 : 188
-  const maxTableH = canvasH - tableY - 210
+  const maxTableH = canvasH - tableY - 132
   const tableH = Math.min(maxTableH, headH + idealRowH * visiblePeriods.length)
   const rowH = (tableH - headH) / visiblePeriods.length
   const dayW = (tableW - timeW) / visibleDays.length
@@ -1273,15 +1272,27 @@ export async function exportCleanPng(plan, semester = '課表') {
       ctx.fillText(value, centerX, startY + idx * lineHeight)
     })
   }
-  const coursePalette = [
-    ['#2563eb', '#7c3aed'],
-    ['#0ea5e9', '#2563eb'],
-    ['#14b8a6', '#0f766e'],
-    ['#8b5cf6', '#4338ca'],
-    ['#f59e0b', '#ea580c'],
-    ['#22c55e', '#15803d'],
-    ['#ec4899', '#7e22ce'],
-  ]
+  const wallpaperCardMode = localStorage.getItem('uniplan:wallpaperCardMode') || 'pink'
+  const wallpaperCardColor = localStorage.getItem('uniplan:wallpaperCardColor') || '#ec4899'
+  const palettesByMode = {
+    pink: [['#ff4fb8', '#7c3aed'], ['#ec4899', '#a855f7'], ['#f472b6', '#8b5cf6']],
+    accent: [[appearance.accent || '#2563eb', appearance.buttonAccent || appearance.accent || '#7c3aed']],
+    blue: [['#38bdf8', '#2563eb'], ['#60a5fa', '#4f46e5']],
+    purple: [['#a78bfa', '#7c3aed'], ['#c084fc', '#9333ea']],
+    green: [['#34d399', '#059669'], ['#22c55e', '#0f766e']],
+    orange: [['#fbbf24', '#ea580c'], ['#fb923c', '#dc2626']],
+    custom: [[wallpaperCardColor, appearance.accent || '#7c3aed']],
+    auto: [
+      ['#2563eb', '#7c3aed'],
+      ['#0ea5e9', '#2563eb'],
+      ['#14b8a6', '#0f766e'],
+      ['#8b5cf6', '#4338ca'],
+      ['#f59e0b', '#ea580c'],
+      ['#22c55e', '#15803d'],
+      ['#ec4899', '#7e22ce'],
+    ],
+  }
+  const coursePalette = palettesByMode[wallpaperCardMode] || palettesByMode.pink
   const hashText = (value) => String(value || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
 
   ctx.clearRect(0, 0, canvasW, canvasH)
@@ -1303,18 +1314,7 @@ export async function exportCleanPng(plan, semester = '課表') {
   ctx.fillStyle = veil
   ctx.fillRect(0, 0, canvasW, canvasH)
 
-  // Compact title; leaves the wallpaper center for the timetable/widget area.
-  ctx.save()
-  ctx.fillStyle = 'rgba(248,250,252,.62)'
-  ctx.font = '900 18px Inter, Noto Sans TC, sans-serif'
-  ctx.textAlign = 'left'
-  ctx.fillText('UNIPLAN', marginX + 8, topY)
-  ctx.fillStyle = '#ffffff'
-  ctx.font = '900 52px Inter, Noto Sans TC, sans-serif'
-  ctx.shadowColor = 'rgba(0,0,0,.36)'
-  ctx.shadowBlur = 18
-  ctx.fillText(`${semester}課表`, marginX + 6, topY + 66)
-  ctx.restore()
+  // Wallpaper mode intentionally omits UniPlan/semester title text; export keeps only the background image and timetable.
 
   // Smart timetable plate.
   const plate = ctx.createLinearGradient(tableX, tableY, tableX, tableY + tableH)
