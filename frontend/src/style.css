@@ -7308,10 +7308,6 @@ body[data-theme="dark"] .programTree{
   .programCourseCreditPill{top:9px!important;right:10px!important;font-size:10px!important;padding:4px 7px!important;}
 }
 
-.soundToggle{min-width:72px;transition:transform .16s ease,background .16s ease,border-color .16s ease;}
-.soundToggle[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 14%,var(--panel));border-color:color-mix(in srgb,var(--accent) 42%,var(--border));}
-.soundToggle:active{transform:scale(.96);}
-body[data-sound="off"] .soundToggle{opacity:.72;}
 
 /* ========================================================================== */
 /* UniPlan export/card correction: preserve image aspect ratio + real span     */

@@ -1135,25 +1135,28 @@ export async function exportPngFromDom(element, semester = '課表') {
 
 
 export async function exportCleanPng(plan, semester = '課表') {
-  // Use the deterministic canvas renderer as the primary export path.
-  // The previous DOM/foreignObject export was fragile with backdrop-filter,
-  // custom timetable backgrounds, overflow containers, and Cloudflare preview domains.
-  // Keeping the canvas path first prevents blank / clipped PNG output.
-  const courses = plan[semester] || []
-  const appearance = readCurrentAppearance()
-  const width = 1420
-  const headerRowH = 58
-  const rowH = 76
-  const timeW = 92
-  const gridW = width
-  const gridH = headerRowH + rowH * 10
-  const dayW = (gridW - timeW) / DAYS.length
+  // Export uses an independent presentation style instead of trying to clone the live timetable.
+  // This avoids background-image distortion, backdrop-filter mismatch, and DOM clipping issues.
+  const courses = Array.isArray(plan?.[semester]) ? plan[semester] : []
+  const scale = 2
+  const canvasW = 1600
+  const canvasH = 1060
+  const margin = 54
+  const headerH = 106
+  const tableX = margin
+  const tableY = margin + headerH
+  const tableW = canvasW - margin * 2
+  const tableH = canvasH - tableY - margin
+  const timeW = 86
+  const headH = 60
+  const rowH = (tableH - headH) / 10
+  const dayW = (tableW - timeW) / DAYS.length
+
   const canvas = document.createElement('canvas')
-  canvas.width = gridW * 2
-  canvas.height = gridH * 2
+  canvas.width = canvasW * scale
+  canvas.height = canvasH * scale
   const ctx = canvas.getContext('2d')
-  ctx.scale(2, 2)
-  ctx.clearRect(0, 0, gridW, gridH)
+  ctx.scale(scale, scale)
 
   const roundRect = (x, y, w, h, r) => {
     ctx.beginPath()
@@ -1164,161 +1167,167 @@ export async function exportCleanPng(plan, semester = '課表') {
     ctx.arcTo(x, y, x + w, y, r)
     ctx.closePath()
   }
-
-  const panel = cssColorToRgba(appearance.panel, [17, 29, 49, 1])
-  const panel2 = cssColorToRgba(appearance.panel2, [27, 42, 68, 1])
-  const text = cssColorToRgba(appearance.text, [239, 246, 255, 1])
-  const muted = cssColorToRgba(appearance.muted, [159, 176, 204, 1])
-  const border = cssColorToRgba(appearance.border, [47, 67, 98, 1])
-  const tint = cssColorToRgba(appearance.tint, panel)
-  const tableOpacity = Math.max(0, Math.min(1, appearance.timetableOpacity))
-  const frost = Math.max(0, Math.min(1, appearance.courseCardOpacity))
-
-  ctx.save()
-  roundRect(0, 0, gridW, gridH, 16)
-  ctx.clip()
-
-  const base = ctx.createLinearGradient(0, 0, gridW, gridH)
-  base.addColorStop(0, rgbaString(panel2, 1))
-  base.addColorStop(.62, rgbaString(panel, 1))
-  base.addColorStop(1, rgbaString(panel2, 1))
-  ctx.fillStyle = base
-  ctx.fillRect(0, 0, gridW, gridH)
-
-  const img = await loadImageSafe(appearance.timetableBg)
-  if (img) {
-    ctx.globalAlpha = Math.max(0, 1 - tableOpacity)
-    drawCoverImage(ctx, img, 0, 0, gridW, gridH)
-    ctx.globalAlpha = 1
-    ctx.fillStyle = rgbaString([8, 15, 28, 1], .34 * (1 - tableOpacity))
-    ctx.fillRect(0, 0, gridW, gridH)
+  const fillRound = (x, y, w, h, r, fillStyle) => {
+    roundRect(x, y, w, h, r)
+    ctx.fillStyle = fillStyle
+    ctx.fill()
   }
-
-  if (tableOpacity > 0) {
-    ctx.fillStyle = rgbaString(tint, tableOpacity)
-    ctx.fillRect(0, 0, gridW, gridH)
+  const strokeRound = (x, y, w, h, r, strokeStyle, lineWidth = 1) => {
+    roundRect(x, y, w, h, r)
+    ctx.strokeStyle = strokeStyle
+    ctx.lineWidth = lineWidth
+    ctx.stroke()
   }
-
-  ctx.fillStyle = rgbaString([255, 255, 255, 1], .035)
-  ctx.fillRect(0, 0, gridW, headerRowH)
-  ctx.fillRect(0, 0, timeW, gridH)
-
-  ctx.strokeStyle = rgbaString(border, .58)
-  ctx.lineWidth = 1
-  for (let i = 0; i <= DAYS.length; i += 1) {
-    const x = timeW + i * dayW
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, gridH); ctx.stroke()
-  }
-  ctx.beginPath(); ctx.moveTo(0, headerRowH); ctx.lineTo(gridW, headerRowH); ctx.stroke()
-  for (let r = 0; r <= 10; r += 1) {
-    const y = headerRowH + r * rowH
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(gridW, y); ctx.stroke()
-  }
-
-  ctx.fillStyle = rgbaString(text, .96)
-  ctx.font = '800 18px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText('節', 36, 36)
-  DAYS.forEach((d, i) => {
-    const x = timeW + i * dayW
-    ctx.fillText(`週${d}`, x + 20, 36)
-  })
-  ctx.font = '800 17px Inter, Noto Sans TC, sans-serif'
-  for (let r = 0; r < 10; r += 1) {
-    const y = headerRowH + r * rowH
-    ctx.fillText(`${r + 1}`, 36, y + 44)
-  }
-
-  const drawTextFit = (textValue, x, y, maxWidth, lineHeight, maxLines = 2) => {
-    const chars = String(textValue || '').split('')
+  const drawTextFit = (value, x, y, maxWidth, lineHeight, maxLines = 2) => {
+    const text = String(value || '')
+    const lines = []
     let line = ''
-    let lines = []
-    chars.forEach((ch) => {
+    for (const ch of text) {
       const test = line + ch
       if (ctx.measureText(test).width > maxWidth && line) {
         lines.push(line)
         line = ch
       } else line = test
-    })
+    }
     if (line) lines.push(line)
-    const original = lines.join('')
-    lines = lines.slice(0, maxLines)
-    lines.forEach((ln, idx) => {
-      const clipped = idx === maxLines - 1 && original.length > lines.join('').length
+    const visible = lines.slice(0, maxLines)
+    const visibleChars = visible.join('').length
+    visible.forEach((ln, idx) => {
+      const clipped = idx === maxLines - 1 && visibleChars < text.length
       ctx.fillText(clipped ? `${ln.slice(0, Math.max(1, ln.length - 1))}…` : ln, x, y + idx * lineHeight)
     })
   }
 
+  ctx.clearRect(0, 0, canvasW, canvasH)
+  const bg = ctx.createLinearGradient(0, 0, canvasW, canvasH)
+  bg.addColorStop(0, '#07111f')
+  bg.addColorStop(.48, '#0b1830')
+  bg.addColorStop(1, '#111827')
+  ctx.fillStyle = bg
+  ctx.fillRect(0, 0, canvasW, canvasH)
+
+  // restrained decorative lines; no imported photo, so export is stable and never squashed.
+  ctx.save()
+  ctx.globalAlpha = .22
+  ctx.strokeStyle = '#60a5fa'
+  ctx.lineWidth = 1
+  for (let i = -300; i < canvasW; i += 92) {
+    ctx.beginPath()
+    ctx.moveTo(i, canvasH)
+    ctx.lineTo(i + 620, 0)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  const headerGrad = ctx.createLinearGradient(margin, margin, canvasW - margin, margin + headerH)
+  headerGrad.addColorStop(0, 'rgba(37,99,235,.28)')
+  headerGrad.addColorStop(1, 'rgba(14,165,233,.08)')
+  fillRound(margin, margin, canvasW - margin * 2, headerH, 28, headerGrad)
+  strokeRound(margin, margin, canvasW - margin * 2, headerH, 28, 'rgba(191,219,254,.28)', 1.2)
+
+  ctx.fillStyle = '#eaf2ff'
+  ctx.font = '900 34px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText(`${semester} 課表`, margin + 34, margin + 46)
+  ctx.font = '700 15px Inter, Noto Sans TC, sans-serif'
+  ctx.fillStyle = 'rgba(226,232,240,.72)'
+  ctx.fillText('UniPlan Timetable Export', margin + 36, margin + 76)
+  ctx.textAlign = 'right'
+  ctx.fillStyle = 'rgba(226,232,240,.62)'
+  ctx.fillText(new Date().toLocaleDateString('zh-TW'), canvasW - margin - 36, margin + 62)
+  ctx.textAlign = 'left'
+
+  fillRound(tableX, tableY, tableW, tableH, 28, 'rgba(15,23,42,.74)')
+  strokeRound(tableX, tableY, tableW, tableH, 28, 'rgba(203,213,225,.28)', 1.2)
+
+  ctx.save()
+  roundRect(tableX, tableY, tableW, tableH, 28)
+  ctx.clip()
+  ctx.fillStyle = 'rgba(255,255,255,.045)'
+  ctx.fillRect(tableX, tableY, tableW, headH)
+  ctx.fillRect(tableX, tableY, timeW, tableH)
+
+  ctx.strokeStyle = 'rgba(148,163,184,.26)'
+  ctx.lineWidth = 1
+  for (let i = 0; i <= DAYS.length; i += 1) {
+    const x = tableX + timeW + i * dayW
+    ctx.beginPath(); ctx.moveTo(x, tableY); ctx.lineTo(x, tableY + tableH); ctx.stroke()
+  }
+  for (let r = 0; r <= 10; r += 1) {
+    const y = tableY + headH + r * rowH
+    ctx.beginPath(); ctx.moveTo(tableX, y); ctx.lineTo(tableX + tableW, y); ctx.stroke()
+  }
+  ctx.beginPath(); ctx.moveTo(tableX, tableY + headH); ctx.lineTo(tableX + tableW, tableY + headH); ctx.stroke()
+
+  ctx.fillStyle = 'rgba(241,245,249,.96)'
+  ctx.font = '900 22px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText('節', tableX + 34, tableY + 39)
+  DAYS.forEach((d, i) => {
+    const x = tableX + timeW + i * dayW
+    ctx.textAlign = 'center'
+    ctx.fillText(`週${d}`, x + dayW / 2, tableY + 39)
+  })
+  ctx.textAlign = 'left'
+  ctx.font = '900 20px Inter, Noto Sans TC, sans-serif'
+  for (let r = 0; r < 10; r += 1) {
+    const y = tableY + headH + r * rowH
+    ctx.fillStyle = 'rgba(226,232,240,.92)'
+    ctx.fillText(`${r + 1}`, tableX + 35, y + rowH / 2 + 7)
+  }
+
+  const placedKeys = new Set()
   courses.filter((course) => courseStatus(course) !== 'failed').forEach((course) => {
     const c = getCourse(course)
     slotsOf(course).forEach((slot) => {
-      if (slot.start > 10 || !slot.day) return
-      const safeEnd = Math.min(10, slot.end || slot.start)
-      const span = Math.max(1, safeEnd - slot.start + 1)
-      const x = timeW + (slot.day - 1) * dayW + 10
-      const y = headerRowH + (slot.start - 1) * rowH + 10
-      const h = Math.max(48, span * rowH - 20)
-      const w = dayW - 20
+      if (!slot.day || slot.start > 10) return
+      const safeStart = Math.max(1, Number(slot.start) || 1)
+      const safeEnd = Math.min(10, Math.max(safeStart, Number(slot.end || slot.start) || safeStart))
+      const key = `${uid(course)}-${slot.day}-${safeStart}`
+      if (placedKeys.has(key)) return
+      placedKeys.add(key)
+      const span = Math.max(1, safeEnd - safeStart + 1)
+      const x = tableX + timeW + (slot.day - 1) * dayW + 14
+      const y = tableY + headH + (safeStart - 1) * rowH + 12
+      const w = dayW - 28
+      const h = Math.max(54, span * rowH - 24)
       const tone = STATUS[courseStatus(course)]?.tone || 'blue'
-      const dot = tone === 'green' ? '#34d399' : tone === 'red' ? '#fb7185' : tone === 'yellow' ? '#fbbf24' : appearance.accent || '#60a5fa'
-
-      roundRect(x, y, w, h, 12)
-      const cardGradient = ctx.createLinearGradient(x, y, x, y + h)
-      cardGradient.addColorStop(0, `rgba(54, 70, 105, ${0.40 + 0.34 * frost})`)
-      cardGradient.addColorStop(1, `rgba(18, 30, 58, ${0.32 + 0.26 * frost})`)
-      ctx.fillStyle = cardGradient
-      ctx.fill()
-      ctx.strokeStyle = `rgba(198, 214, 241, ${0.14 + 0.20 * frost})`
-      ctx.lineWidth = 1.1
-      ctx.stroke()
-      if (frost > 0) {
-        ctx.fillStyle = `rgba(255,255,255,${0.08 * frost})`
-        roundRect(x + 1, y + 1, w - 2, Math.max(10, h * .28), 10)
-        ctx.fill()
-      }
-
-      ctx.fillStyle = dot
-      ctx.beginPath()
-      ctx.arc(x + 17, y + 18, 5, 0, Math.PI * 2)
-      ctx.fill()
-
-      ctx.fillStyle = rgbaString(text, .98)
-      ctx.font = '900 15px Inter, Noto Sans TC, sans-serif'
-      drawTextFit(c.name || '課程', x + 30, y + 23, w - 44, 17, h > 70 ? 2 : 1)
-      ctx.font = '600 12px Inter, Noto Sans TC, sans-serif'
-      ctx.fillStyle = rgbaString(muted, .94)
-      const metaY = h > 70 ? y + Math.min(h - 18, 62) : y + 44
-      ctx.fillText(`${c.classroom || c.room || c.location || ''}`.slice(0, 22), x + 12, metaY)
+      const accent = tone === 'green' ? '#34d399' : tone === 'red' ? '#fb7185' : '#60a5fa'
+      const card = ctx.createLinearGradient(x, y, x + w, y + h)
+      card.addColorStop(0, 'rgba(59,130,246,.72)')
+      card.addColorStop(1, 'rgba(30,64,175,.72)')
+      fillRound(x, y, w, h, 18, card)
+      strokeRound(x, y, w, h, 18, 'rgba(219,234,254,.46)', 1.2)
+      ctx.save()
+      roundRect(x, y, w, h, 18)
+      ctx.clip()
+      ctx.fillStyle = 'rgba(255,255,255,.16)'
+      ctx.fillRect(x, y, w, Math.max(20, h * .30))
+      ctx.fillStyle = 'rgba(15,23,42,.16)'
+      ctx.fillRect(x, y + h - Math.max(22, h * .22), w, Math.max(22, h * .22))
+      ctx.restore()
+      ctx.fillStyle = accent
+      ctx.beginPath(); ctx.arc(x + 20, y + 22, 6, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#f8fbff'
+      ctx.font = '900 17px Inter, Noto Sans TC, sans-serif'
+      drawTextFit(c.name || '課程', x + 35, y + 27, w - 48, 19, h >= 80 ? 2 : 1)
+      ctx.font = '800 13px Inter, Noto Sans TC, sans-serif'
+      ctx.fillStyle = 'rgba(239,246,255,.82)'
+      const meta = [c.classroom || c.room || c.location, c.teacher].filter(Boolean).join('｜') || `${credits(course) || ''} 學分`
+      drawTextFit(meta, x + 16, y + h - 18, w - 32, 15, 1)
     })
   })
-
   ctx.restore()
-  roundRect(0, 0, gridW, gridH, 16)
-  ctx.strokeStyle = rgbaString(border, .70)
-  ctx.lineWidth = 1.2
-  ctx.stroke()
 
   await new Promise((resolve) => {
     canvas.toBlob((blob) => {
-      if (blob) {
-        const url = URL.createObjectURL(blob)
+      try {
+        const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
         const a = document.createElement('a')
         a.href = url
         a.download = `${semester}_課表.png`
         document.body.appendChild(a)
         a.click()
         a.remove()
-        URL.revokeObjectURL(url)
-        resolve(true)
-        return
-      }
-
-      try {
-        const a = document.createElement('a')
-        a.href = canvas.toDataURL('image/png')
-        a.download = `${semester}_課表.png`
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
+        if (blob) URL.revokeObjectURL(url)
         resolve(true)
       } catch (error) {
         console.error(error)
@@ -1328,6 +1337,7 @@ export async function exportCleanPng(plan, semester = '課表') {
     }, 'image/png')
   })
 }
+
 
 export function exportCalendar(plan, semester = '') {
   const entries = semester ? [[semester, plan[semester] || []]] : Object.entries(plan)

@@ -53,7 +53,6 @@ import { useBackupSync } from './hooks/useBackupSync'
 import { useCourseSelection } from './hooks/useCourseSelection'
 import { useCandidateActions } from './hooks/useCandidateActions'
 import { usePlannerActions } from './hooks/usePlannerActions'
-import { useUISound } from './hooks/useUISound'
 
 class UniPlanErrorBoundary extends Component {
   constructor(props) {
@@ -106,11 +105,9 @@ function App() {
   const appearanceSaveTimerRef = useRef(null)
 
   const { toast, notify: baseNotify } = useToast()
-  const uiSound = useUISound()
-  const notify = useCallback((message, tone = 'success') => {
+  const notify = useCallback((message) => {
     baseNotify(message)
-    uiSound.play(tone === 'error' ? 'error' : 'success')
-  }, [baseNotify, uiSound])
+  }, [baseNotify])
   const {
     plan, setPlan, candidates, setCandidates, favorites, setFavorites, snapshots, setSnapshots,
     localReviews, setLocalReviews, tagVotes, setTagVotes, applyRemoteBundle, makeUserBundle,
@@ -278,10 +275,6 @@ function App() {
 
 
   useEffect(() => {
-    uiSound.play('nav')
-  }, [activeMenu])
-
-  useEffect(() => {
     if (!user?.studentId || user.publicAlpha) return
     const timer = window.setTimeout(() => {
       const bundle = makeUserBundle()
@@ -339,7 +332,7 @@ function App() {
     <div className="appShell">
       <SideNav user={user} accountProfile={accountProfile} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />
       <main className="main">
-        <Topbar activeMenu={activeMenu} user={user} onOpenSettings={() => setSettingsOpen(true)} onLogout={logout} soundEnabled={uiSound.enabled} onToggleSound={uiSound.toggle} />
+        <Topbar activeMenu={activeMenu} user={user} onOpenSettings={() => setSettingsOpen(true)} onLogout={logout} />
 
         {activeMenu === 'planner' && <PlannerPage CreditStrip={CreditStrip} plan={plan} rules={rules} scheduleExportRef={scheduleExportRef} activeSemester={activeSemester} semesterAnimKey={semesterAnimKey} SemesterGrid={SemesterGrid} handleDropCourse={handleDropCourse} autoPlace={autoPlace} openCoursePopover={openCoursePopover} searchEmptySlot={searchEmptySlot} deletePlannedCourse={deletePlannedCourse} movePlannedToCandidate={movePlannedToCandidate} SEMESTERS={SEMESTERS} switchSemester={switchSemester} save={save} undo={undo} history={history} redo={redo} future={future} download={download} candidates={candidates} favorites={favorites} snapshots={snapshots} setSnapshots={setSnapshots} restoreSnapshot={restoreSnapshot} localReviews={localReviews} tagVotes={tagVotes} importBackupFile={importBackupFile} exportPngFromDom={exportPngFromDom} exportCleanPng={exportCleanPng} exportExcel={exportExcel} exportCalendar={exportCalendar} createSnapshot={createSnapshot} dropToCandidates={dropToCandidates} candidateSearch={candidateSearch} setCandidateSearch={setCandidateSearch} candidateSort={candidateSort} setCandidateSort={setCandidateSort} filteredCandidates={filteredCandidates} getCourse={getCourse} uid={uid} openCourseInfo={openCourseInfo} credits={credits} courseMatchesSemester={courseMatchesSemester} courseTermLabel={courseTermLabel} addCourseToSemester={addCourseToSemester} removeCandidate={removeCandidate} dropDelete={dropDelete} />}
 
