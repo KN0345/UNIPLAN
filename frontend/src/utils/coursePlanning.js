@@ -797,18 +797,20 @@ function makeExportText(value = '') {
 
 function makeExportCourseName(value = '') {
   // Export-only display cleanup. The original course data remains unchanged.
+  // This must run before any truncation, otherwise names such as 教育心理學(B班)
+  // become 教育心理學(… in wallpaper export.
   let text = makeExportText(value)
     .replace(/[（]/g, '(')
     .replace(/[）]/g, ')')
     .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
 
-  // Remove class suffixes before truncation, e.g. 教育心理學(B班) -> 教育心理學.
-  // Also handles spaces and repeated suffixes: 課名 (B班) (實習班) etc.
-  const classSuffix = /[\s　]*\(\s*[^)]{0,12}?班\s*\)\s*$/u
-  while (classSuffix.test(text)) text = text.replace(classSuffix, '').trim()
+  const classToken = '[A-Za-z0-9一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]+'
+  const parenthesizedClass = new RegExp(`[\\s　]*\\(\\s*${classToken}班\\s*\\)[\\s　]*`, 'gu')
+  const trailingBareClass = new RegExp(`[\\s　]+${classToken}班$`, 'u')
 
-  // Remove a trailing bare class marker if data was imported as 課名 B班.
-  text = text.replace(/[\s　]+[A-Za-z0-9一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]班\s*$/u, '').trim()
+  // Remove every normal class suffix, not only B班: (A班), (B班), （C班）, (甲班), etc.
+  text = text.replace(parenthesizedClass, ' ').replace(trailingBareClass, '').trim()
+  text = text.replace(/[\s　]{2,}/g, ' ').trim()
   return text || makeExportText(value)
 }
 
