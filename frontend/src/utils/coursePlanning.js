@@ -1154,21 +1154,22 @@ export async function exportPngFromDom(element, semester = '課表') {
 
 
 export async function exportCleanPng(plan, semester = '課表') {
-  // Phone-wallpaper export: keep the user's timetable background image, but draw it with object-fit: cover.
-  // Course tiles use a separate stable canvas style so browser glass/backdrop rendering will not squash or clip.
+  // Wallpaper Export V3: purpose-built phone wallpaper rendering.
+  // Keeps user background with cover-fit, enlarges timetable, fades grid, and turns course tiles into widget cards.
   const courses = Array.isArray(plan?.[semester]) ? plan[semester] : []
   const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2))
   const canvasW = 1440
   const canvasH = 2560
-  const margin = 64
-  const titleY = 190
-  const tableX = margin
-  const tableY = 250
-  const tableW = canvasW - margin * 2
-  const tableH = 1850
-  const timeW = 84
-  const headH = 78
-  const rowH = (tableH - headH) / 10
+  const marginX = 48
+  const topY = 118
+  const tableX = marginX
+  const tableY = 238
+  const tableW = canvasW - marginX * 2
+  const tableH = 2030
+  const timeW = 64
+  const headH = 92
+  const visiblePeriods = 10
+  const rowH = (tableH - headH) / visiblePeriods
   const dayW = (tableW - timeW) / DAYS.length
   const appearance = readCurrentAppearance()
   const bgUrl = safeBackgroundImageValue(appearance.timetableBg || localStorage.getItem('uniplan:timetableBg') || '')
@@ -1201,172 +1202,193 @@ export async function exportCleanPng(plan, semester = '課表') {
     ctx.lineWidth = lineWidth
     ctx.stroke()
   }
-  const drawTextFit = (value, x, y, maxWidth, lineHeight, maxLines = 2) => {
-    const text = String(value || '')
+  const drawCenteredLines = (text, centerX, startY, maxWidth, lineHeight, maxLines = 2) => {
+    const source = String(text || '')
     const lines = []
     let line = ''
-    for (const ch of text) {
+    for (const ch of source) {
       const test = line + ch
       if (ctx.measureText(test).width > maxWidth && line) {
         lines.push(line)
         line = ch
-      } else line = test
+      } else {
+        line = test
+      }
     }
     if (line) lines.push(line)
     const visible = lines.slice(0, maxLines)
-    const visibleChars = visible.join('').length
+    const overflow = lines.length > maxLines
     visible.forEach((ln, idx) => {
-      const clipped = idx === maxLines - 1 && visibleChars < text.length
-      ctx.fillText(clipped ? `${ln.slice(0, Math.max(1, ln.length - 1))}…` : ln, x, y + idx * lineHeight)
+      const value = overflow && idx === maxLines - 1 ? `${ln.slice(0, Math.max(1, ln.length - 1))}…` : ln
+      ctx.fillText(value, centerX, startY + idx * lineHeight)
     })
   }
+  const coursePalette = [
+    ['#2563eb', '#7c3aed'],
+    ['#0ea5e9', '#2563eb'],
+    ['#14b8a6', '#0f766e'],
+    ['#8b5cf6', '#4338ca'],
+    ['#f59e0b', '#ea580c'],
+    ['#22c55e', '#15803d'],
+    ['#ec4899', '#7e22ce'],
+  ]
+  const hashText = (value) => String(value || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0)
 
   ctx.clearRect(0, 0, canvasW, canvasH)
-  if (bgImg) {
-    drawCoverImage(ctx, bgImg, 0, 0, canvasW, canvasH)
-  } else {
+  if (bgImg) drawCoverImage(ctx, bgImg, 0, 0, canvasW, canvasH)
+  else {
     const fallback = ctx.createLinearGradient(0, 0, canvasW, canvasH)
-    fallback.addColorStop(0, '#07111f')
-    fallback.addColorStop(.55, '#102544')
-    fallback.addColorStop(1, '#0b1220')
+    fallback.addColorStop(0, '#040b16')
+    fallback.addColorStop(.45, '#10213b')
+    fallback.addColorStop(1, '#050812')
     ctx.fillStyle = fallback
     ctx.fillRect(0, 0, canvasW, canvasH)
   }
 
-  // Wallpaper readability layer. Keeps the photo visible but gives the timetable enough contrast.
-  ctx.save()
   const tint = cssColorToRgba(appearance.tint || '#07111f', [7, 17, 31, 1])
   const veil = ctx.createLinearGradient(0, 0, 0, canvasH)
-  veil.addColorStop(0, rgbaString(tint, .34))
-  veil.addColorStop(.46, 'rgba(7,12,24,.44)')
-  veil.addColorStop(1, 'rgba(7,12,24,.56)')
+  veil.addColorStop(0, rgbaString(tint, .26))
+  veil.addColorStop(.48, 'rgba(2,6,23,.28)')
+  veil.addColorStop(1, 'rgba(2,6,23,.62)')
   ctx.fillStyle = veil
   ctx.fillRect(0, 0, canvasW, canvasH)
-  ctx.restore()
 
+  // Header: compact lock-screen style.
   ctx.save()
-  ctx.globalAlpha = .24
+  ctx.fillStyle = 'rgba(248,250,252,.64)'
+  ctx.font = '900 19px Inter, Noto Sans TC, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.fillText('UNIPLAN', marginX + 8, topY)
   ctx.fillStyle = '#ffffff'
-  ctx.font = '900 18px Inter, Noto Sans TC, sans-serif'
-  ctx.letterSpacing = '4px'
-  ctx.fillText('UNIPLAN', margin + 4, 102)
+  ctx.font = '900 54px Inter, Noto Sans TC, sans-serif'
+  ctx.shadowColor = 'rgba(0,0,0,.35)'
+  ctx.shadowBlur = 18
+  ctx.fillText(`${semester}課表`, marginX + 6, topY + 68)
   ctx.restore()
 
-  ctx.fillStyle = '#f8fbff'
-  ctx.font = '900 58px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText(`${semester} 課表`, margin + 4, titleY)
-  ctx.font = '700 24px Inter, Noto Sans TC, sans-serif'
-  ctx.fillStyle = 'rgba(241,245,249,.76)'
-  ctx.fillText('Theme color wallpaper export', margin + 8, titleY + 48)
-
-  // Main timetable glass plate.
+  // Main plate: less like a webpage, more like a large widget surface.
   const plate = ctx.createLinearGradient(tableX, tableY, tableX, tableY + tableH)
-  plate.addColorStop(0, 'rgba(15,23,42,.36)')
-  plate.addColorStop(1, 'rgba(15,23,42,.22)')
-  fillRound(tableX, tableY, tableW, tableH, 36, plate)
-  strokeRound(tableX, tableY, tableW, tableH, 36, 'rgba(255,255,255,.30)', 1.4)
+  plate.addColorStop(0, 'rgba(15,23,42,.24)')
+  plate.addColorStop(1, 'rgba(15,23,42,.12)')
+  ctx.save()
+  ctx.shadowColor = 'rgba(0,0,0,.28)'
+  ctx.shadowBlur = 40
+  ctx.shadowOffsetY = 18
+  fillRound(tableX, tableY, tableW, tableH, 46, plate)
+  ctx.restore()
+  strokeRound(tableX, tableY, tableW, tableH, 46, 'rgba(255,255,255,.24)', 1.2)
 
   ctx.save()
-  roundRect(tableX, tableY, tableW, tableH, 36)
+  roundRect(tableX, tableY, tableW, tableH, 46)
   ctx.clip()
-  ctx.fillStyle = 'rgba(255,255,255,.075)'
-  ctx.fillRect(tableX, tableY, tableW, headH)
-  ctx.fillStyle = 'rgba(255,255,255,.045)'
-  ctx.fillRect(tableX, tableY, timeW, tableH)
 
-  ctx.strokeStyle = 'rgba(255,255,255,.18)'
+  // Header capsules.
+  ctx.fillStyle = 'rgba(255,255,255,.045)'
+  ctx.fillRect(tableX, tableY, tableW, headH)
+  ctx.textAlign = 'center'
+  ctx.font = '900 28px Inter, Noto Sans TC, sans-serif'
+  DAYS.forEach((d, i) => {
+    const cx = tableX + timeW + i * dayW + dayW / 2
+    const cy = tableY + headH / 2
+    fillRound(cx - 48, cy - 24, 96, 48, 24, 'rgba(255,255,255,.105)')
+    ctx.fillStyle = 'rgba(255,255,255,.92)'
+    ctx.fillText(d, cx, cy + 10)
+  })
+
+  // Minimal grid.
+  ctx.strokeStyle = 'rgba(255,255,255,.075)'
   ctx.lineWidth = 1
   for (let i = 0; i <= DAYS.length; i += 1) {
     const x = tableX + timeW + i * dayW
-    ctx.beginPath(); ctx.moveTo(x, tableY); ctx.lineTo(x, tableY + tableH); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(x, tableY + headH); ctx.lineTo(x, tableY + tableH); ctx.stroke()
   }
-  for (let r = 0; r <= 10; r += 1) {
+  for (let r = 0; r <= visiblePeriods; r += 1) {
     const y = tableY + headH + r * rowH
-    ctx.beginPath(); ctx.moveTo(tableX, y); ctx.lineTo(tableX + tableW, y); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(tableX + timeW, y); ctx.lineTo(tableX + tableW, y); ctx.stroke()
   }
 
-  ctx.fillStyle = 'rgba(248,250,252,.95)'
-  ctx.font = '900 26px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText('節', tableX + 30, tableY + 49)
-  DAYS.forEach((d, i) => {
-    const x = tableX + timeW + i * dayW
-    ctx.textAlign = 'center'
-    ctx.fillText(`週${d}`, x + dayW / 2, tableY + 49)
-  })
-  ctx.textAlign = 'left'
-  ctx.font = '900 26px Inter, Noto Sans TC, sans-serif'
-  for (let r = 0; r < 10; r += 1) {
-    const y = tableY + headH + r * rowH
-    ctx.fillStyle = 'rgba(248,250,252,.90)'
-    ctx.fillText(`${r + 1}`, tableX + 30, y + rowH / 2 + 9)
+  ctx.textAlign = 'center'
+  ctx.font = '900 24px Inter, Noto Sans TC, sans-serif'
+  for (let r = 0; r < visiblePeriods; r += 1) {
+    const y = tableY + headH + r * rowH + rowH / 2
+    fillRound(tableX + 13, y - 22, 38, 44, 20, 'rgba(255,255,255,.07)')
+    ctx.fillStyle = 'rgba(255,255,255,.72)'
+    ctx.fillText(`${r + 1}`, tableX + 32, y + 9)
   }
 
   const placedKeys = new Set()
   courses.filter((course) => courseStatus(course) !== 'failed').forEach((course) => {
     const c = getCourse(course)
     slotsOf(course).forEach((slot) => {
-      if (!slot.day || slot.start > 10) return
+      if (!slot.day || slot.start > visiblePeriods) return
       const safeStart = Math.max(1, Number(slot.start) || 1)
-      const safeEnd = Math.min(10, Math.max(safeStart, Number(slot.end || slot.start) || safeStart))
+      const safeEnd = Math.min(visiblePeriods, Math.max(safeStart, Number(slot.end || slot.start) || safeStart))
       const key = `${uid(course)}-${slot.day}-${safeStart}`
       if (placedKeys.has(key)) return
       placedKeys.add(key)
 
       const span = Math.max(1, safeEnd - safeStart + 1)
-      const x = tableX + timeW + (slot.day - 1) * dayW + 12
-      const y = tableY + headH + (safeStart - 1) * rowH + 12
-      const w = dayW - 24
-      const h = Math.max(120, span * rowH - 20)
-      const themeBase = cssColorToRgba(appearance.accent || appearance.tint || '#2563eb', [37, 99, 235, 1])
-      const tintBase = cssColorToRgba(appearance.tint || appearance.panel || '#101f3a', [16, 31, 58, 1])
-      const cardTop = brightenRgba(themeBase, .22)
-      const cardMid = mixRgba(themeBase, tintBase, .18)
-      const cardBottom = darkenRgba(themeBase, .34)
-      const glowColor = rgbaString(themeBase, .34)
+      const x = tableX + timeW + (slot.day - 1) * dayW + 14
+      const y = tableY + headH + (safeStart - 1) * rowH + 14
+      const w = dayW - 28
+      const h = Math.max(138, span * rowH - 28)
+      const palette = coursePalette[hashText(c.name || c.code || c.serial) % coursePalette.length]
+      const baseA = cssColorToRgba(appearance.accent || palette[0], [37, 99, 235, 1])
+      const baseB = cssColorToRgba(palette[1], [124, 58, 237, 1])
+      const top = brightenRgba(baseA, .20)
+      const bottom = mixRgba(baseA, baseB, .52)
+      const deep = darkenRgba(bottom, .28)
 
       ctx.save()
-      ctx.shadowColor = glowColor
+      ctx.shadowColor = rgbaString(baseA, .40)
       ctx.shadowBlur = 24
       ctx.shadowOffsetY = 10
       const card = ctx.createLinearGradient(x, y, x + w, y + h)
-      card.addColorStop(0, rgbaString(cardTop, .88))
-      card.addColorStop(.52, rgbaString(cardMid, .76))
-      card.addColorStop(1, rgbaString(cardBottom, .82))
-      fillRound(x, y, w, h, 28, card)
+      card.addColorStop(0, rgbaString(top, .82))
+      card.addColorStop(.55, rgbaString(bottom, .76))
+      card.addColorStop(1, rgbaString(deep, .84))
+      fillRound(x, y, w, h, 34, card)
       ctx.restore()
-      strokeRound(x, y, w, h, 22, 'rgba(255,255,255,.44)', 1.4)
+      strokeRound(x, y, w, h, 34, 'rgba(255,255,255,.38)', 1.25)
 
       ctx.save()
-      roundRect(x, y, w, h, 22)
+      roundRect(x, y, w, h, 34)
       ctx.clip()
-      const shine = ctx.createLinearGradient(x, y, x, y + Math.min(70, h * .45))
-      shine.addColorStop(0, 'rgba(255,255,255,.32)')
+      const shine = ctx.createLinearGradient(x, y, x, y + h * .45)
+      shine.addColorStop(0, 'rgba(255,255,255,.30)')
       shine.addColorStop(1, 'rgba(255,255,255,0)')
       ctx.fillStyle = shine
-      ctx.fillRect(x, y, w, Math.min(72, h * .48))
-      ctx.fillStyle = 'rgba(2,6,23,.18)'
-      ctx.fillRect(x, y + h * .62, w, h * .38)
+      ctx.fillRect(x, y, w, h * .5)
+      ctx.fillStyle = 'rgba(2,6,23,.14)'
+      ctx.fillRect(x, y + h * .66, w, h * .34)
       ctx.restore()
 
-      ctx.fillStyle = 'rgba(255,255,255,.92)'
-      ctx.beginPath(); ctx.arc(x + 22, y + 26, 6, 0, Math.PI * 2); ctx.fill()
+      ctx.save()
+      ctx.textAlign = 'center'
+      ctx.shadowColor = 'rgba(0,0,0,.34)'
+      ctx.shadowBlur = 10
+      const nameLines = h >= 180 ? 2 : 1
       ctx.fillStyle = '#ffffff'
-      ctx.font = '900 26px Inter, Noto Sans TC, sans-serif'
-      drawTextFit(c.name || '課程', x + 38, y + 33, w - 52, 25, h >= 100 ? 2 : 1)
-      ctx.font = '800 20px Inter, Noto Sans TC, sans-serif'
-      ctx.fillStyle = 'rgba(248,250,252,.90)'
-      const meta = [c.classroom || c.room || c.location, c.teacher].filter(Boolean).join('｜') || `${credits(course) || ''} 學分`
-      drawTextFit(meta, x + 18, y + h - 25, w - 36, 19, 1)
+      ctx.font = h >= 180 ? '900 31px Inter, Noto Sans TC, sans-serif' : '900 27px Inter, Noto Sans TC, sans-serif'
+      const nameStartY = y + h / 2 - (nameLines === 2 ? 22 : 6)
+      drawCenteredLines(c.name || '課程', x + w / 2, nameStartY, w - 34, h >= 180 ? 32 : 28, nameLines)
+      const room = c.classroom || c.room || c.location || ''
+      if (room && h >= 124) {
+        ctx.font = '800 22px Inter, Noto Sans TC, sans-serif'
+        ctx.fillStyle = 'rgba(255,255,255,.86)'
+        ctx.fillText(room, x + w / 2, y + h - 28)
+      }
+      ctx.restore()
     })
   })
   ctx.restore()
 
-  // Bottom safe area: useful when the image is used as a phone lock/home screen wallpaper.
+  // Footer kept small; avoids the old promotional text and preserves wallpaper safe area.
   ctx.save()
   ctx.textAlign = 'center'
-  ctx.fillStyle = 'rgba(248,250,252,.56)'
-  ctx.font = '800 20px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText('Designed for phone wallpaper', canvasW / 2, canvasH - 150)
+  ctx.fillStyle = 'rgba(255,255,255,.46)'
+  ctx.font = '800 22px Inter, Noto Sans TC, sans-serif'
+  ctx.fillText('114 學年度', canvasW / 2, canvasH - 120)
   ctx.restore()
 
   await new Promise((resolve) => {
@@ -1375,7 +1397,7 @@ export async function exportCleanPng(plan, semester = '課表') {
         const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
         const a = document.createElement('a')
         a.href = url
-        a.download = `${semester}_手機桌布課表.png`
+        a.download = `${semester}_手機桌布課表_V3.png`
         document.body.appendChild(a)
         a.click()
         a.remove()
