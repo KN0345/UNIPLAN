@@ -7307,3 +7307,32 @@ body[data-theme="dark"] .programTree{
   .programCourseMainButton{padding:40px 38px 18px 12px!important;}
   .programCourseCreditPill{top:9px!important;right:10px!important;font-size:10px!important;padding:4px 7px!important;}
 }
+
+.soundToggle{min-width:72px;transition:transform .16s ease,background .16s ease,border-color .16s ease;}
+.soundToggle[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 14%,var(--panel));border-color:color-mix(in srgb,var(--accent) 42%,var(--border));}
+.soundToggle:active{transform:scale(.96);}
+body[data-sound="off"] .soundToggle{opacity:.72;}
+
+/* ========================================================================== */
+/* UniPlan export/card correction: preserve image aspect ratio + real span     */
+/* ========================================================================== */
+.semesterPanel.activeSemesterPanel .timetableGridClean{
+  background-size:auto, cover, cover!important;
+  background-position:center center!important;
+  background-repeat:no-repeat!important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile,
+.semesterPanel.activeSemesterPanel .timetableConflictTile{
+  height:calc((100% * var(--tile-span, 1)) - 10px)!important;
+  min-height:calc((100% * var(--tile-span, 1)) - 10px)!important;
+  justify-content:flex-start!important;
+  padding-top:12px!important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile .tileTitle,
+.semesterPanel.activeSemesterPanel .timetableConflictTile strong{
+  flex:0 0 auto!important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile .tileMeta,
+.semesterPanel.activeSemesterPanel .timetableConflictTile small{
+  margin-top:4px!important;
+}
