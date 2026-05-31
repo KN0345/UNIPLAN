@@ -1,0 +1,14 @@
+{
+  "name": "uniplan-root-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db:import-courses": "node scripts/import-courses-to-neon.mjs",
+    "db:import-courses:test": "node scripts/import-courses-to-neon.mjs --limit=100 --batch=1",
+    "build": "npm --prefix frontend install --no-package-lock && npm --prefix frontend run build",
+    "install:frontend": "npm --prefix frontend install --no-package-lock"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0"
+  }
+}
