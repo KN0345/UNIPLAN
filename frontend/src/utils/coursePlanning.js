@@ -1163,9 +1163,9 @@ export async function exportCleanPng(plan, semester = '課表') {
   const margin = 64
   const titleY = 190
   const tableX = margin
-  const tableY = 430
+  const tableY = 250
   const tableW = canvasW - margin * 2
-  const tableH = 1520
+  const tableH = 1850
   const timeW = 84
   const headH = 78
   const rowH = (tableH - headH) / 10
@@ -1316,7 +1316,7 @@ export async function exportCleanPng(plan, semester = '課表') {
       const x = tableX + timeW + (slot.day - 1) * dayW + 12
       const y = tableY + headH + (safeStart - 1) * rowH + 12
       const w = dayW - 24
-      const h = Math.max(70, span * rowH - 24)
+      const h = Math.max(120, span * rowH - 20)
       const themeBase = cssColorToRgba(appearance.accent || appearance.tint || '#2563eb', [37, 99, 235, 1])
       const tintBase = cssColorToRgba(appearance.tint || appearance.panel || '#101f3a', [16, 31, 58, 1])
       const cardTop = brightenRgba(themeBase, .22)
@@ -1332,7 +1332,7 @@ export async function exportCleanPng(plan, semester = '課表') {
       card.addColorStop(0, rgbaString(cardTop, .88))
       card.addColorStop(.52, rgbaString(cardMid, .76))
       card.addColorStop(1, rgbaString(cardBottom, .82))
-      fillRound(x, y, w, h, 22, card)
+      fillRound(x, y, w, h, 28, card)
       ctx.restore()
       strokeRound(x, y, w, h, 22, 'rgba(255,255,255,.44)', 1.4)
 
@@ -1351,9 +1351,9 @@ export async function exportCleanPng(plan, semester = '課表') {
       ctx.fillStyle = 'rgba(255,255,255,.92)'
       ctx.beginPath(); ctx.arc(x + 22, y + 26, 6, 0, Math.PI * 2); ctx.fill()
       ctx.fillStyle = '#ffffff'
-      ctx.font = '900 21px Inter, Noto Sans TC, sans-serif'
+      ctx.font = '900 26px Inter, Noto Sans TC, sans-serif'
       drawTextFit(c.name || '課程', x + 38, y + 33, w - 52, 25, h >= 100 ? 2 : 1)
-      ctx.font = '800 17px Inter, Noto Sans TC, sans-serif'
+      ctx.font = '800 20px Inter, Noto Sans TC, sans-serif'
       ctx.fillStyle = 'rgba(248,250,252,.90)'
       const meta = [c.classroom || c.room || c.location, c.teacher].filter(Boolean).join('｜') || `${credits(course) || ''} 學分`
       drawTextFit(meta, x + 18, y + h - 25, w - 36, 19, 1)
