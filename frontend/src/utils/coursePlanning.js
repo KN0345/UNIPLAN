@@ -795,6 +795,15 @@ function makeExportText(value = '') {
   return String(value || '').replace(/\s+/g, ' ').trim()
 }
 
+function makeExportCourseName(value = '') {
+  // Keep the original course data untouched, but make exported timetable cards
+  // cleaner by removing class suffixes such as "(B班)" / "（B班）".
+  let text = makeExportText(value)
+  const classSuffix = /[\s　]*[（(]\s*[A-Za-zＡ-Ｚａ-ｚ0-9０-９一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]\s*班\s*[）)]\s*$/u
+  while (classSuffix.test(text)) text = text.replace(classSuffix, '').trim()
+  return text || makeExportText(value)
+}
+
 function safeCourseTileTone(index = 0) {
   const tones = [
     ['#1e3f78', '#274f92'],
@@ -1025,7 +1034,7 @@ function buildStableExportDom(element, semester = '課表') {
 
       const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
       const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
-      const titleText = makeExportText(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
+      const titleText = makeExportCourseName(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
       const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
       const [from, to] = safeCourseTileTone(courseIndex)
 
@@ -1372,7 +1381,8 @@ export async function exportCleanPng(plan, semester = '課表') {
     const h = Math.min(Math.max(132, targetH), Math.max(132, spanBlockH - 26))
     const x = baseX + (dayW - w) / 2
     const y = baseY + Math.max(13, (spanBlockH - h) / 2)
-    const palette = coursePalette[hashText(c.name || c.code || c.serial) % coursePalette.length]
+    const displayName = makeExportCourseName(c.name || '課程')
+    const palette = coursePalette[hashText(displayName || c.code || c.serial) % coursePalette.length]
     const baseA = cssColorToRgba(appearance.accent || palette[0], [37, 99, 235, 1])
     const baseB = cssColorToRgba(palette[1], [124, 58, 237, 1])
     const top = brightenRgba(baseA, .25)
@@ -1416,7 +1426,7 @@ export async function exportCleanPng(plan, semester = '課表') {
     ctx.font = '900 30px Inter, Noto Sans TC, sans-serif'
     const nameLines = w >= 210 ? 1 : 2
     const nameY = y + (h >= 220 ? h * .39 : h * .43) - (nameLines === 2 ? 12 : 0)
-    drawCenteredLines(c.name || '課程', x + w / 2, nameY, w - 34, 32, nameLines)
+    drawCenteredLines(displayName || '課程', x + w / 2, nameY, w - 34, 32, nameLines)
     const room = c.classroom || c.room || c.location || ''
     const timeRange = span > 1 ? `第 ${safeStart}–${Math.min(lastPeriod, slot.end)} 節` : `第 ${safeStart} 節`
     ctx.font = '850 22px Inter, Noto Sans TC, sans-serif'
