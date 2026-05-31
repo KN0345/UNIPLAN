@@ -1154,8 +1154,8 @@ export async function exportPngFromDom(element, semester = '課表') {
 
 
 export async function exportCleanPng(plan, semester = '課表') {
-  // Wallpaper Export V4: smart phone-wallpaper layout.
-  // Hides unused weekend columns, crops empty periods, and uses fixed-height widget cards instead of timetable-stretched tiles.
+  // Wallpaper Export V5: smart phone-wallpaper layout.
+  // Hides unused weekend columns, crops empty periods, and uses proportional widget cards that keep cross-period intuition.
   const rawCourses = Array.isArray(plan?.[semester]) ? plan[semester] : []
   const activeCourses = rawCourses.filter((course) => courseStatus(course) !== 'failed')
   const allSlots = []
@@ -1361,10 +1361,17 @@ export async function exportCleanPng(plan, semester = '課表') {
     const baseX = tableX + timeW + dayIndex * dayW
     const baseY = tableY + headH + (safeStart - firstPeriod) * rowH
     const w = Math.max(150, dayW - 34)
-    const fixedH = Math.min(176, Math.max(124, rowH * .68))
-    const h = Math.min(fixedH, Math.max(112, rowH * span - 22))
+    const spanBlockH = rowH * span
+    const targetH = span === 1
+      ? rowH * .66
+      : span === 2
+        ? rowH * 1.28
+        : span === 3
+          ? rowH * 1.82
+          : rowH * 2.34
+    const h = Math.min(Math.max(132, targetH), Math.max(132, spanBlockH - 26))
     const x = baseX + (dayW - w) / 2
-    const y = baseY + Math.max(15, (rowH - h) / 2)
+    const y = baseY + Math.max(13, (spanBlockH - h) / 2)
     const palette = coursePalette[hashText(c.name || c.code || c.serial) % coursePalette.length]
     const baseA = cssColorToRgba(appearance.accent || palette[0], [37, 99, 235, 1])
     const baseB = cssColorToRgba(palette[1], [124, 58, 237, 1])
@@ -1408,14 +1415,17 @@ export async function exportCleanPng(plan, semester = '課表') {
     ctx.fillStyle = '#ffffff'
     ctx.font = '900 30px Inter, Noto Sans TC, sans-serif'
     const nameLines = w >= 210 ? 1 : 2
-    const nameY = y + h * .45 - (nameLines === 2 ? 12 : 0)
+    const nameY = y + (h >= 220 ? h * .39 : h * .43) - (nameLines === 2 ? 12 : 0)
     drawCenteredLines(c.name || '課程', x + w / 2, nameY, w - 34, 32, nameLines)
     const room = c.classroom || c.room || c.location || ''
+    const timeRange = span > 1 ? `第 ${safeStart}–${Math.min(lastPeriod, slot.end)} 節` : `第 ${safeStart} 節`
+    ctx.font = '850 22px Inter, Noto Sans TC, sans-serif'
+    ctx.fillStyle = 'rgba(255,255,255,.86)'
+    ctx.fillText(timeRange, x + w / 2, y + h - (room ? 58 : 30))
     if (room) {
-      ctx.font = '850 22px Inter, Noto Sans TC, sans-serif'
-      ctx.fillStyle = 'rgba(255,255,255,.88)'
-      const timeRange = span > 1 ? `${safeStart}-${Math.min(lastPeriod, slot.end)}` : `${safeStart}`
-      ctx.fillText(`${room}  ·  ${timeRange}`, x + w / 2, y + h - 26)
+      ctx.font = '850 21px Inter, Noto Sans TC, sans-serif'
+      ctx.fillStyle = 'rgba(255,255,255,.78)'
+      ctx.fillText(room, x + w / 2, y + h - 25)
     }
     ctx.restore()
   })
@@ -1425,7 +1435,7 @@ export async function exportCleanPng(plan, semester = '課表') {
   ctx.textAlign = 'center'
   ctx.fillStyle = 'rgba(255,255,255,.42)'
   ctx.font = '800 21px Inter, Noto Sans TC, sans-serif'
-  ctx.fillText(`智慧桌布模式 · ${visibleDays.length}日 / ${visiblePeriods[0]}-${visiblePeriods[visiblePeriods.length - 1]}節`, canvasW / 2, canvasH - 118)
+  ctx.fillText(`智慧桌布 V5 · ${visibleDays.length}日 / ${visiblePeriods[0]}-${visiblePeriods[visiblePeriods.length - 1]}節`, canvasW / 2, canvasH - 118)
   ctx.restore()
 
   await new Promise((resolve) => {
@@ -1434,7 +1444,7 @@ export async function exportCleanPng(plan, semester = '課表') {
         const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
         const a = document.createElement('a')
         a.href = url
-        a.download = `${semester}_手機桌布課表_V4.png`
+        a.download = `${semester}_手機桌布課表_V5.png`
         document.body.appendChild(a)
         a.click()
         a.remove()
