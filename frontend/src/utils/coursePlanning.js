@@ -40,9 +40,9 @@ export const TIMETABLE_ROW_HEIGHT = 56
 
 export const PERIOD_CLOCK = {
   1: ['08:10', '09:00'], 2: ['09:10', '10:00'], 3: ['10:10', '11:00'], 4: ['11:10', '12:00'],
-  5: ['13:10', '14:00'], 6: ['14:10', '15:00'], 7: ['15:10', '16:00'], 8: ['16:10', '17:00'],
-  9: ['17:10', '18:00'], 10: ['18:10', '19:00'], 11: ['19:10', '20:00'], 12: ['20:10', '21:00'],
-  13: ['21:10', '22:00'], 14: ['22:10', '23:00'],
+  5: ['12:10', '13:00'], 6: ['13:10', '14:00'], 7: ['14:10', '15:00'], 8: ['15:10', '16:00'],
+  9: ['16:10', '17:00'], 10: ['17:10', '18:00'], 11: ['18:10', '19:00'], 12: ['19:10', '20:00'],
+  13: ['20:10', '21:00'], 14: ['21:10', '22:00'],
 }
 export const STATUS = {
   planned: { label: '正常排程', tone: 'blue' },
@@ -254,8 +254,39 @@ export function slotsOf(course) {
   return periodsToSlots(DAYS.indexOf(dayMatch[1]) + 1, periods)
 }
 
+export function courseWeekRanges(course) {
+  const c = getCourse(course)
+  const text = `${c.notes || ''} ${c.name || ''} ${c.time_info || ''}`
+  const ranges = []
+  const patterns = [
+    /第\s*(\d{1,2})\s*[-~－～]\s*(\d{1,2})\s*週/g,
+    /(\d{1,2})\s*[-~－～]\s*(\d{1,2})\s*週/g,
+  ]
+  patterns.forEach((pattern) => {
+    let match
+    while ((match = pattern.exec(text))) {
+      const start = Number(match[1])
+      const end = Number(match[2])
+      if (start && end) ranges.push({ start: Math.min(start, end), end: Math.max(start, end) })
+    }
+  })
+  return ranges
+}
+
+export function weekRangesOverlap(a, b) {
+  const ar = courseWeekRanges(a)
+  const br = courseWeekRanges(b)
+  if (!ar.length || !br.length) return true
+  return ar.some((x) => br.some((y) => Math.max(x.start, y.start) <= Math.min(x.end, y.end)))
+}
+
 export function hasConflict(a, b) {
+  if (!weekRangesOverlap(a, b)) return false
   return slotsOf(a).some((x) => slotsOf(b).some((y) => x.day === y.day && Math.max(x.start, y.start) <= Math.min(x.end, y.end)))
+}
+
+export function hasAnyConflict(courses = []) {
+  return courses.some((a, i) => courses.slice(i + 1).some((b) => hasConflict(a, b)))
 }
 
 export function findConflict(course, courses) {

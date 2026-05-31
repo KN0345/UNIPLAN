@@ -3,6 +3,33 @@ import { neon } from '@neondatabase/serverless'
 const ADMIN_STUDENT_IDS = new Set(['414730209'])
 const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30
 
+const PATCHED_COMMON_COURSES = [
+  { serial: '1490', code: 'D0778', name: '未來學習與人工智慧 (A班)', credits: 2, category: '必', teacher: '郭盈芝 (169***)', classroom: 'L  110', capacity: '', time_data: [[5, 6, 7]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '五 / 6,7', department: 'TGDXB.教育共同科－日', notes: '' },
+  { serial: '1491', code: 'D0778', name: '未來學習與人工智慧 (B班)', credits: 2, category: '必', teacher: '郭盈芝 (169***)', classroom: 'L  110', capacity: '', time_data: [[3, 3, 4]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'B', group_type: '', time_info: '三 / 3,4', department: 'TGDXB.教育共同科－日', notes: '' },
+  { serial: '1492', code: 'D0778', name: '未來學習與人工智慧 (C班)', credits: 2, category: '必', teacher: '邱俊達 (160***)', classroom: 'SG 603', capacity: '', time_data: [[4, 7, 8]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'C', group_type: '', time_info: '四 / 7,8', department: 'TGDXB.教育共同科－日', notes: '以實整虛課程' },
+  { serial: '1487', code: 'T2895', name: '愛情關係管理 (A班)', credits: 2, category: '選', teacher: '曾錫慧 (998***)', classroom: '', capacity: '', time_data: [], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '/', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播中原大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '1488', code: 'T3107', name: '飲食與生態保護 (A班)', credits: 1, category: '選', teacher: '蘇正元 (998***)', classroom: '', capacity: '', time_data: [], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '/', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播中原大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '1489', code: 'T3159', name: '生機材料解密 (A班)', credits: 1, category: '選', teacher: '陳宸權 (998***)', classroom: '', capacity: '', time_data: [[3, 10, 10]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '三 / 10', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播中原大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '3308', code: 'T3208', name: '棒球場上的物理學 (A班)', credits: 2, category: '選', teacher: '李中傑 (998***)', classroom: '', capacity: '20', time_data: [[2, 3, 4]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '二 / 3,4', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播實踐大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '3309', code: 'T3258', name: '翻轉人生：新南向 (A班)', credits: 2, category: '選', teacher: '宋玫怡 (998***)', classroom: '', capacity: '5', time_data: [[2, 1, 2]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '二 / 1,2', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播實踐大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '3310', code: 'T3307', name: '運統臺灣 (四) (A班)', credits: 1, category: '選', teacher: '包善龍, 李尚林 (998***,998***)', classroom: '', capacity: '5', time_data: [[5, 3, 4]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '五 / 3,4', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播元智大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '1374', code: 'D0864', name: 'XR 創客科技在生活上的應用 (A班)', credits: 2, category: '必', teacher: '林逸農 (149***)', classroom: 'L  203', capacity: '', time_data: [[3, 3, 4]], semester_source: '1142CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: 'A', time_info: '三 / 3,4', department: 'TGDHB.榮譽進階專業一教', notes: '榮譽學程進階專業課程，限符合資格者修習' },
+  { serial: '1375', code: 'D0865', name: '跨領域人文與數理學習 (A班)', credits: 2, category: '必', teacher: '陳思思 (157***)', classroom: 'ED 501', capacity: '', time_data: [[1, 3, 4]], semester_source: '1142CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: 'A', time_info: '一 / 3,4', department: 'TGDHB.榮譽進階專業一教', notes: '榮譽學程進階專業課程，限符合資格者修習，全英語授課' },
+  { serial: '1376', code: 'E3683', name: '創意實踐 (A班)', credits: 2, category: '選', teacher: '廖慶榮 (998***)', classroom: '', capacity: '', time_data: [], semester_source: '1142CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '/', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播中原大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '1377', code: 'T2895', name: '愛情關係管理 (A班)', credits: 2, category: '選', teacher: '曾錫慧 (998***)', classroom: '', capacity: '', time_data: [], semester_source: '1142CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '/', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播中原大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '1378', code: 'T3107', name: '飲食與生態保護 (A班)', credits: 1, category: '選', teacher: '蘇正元 (998***)', classroom: '', capacity: '', time_data: [], semester_source: '1142CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '/', department: 'TGDLM.遠距教學課程－日', notes: '遠距收播中原大學課程，教學計畫表請至遠距中心網頁查詢' },
+  { serial: '8227', code: 'D0210', name: '統計方法與應用 (A班)', credits: 3, category: '選', teacher: '張瓊方 (167***)', classroom: 'ED 101', capacity: '', time_data: [[1, 5, 7]], semester_source: '1142CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '一 / 5,6,7', department: 'TGDXM.教育學院共同一碩', notes: '以實整虛課程' },
+  { serial: '8230', code: 'D0037', name: '質化研究 (A班)', credits: 3, category: '選', teacher: '張貴傑, 陳玉樺 (154***,167***)', classroom: 'ED 601', capacity: '', time_data: [[1, 8, 9], [2, 10, 10]], semester_source: '1141CLASS', grade: '0', major: '', sem_seq: '0', class_name: 'A', group_type: '', time_info: '一 / 8,9 二 / 10', department: 'TGDXM.教育學院共同一碩', notes: '' },
+]
+
+function patchedCourseKey(course) {
+  return `${course.semester_source || ''}:${course.serial || ''}:${course.code || ''}:${course.class_name || ''}:${course.name || ''}`
+}
+
+function normalizePatchedCourse(course) {
+  return mapCourseRow({ id: patchedCourseKey(course), raw_json: course, ...course })
+}
+
 const jsonHeaders = {
   'content-type': 'application/json; charset=utf-8',
   'cache-control': 'no-store',
@@ -1003,12 +1030,17 @@ async function handleCourses(request, env) {
   if (weekday) searchParams.set('weekday', weekday)
   if (period) searchParams.set('period', period)
 
-  const data = rows
-    .map(mapCourseRow)
+  const neonCourses = rows.map(mapCourseRow)
+  const existing = new Set(neonCourses.map(patchedCourseKey))
+  const patchedCourses = PATCHED_COMMON_COURSES
+    .map(normalizePatchedCourse)
+    .filter((course) => !existing.has(patchedCourseKey(course)))
+
+  const data = [...neonCourses, ...patchedCourses]
     .filter((course) => courseMatchesQuery(course, searchParams))
     .slice(0, 500)
 
-  return json({ ok: true, data, total: data.length, source: 'neon-courses' })
+  return json({ ok: true, data, total: data.length, source: 'neon-courses-with-local-patches' })
 }
 
 async function handleCourseMetadata(request, env) {
@@ -1022,16 +1054,17 @@ async function handleCourseMetadata(request, env) {
   ])
   const notClass = (item) => !/^[A-ZＡ-Ｚ]班?$|^[甲乙丙丁戊己庚辛壬癸]班?$|^[A-Z]$/i.test(String(item || '').trim())
   const values = (rows) => rows.map((row) => row.value).filter(Boolean)
+  const unique = (items) => [...new Set(items.filter(Boolean))]
   return json({
     ok: true,
     data: {
-      departments: values(departments).filter(notClass),
+      departments: unique([...values(departments), ...PATCHED_COMMON_COURSES.map((c) => c.department)]).filter(notClass).sort(),
       majors: values(majors).filter(notClass),
-      grades: values(grades),
-      categories: values(categories),
-      semesters: values(semesters).map(normalizeCourseCatalogTerm).filter(Boolean),
+      grades: unique([...values(grades), ...PATCHED_COMMON_COURSES.map((c) => c.grade)]),
+      categories: unique([...values(categories), ...PATCHED_COMMON_COURSES.map((c) => c.category)]),
+      semesters: unique([...values(semesters).map(normalizeCourseCatalogTerm), ...PATCHED_COMMON_COURSES.map((c) => normalizeCourseCatalogTerm(c.semester_source))]).filter(Boolean).sort(),
     },
-    source: 'neon-courses',
+    source: 'neon-courses-with-local-patches',
   })
 }
 

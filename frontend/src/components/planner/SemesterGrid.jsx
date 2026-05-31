@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DAYS, PERIODS, STATUS, credits, getCourse, riskScore, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus } from '../../utils/coursePlanning'
+import { DAYS, PERIODS, STATUS, credits, getCourse, riskScore, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus, hasAnyConflict } from '../../utils/coursePlanning'
 
 function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onCourseClick, onEmptySlotClick, onDeleteCourse, onMoveToCandidate }) {
   const warnings = semesterWarnings(semester, courses, plan)
@@ -58,10 +58,10 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
               const activeCourses = activeCoursesAt(di, p)
               const startingCourses = startingCoursesAt(di, p)
               const hasCourse = activeCourses.length > 0
-              const hasStartingConflict = startingCourses.length > 1
+              const hasStartingConflict = startingCourses.length > 1 && hasAnyConflict(startingCourses)
               const course = startingCourses[0]
               const continuationCourse = activeCourses[0]
-              const hasContinuingConflict = !course && activeCourses.length > 1
+              const hasContinuingConflict = !course && activeCourses.length > 1 && hasAnyConflict(activeCourses)
               return (
                 <div className={`timetableCell ${hasCourse ? 'hasCourse' : ''}`} key={`${d}-${p}`}>
                   {hasStartingConflict ? (
