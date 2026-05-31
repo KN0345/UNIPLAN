@@ -560,6 +560,25 @@ export function rgbaString([r, g, b, a = 1], alpha = a) {
   return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${Math.max(0, Math.min(1, alpha))})`
 }
 
+
+export function mixRgba(a, b, ratio = .5) {
+  const t = Math.max(0, Math.min(1, ratio))
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+    1,
+  ]
+}
+
+export function brightenRgba(color, amount = .18) {
+  return mixRgba(color, [255, 255, 255, 1], amount)
+}
+
+export function darkenRgba(color, amount = .22) {
+  return mixRgba(color, [2, 6, 23, 1], amount)
+}
+
 export function readCurrentAppearance() {
   const bodyStyle = window.getComputedStyle(document.body)
   const rootStyle = window.getComputedStyle(document.documentElement)
@@ -1238,7 +1257,7 @@ export async function exportCleanPng(plan, semester = '課表') {
   ctx.fillText(`${semester} 課表`, margin + 4, titleY)
   ctx.font = '700 24px Inter, Noto Sans TC, sans-serif'
   ctx.fillStyle = 'rgba(241,245,249,.76)'
-  ctx.fillText('mobile wallpaper export', margin + 8, titleY + 48)
+  ctx.fillText('Theme color wallpaper export', margin + 8, titleY + 48)
 
   // Main timetable glass plate.
   const plate = ctx.createLinearGradient(tableX, tableY, tableX, tableY + tableH)
@@ -1298,31 +1317,44 @@ export async function exportCleanPng(plan, semester = '課表') {
       const y = tableY + headH + (safeStart - 1) * rowH + 12
       const w = dayW - 24
       const h = Math.max(70, span * rowH - 24)
-      const statusTone = STATUS[courseStatus(course)]?.tone || 'blue'
-      const accent = statusTone === 'green' ? '#34d399' : statusTone === 'red' ? '#fb7185' : '#60a5fa'
+      const themeBase = cssColorToRgba(appearance.accent || appearance.tint || '#2563eb', [37, 99, 235, 1])
+      const tintBase = cssColorToRgba(appearance.tint || appearance.panel || '#101f3a', [16, 31, 58, 1])
+      const cardTop = brightenRgba(themeBase, .22)
+      const cardMid = mixRgba(themeBase, tintBase, .18)
+      const cardBottom = darkenRgba(themeBase, .34)
+      const glowColor = rgbaString(themeBase, .34)
 
+      ctx.save()
+      ctx.shadowColor = glowColor
+      ctx.shadowBlur = 24
+      ctx.shadowOffsetY = 10
       const card = ctx.createLinearGradient(x, y, x + w, y + h)
-      card.addColorStop(0, 'rgba(255,255,255,.28)')
-      card.addColorStop(1, 'rgba(255,255,255,.13)')
+      card.addColorStop(0, rgbaString(cardTop, .88))
+      card.addColorStop(.52, rgbaString(cardMid, .76))
+      card.addColorStop(1, rgbaString(cardBottom, .82))
       fillRound(x, y, w, h, 22, card)
-      strokeRound(x, y, w, h, 22, 'rgba(255,255,255,.42)', 1.4)
+      ctx.restore()
+      strokeRound(x, y, w, h, 22, 'rgba(255,255,255,.44)', 1.4)
 
       ctx.save()
       roundRect(x, y, w, h, 22)
       ctx.clip()
-      ctx.fillStyle = 'rgba(15,23,42,.23)'
-      ctx.fillRect(x, y + h * .54, w, h * .46)
-      ctx.fillStyle = 'rgba(255,255,255,.12)'
-      ctx.fillRect(x, y, w, 30)
+      const shine = ctx.createLinearGradient(x, y, x, y + Math.min(70, h * .45))
+      shine.addColorStop(0, 'rgba(255,255,255,.32)')
+      shine.addColorStop(1, 'rgba(255,255,255,0)')
+      ctx.fillStyle = shine
+      ctx.fillRect(x, y, w, Math.min(72, h * .48))
+      ctx.fillStyle = 'rgba(2,6,23,.18)'
+      ctx.fillRect(x, y + h * .62, w, h * .38)
       ctx.restore()
 
-      ctx.fillStyle = accent
+      ctx.fillStyle = 'rgba(255,255,255,.92)'
       ctx.beginPath(); ctx.arc(x + 22, y + 26, 6, 0, Math.PI * 2); ctx.fill()
       ctx.fillStyle = '#ffffff'
       ctx.font = '900 21px Inter, Noto Sans TC, sans-serif'
       drawTextFit(c.name || '課程', x + 38, y + 33, w - 52, 25, h >= 100 ? 2 : 1)
       ctx.font = '800 17px Inter, Noto Sans TC, sans-serif'
-      ctx.fillStyle = 'rgba(248,250,252,.86)'
+      ctx.fillStyle = 'rgba(248,250,252,.90)'
       const meta = [c.classroom || c.room || c.location, c.teacher].filter(Boolean).join('｜') || `${credits(course) || ''} 學分`
       drawTextFit(meta, x + 18, y + h - 25, w - 36, 19, 1)
     })
