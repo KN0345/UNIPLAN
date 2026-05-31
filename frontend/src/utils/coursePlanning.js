@@ -960,14 +960,52 @@ export async function exportPngFromDom(element, semester = '課表') {
     return false
   }
 
+  let iframe = null
   let exportRoot = null
   try {
     const built = buildStableExportDom(element, semester)
     exportRoot = built.root
-    document.body.appendChild(exportRoot)
+
+    // Run html2canvas inside a fully isolated document. html2canvas parses the
+    // stylesheets available in the document it renders. The main UniPlan app uses
+    // many modern CSS color functions such as color-mix(), which html2canvas cannot
+    // parse. A blank iframe prevents html2canvas from seeing those app styles while
+    // the stable export DOM provides its own safe layout CSS.
+    iframe = document.createElement('iframe')
+    iframe.setAttribute('aria-hidden', 'true')
+    iframe.style.position = 'fixed'
+    iframe.style.left = '-100000px'
+    iframe.style.top = '0'
+    iframe.style.width = `${built.width}px`
+    iframe.style.height = `${built.height}px`
+    iframe.style.border = '0'
+    iframe.style.opacity = '0'
+    iframe.style.pointerEvents = 'none'
+    document.body.appendChild(iframe)
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+    if (!iframeDoc) throw new Error('無法建立匯出用 iframe')
+
+    iframeDoc.open()
+    iframeDoc.write(`<!doctype html><html><head><meta charset="utf-8"><style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: ${built.width}px;
+        height: ${built.height}px;
+        overflow: hidden;
+        background: #0b1f3d;
+      }
+    </style></head><body></body></html>`)
+    iframeDoc.close()
+
+    iframeDoc.body.appendChild(exportRoot)
+    exportRoot.style.position = 'relative'
+    exportRoot.style.left = '0'
+    exportRoot.style.top = '0'
 
     await waitForImages(exportRoot)
-    if (document.fonts?.ready) await document.fonts.ready
+    if (iframeDoc.fonts?.ready) await iframeDoc.fonts.ready
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 
     const { default: html2canvas } = await import('html2canvas')
@@ -1000,10 +1038,11 @@ export async function exportPngFromDom(element, semester = '課表') {
     return true
   } catch (error) {
     console.error('Stable DOM PNG export failed.', error)
-    alert('PNG 匯出失敗：穩定版課表匯出失敗，請回報 Console 錯誤。')
+    alert('PNG 匯出失敗：隔離版課表匯出失敗，請回報 Console 錯誤。')
     return false
   } finally {
-    if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
+    if (iframe?.parentNode) iframe.parentNode.removeChild(iframe)
+    else if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
   }
 }
 
