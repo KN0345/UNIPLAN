@@ -1388,8 +1388,10 @@ export async function exportCleanPng(plan, semester = '課表') {
     const y = baseY + Math.max(13, (spanBlockH - h) / 2)
     const displayName = makeExportCourseName(c.name || '課程')
     const palette = coursePalette[hashText(displayName || c.code || c.serial) % coursePalette.length]
-    const baseA = cssColorToRgba(appearance.accent || palette[0], [37, 99, 235, 1])
-    const baseB = cssColorToRgba(palette[1], [124, 58, 237, 1])
+    // Wallpaper card color must follow the selected wallpaper mode directly.
+    // Previously palette[0] was overridden by the global accent color, so modes such as 青綠 / 橘紅 looked unchanged.
+    const baseA = cssColorToRgba(palette[0], [37, 99, 235, 1])
+    const baseB = cssColorToRgba(palette[1] || palette[0], [124, 58, 237, 1])
     const top = brightenRgba(baseA, .25)
     const bottom = mixRgba(baseA, baseB, .58)
     const deep = darkenRgba(bottom, .20)

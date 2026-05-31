@@ -104,6 +104,16 @@ function AppearanceModal({
     localStorage.setItem('uniplan:wallpaperCardColor', wallpaperCardColor)
   }, [wallpaperCardMode, wallpaperCardColor])
 
+  const applyWallpaperCardMode = (modeKey) => {
+    setWallpaperCardMode(modeKey)
+    localStorage.setItem('uniplan:wallpaperCardMode', modeKey)
+  }
+
+  const applyWallpaperCardColor = (colorValue) => {
+    setWallpaperCardColor(colorValue)
+    localStorage.setItem('uniplan:wallpaperCardColor', colorValue)
+  }
+
   if (!open) return null
 
   function handleBackdrop(event) {
@@ -216,7 +226,7 @@ function AppearanceModal({
                     type="button"
                     className={wallpaperCardMode === mode.key ? 'active' : ''}
                     style={{ background: `linear-gradient(135deg, ${mode.colors[0]}, ${mode.colors[1]})` }}
-                    onClick={() => setWallpaperCardMode(mode.key)}
+                    onClick={() => applyWallpaperCardMode(mode.key)}
                   >
                     {mode.label}
                   </button>
@@ -225,7 +235,7 @@ function AppearanceModal({
               {wallpaperCardMode === 'custom' && (
                 <label className="inlineControl">
                   <span>自訂卡片色</span>
-                  <input type="color" value={wallpaperCardColor} onChange={(event) => setWallpaperCardColor(event.target.value)} />
+                  <input type="color" value={wallpaperCardColor} onChange={(event) => applyWallpaperCardColor(event.target.value)} />
                 </label>
               )}
               <p className="appearanceHint">只影響手機桌布匯出的課程卡片，不改變原本網頁課表資料。</p>
@@ -257,7 +267,7 @@ function AppearanceModal({
             setTimetableOpacity('0')
             setCourseCardOpacity('0.72')
             setTimetableBg('')
-            setWallpaperCardMode('pink')
+            applyWallpaperCardMode('pink')
             setWallpaperCardColor('#ec4899')
           }}>恢復預設</button>
           <button className="primary" type="button" onClick={onClose}>完成</button>
