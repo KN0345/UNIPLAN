@@ -704,66 +704,6 @@ export function injectExportBackgroundImage(clonedDocument, safeBackgroundUrl) {
   })
 }
 
-function copyExportLayoutInlineStyles(sourceElement, clonedElement, clonedWindow) {
-  if (!(sourceElement instanceof Element) || !(clonedElement instanceof clonedWindow.HTMLElement)) return
-
-  const unsafeValue = (value) => {
-    const raw = String(value || '').toLowerCase()
-    return raw.includes('color(') || raw.includes('color-mix(') || raw.includes('oklch(') || raw.includes('lab(') || raw.includes('lch(')
-  }
-
-  const layoutProps = [
-    'display', 'position', 'box-sizing', 'float', 'clear',
-    'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
-    'top', 'right', 'bottom', 'left', 'inset', 'z-index',
-    'overflow', 'overflow-x', 'overflow-y',
-    'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-    'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-    'grid-template-columns', 'grid-template-rows', 'grid-column', 'grid-row',
-    'grid-column-start', 'grid-column-end', 'grid-row-start', 'grid-row-end',
-    'grid-auto-columns', 'grid-auto-rows', 'grid-auto-flow',
-    'gap', 'row-gap', 'column-gap',
-    'align-items', 'align-content', 'align-self',
-    'justify-items', 'justify-content', 'justify-self',
-    'flex', 'flex-basis', 'flex-direction', 'flex-grow', 'flex-shrink', 'flex-wrap',
-    'order',
-    'border-radius', 'border-top-left-radius', 'border-top-right-radius',
-    'border-bottom-right-radius', 'border-bottom-left-radius',
-    'border-width', 'border-style', 'border-top-width', 'border-right-width',
-    'border-bottom-width', 'border-left-width',
-    'font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch',
-    'line-height', 'letter-spacing', 'text-align', 'text-transform', 'white-space',
-    'word-break', 'overflow-wrap', 'text-overflow',
-    'opacity', 'object-fit', 'object-position', 'vertical-align',
-  ]
-
-  const applyOne = (src, dst) => {
-    if (!(src instanceof Element) || !(dst instanceof clonedWindow.HTMLElement)) return
-    const computed = window.getComputedStyle(src)
-    for (const prop of layoutProps) {
-      const value = computed.getPropertyValue(prop)
-      if (!value || unsafeValue(value)) continue
-      try { dst.style.setProperty(prop, value) } catch {}
-    }
-    dst.style.setProperty('animation', 'none', 'important')
-    dst.style.setProperty('transition', 'none', 'important')
-    dst.style.setProperty('-webkit-backdrop-filter', 'none', 'important')
-    dst.style.setProperty('backdrop-filter', 'none', 'important')
-    dst.style.setProperty('filter', 'none', 'important')
-    dst.style.setProperty('mix-blend-mode', 'normal', 'important')
-    dst.style.setProperty('transform', 'none', 'important')
-    dst.style.setProperty('text-shadow', 'none', 'important')
-  }
-
-  const sourceNodes = [sourceElement, ...Array.from(sourceElement.querySelectorAll('*'))]
-  const clonedNodes = [clonedElement, ...Array.from(clonedElement.querySelectorAll('*'))]
-  sourceNodes.forEach((src, index) => applyOne(src, clonedNodes[index]))
-}
-
-function removeProblematicStylesheetsFromClone(clonedDocument) {
-  clonedDocument.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => node.remove())
-}
-
 
 function applyExportSafeDomStyles(clonedElement, clonedWindow) {
   if (!(clonedElement instanceof clonedWindow.HTMLElement)) return
@@ -826,147 +766,228 @@ function applyExportSafeDomStyles(clonedElement, clonedWindow) {
 }
 
 
+
+function px(value, fallback = 0) {
+  const n = Number.parseFloat(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function makeExportText(value = '') {
+  return String(value || '').replace(/\s+/g, ' ').trim()
+}
+
+function safeCourseTileTone(index = 0) {
+  const tones = [
+    ['#1e3f78', '#274f92'],
+    ['#193866', '#24477f'],
+    ['#21446f', '#2d5688'],
+    ['#1b4f71', '#246485'],
+  ]
+  return tones[index % tones.length]
+}
+
+function readBackgroundFromElement(element) {
+  const stored = safeBackgroundImageValue(localStorage.getItem('uniplan:timetableBg') || '')
+  if (stored) return stored
+  if (!(element instanceof Element)) return ''
+  const nodes = [element, ...Array.from(element.querySelectorAll('*'))]
+  for (const node of nodes) {
+    if (!(node instanceof HTMLElement)) continue
+    const urls = extractCssUrls(window.getComputedStyle(node).getPropertyValue('background-image') || '')
+    const safe = urls.find((url) => String(url || '').startsWith('data:image/'))
+    if (safe) return safe
+  }
+  return ''
+}
+
+function buildStableExportDom(element, semester = '課表') {
+  const panel = element.querySelector('.semesterPanel') || element
+  const grid = panel.querySelector('.timetableGridClean') || panel.querySelector('.grid')
+  const header = panel.querySelector('.semesterHeader')
+  const title = makeExportText(header?.querySelector('h3')?.textContent) || semester
+  const creditText = makeExportText(header?.querySelector('span')?.textContent)
+  const badges = Array.from(panel.querySelectorAll('.semesterBadges b')).map((node) => makeExportText(node.textContent)).filter(Boolean)
+  const warnings = Array.from(panel.querySelectorAll('.warnings span')).map((node) => makeExportText(node.textContent)).filter(Boolean)
+  const backgroundUrl = readBackgroundFromElement(panel)
+
+  const sourceRect = (grid || panel).getBoundingClientRect()
+  const exportWidth = 1180
+  const headerHeight = 126 + (warnings.length ? 30 : 0)
+  const gridWidth = exportWidth - 56
+  const cornerW = 78
+  const dayCount = 7
+  const periodCount = 10
+  const headerRowH = 56
+  const rowH = 74
+  const gridHeight = headerRowH + rowH * periodCount
+  const dayW = (gridWidth - cornerW) / dayCount
+  const exportHeight = headerHeight + gridHeight + 28
+
+  const root = document.createElement('section')
+  root.className = 'uniplanStableExportRoot'
+  root.style.cssText = `
+    position:fixed;
+    left:-100000px;
+    top:0;
+    width:${exportWidth}px;
+    min-height:${exportHeight}px;
+    box-sizing:border-box;
+    padding:24px 28px 28px;
+    background:#0b1f3d;
+    color:#f8fafc;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;
+    border-radius:0;
+    overflow:hidden;
+  `
+
+  const style = document.createElement('style')
+  style.textContent = `
+    .uniplanStableExportRoot, .uniplanStableExportRoot *{
+      box-sizing:border-box!important;
+      color:#f8fafc;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif!important;
+      letter-spacing:0!important;
+      text-rendering:geometricPrecision;
+    }
+    .uniplanStableExportHeader{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:20px;}
+    .uniplanStableExportTitle h1{font-size:34px;line-height:1.1;margin:0 0 8px;font-weight:900;color:#f8fafc;}
+    .uniplanStableExportTitle p{font-size:18px;line-height:1.35;margin:0;color:#cbdaf1;font-weight:750;}
+    .uniplanStableExportBadges{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;max-width:480px;padding-top:6px;}
+    .uniplanStableExportBadge{display:inline-flex;align-items:center;min-height:34px;padding:7px 13px;border-radius:999px;font-size:16px;font-weight:900;background:#fef3c7;color:#92400e!important;border:1px solid #facc15;}
+    .uniplanStableExportBadge.risk{background:rgba(22,163,74,.16);border-color:rgba(74,222,128,.46);color:#4ade80!important;}
+    .uniplanStableExportWarnings{margin:-6px 0 14px;font-size:17px;font-weight:800;color:#e2e8f0;}
+    .uniplanStableExportGrid{position:relative;width:${gridWidth}px;height:${gridHeight}px;border-radius:18px;overflow:hidden;border:1px solid rgba(147,197,253,.32);background:#111f36;box-shadow:0 18px 48px rgba(0,0,0,.28);}
+    .uniplanStableExportBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;z-index:0;}
+    .uniplanStableExportTint{position:absolute;inset:0;background:rgba(8,20,38,.46);z-index:1;}
+    .uniplanStableExportCell{position:absolute;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(147,197,253,.22);border-bottom:1px solid rgba(147,197,253,.20);z-index:2;color:#eef6ff;font-weight:900;font-size:17px;background:rgba(15,23,42,.30);}
+    .uniplanStableExportCell.head,.uniplanStableExportCell.corner,.uniplanStableExportCell.period{background:rgba(15,23,42,.58);}
+    .uniplanStableExportCell.period{font-size:18px;color:#e5edf9;}
+    .uniplanStableExportCourse{position:absolute;z-index:4;border-radius:14px;padding:14px 14px 12px;overflow:hidden;border:1px solid rgba(191,219,254,.36);box-shadow:0 14px 30px rgba(0,0,0,.26);}
+    .uniplanStableExportCourse::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.015));pointer-events:none;}
+    .uniplanStableExportCourseTitle{position:relative;z-index:1;display:block;font-size:17px;line-height:1.18;font-weight:950;color:#fff;word-break:break-word;}
+    .uniplanStableExportCourseMeta{position:relative;z-index:1;display:block;margin-top:9px;font-size:15px;line-height:1.15;font-weight:800;color:#dbeafe;}
+    .uniplanStableExportDot{display:inline-block;width:10px;height:10px;border-radius:999px;background:#60a5fa;margin-right:8px;box-shadow:0 0 0 3px rgba(96,165,250,.18);}
+  `
+  root.appendChild(style)
+
+  const headerEl = document.createElement('div')
+  headerEl.className = 'uniplanStableExportHeader'
+  const titleEl = document.createElement('div')
+  titleEl.className = 'uniplanStableExportTitle'
+  titleEl.innerHTML = `<h1>${title}</h1><p>${creditText || ''}</p>`
+  const badgeEl = document.createElement('div')
+  badgeEl.className = 'uniplanStableExportBadges'
+  ;(badges.length ? badges : []).forEach((badge, index) => {
+    const span = document.createElement('span')
+    span.className = `uniplanStableExportBadge ${/風險/.test(badge) ? 'risk' : ''}`
+    span.textContent = badge
+    badgeEl.appendChild(span)
+  })
+  headerEl.append(titleEl, badgeEl)
+  root.appendChild(headerEl)
+
+  if (warnings.length) {
+    const w = document.createElement('div')
+    w.className = 'uniplanStableExportWarnings'
+    w.textContent = warnings.join('，')
+    root.appendChild(w)
+  }
+
+  const gridEl = document.createElement('div')
+  gridEl.className = 'uniplanStableExportGrid'
+  if (backgroundUrl) {
+    const img = document.createElement('img')
+    img.className = 'uniplanStableExportBg'
+    img.src = backgroundUrl
+    img.alt = ''
+    img.crossOrigin = 'anonymous'
+    gridEl.appendChild(img)
+  }
+  const tint = document.createElement('div')
+  tint.className = 'uniplanStableExportTint'
+  gridEl.appendChild(tint)
+
+  const addCell = (className, text, x, y, w, h) => {
+    const cell = document.createElement('div')
+    cell.className = `uniplanStableExportCell ${className}`
+    cell.textContent = text
+    cell.style.left = `${x}px`
+    cell.style.top = `${y}px`
+    cell.style.width = `${w}px`
+    cell.style.height = `${h}px`
+    gridEl.appendChild(cell)
+  }
+
+  addCell('corner', '節', 0, 0, cornerW, headerRowH)
+  DAYS.forEach((day, index) => addCell('head', `週${day}`, cornerW + dayW * index, 0, dayW, headerRowH))
+  PERIODS.slice(0, 10).forEach((period, index) => addCell('period', String(period), 0, headerRowH + rowH * index, cornerW, rowH))
+  PERIODS.slice(0, 10).forEach((period, pIndex) => {
+    DAYS.forEach((day, dIndex) => addCell('', '', cornerW + dayW * dIndex, headerRowH + rowH * pIndex, dayW, rowH))
+  })
+
+  const rows = Array.from((grid || panel).querySelectorAll('.gridRow'))
+  let courseIndex = 0
+  rows.slice(0, 10).forEach((row, rowIndex) => {
+    const cells = Array.from(row.querySelectorAll('.timetableCell'))
+    cells.slice(0, 7).forEach((cell, dayIndex) => {
+      const tile = cell.querySelector('.timetableCourseTile, .slotCourse, .glassCourse')
+      if (!tile) return
+      const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
+      const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
+      const titleText = makeExportText(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
+      const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
+      const [from, to] = safeCourseTileTone(courseIndex)
+      const course = document.createElement('div')
+      course.className = 'uniplanStableExportCourse'
+      course.style.left = `${cornerW + dayW * dayIndex + 12}px`
+      course.style.top = `${headerRowH + rowH * rowIndex + 12}px`
+      course.style.width = `${dayW - 24}px`
+      course.style.height = `${rowH * span - 24}px`
+      course.style.background = `linear-gradient(145deg,${from},${to})`
+      course.innerHTML = `<span class="uniplanStableExportCourseTitle"><i class="uniplanStableExportDot"></i>${titleText}</span><span class="uniplanStableExportCourseMeta">${metaText}</span>`
+      gridEl.appendChild(course)
+      courseIndex += 1
+    })
+  })
+
+  root.appendChild(gridEl)
+  return { root, width: exportWidth, height: exportHeight }
+}
+
 export async function exportPngFromDom(element, semester = '課表') {
   if (!element) {
     alert('找不到目前課表畫面，無法匯出 PNG。')
     return false
   }
 
-  await waitForImages(element)
-  if (document.fonts?.ready) await document.fonts.ready
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-
-  let restoreExternalBackgrounds = () => {}
-  const originalOverflow = document.body.style.overflow
-  const safeBackgroundUrl = getExportSafeBackgroundUrl(element)
-
+  let exportRoot = null
   try {
-    // DOM-only export: capture the actual rendered timetable. Background images are sanitized in
-    // the cloned document. Local uploaded images are re-injected as a normal <img>, which avoids
-    // CSS background / CORS / foreignObject failures while keeping the DOM layout as the source.
-    restoreExternalBackgrounds = await stripExternalBackgroundsForExport(element)
-    document.body.style.overflow = 'visible'
+    const built = buildStableExportDom(element, semester)
+    exportRoot = built.root
+    document.body.appendChild(exportRoot)
 
-    const rect = element.getBoundingClientRect()
-    const width = Math.ceil(Math.max(element.scrollWidth, rect.width))
-    const height = Math.ceil(Math.max(element.scrollHeight, rect.height))
+    await waitForImages(exportRoot)
+    if (document.fonts?.ready) await document.fonts.ready
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 
     const { default: html2canvas } = await import('html2canvas')
-    const canvas = await html2canvas(element, {
-      backgroundColor: null,
+    const canvas = await html2canvas(exportRoot, {
+      backgroundColor: '#0b1f3d',
       scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)),
       useCORS: true,
       allowTaint: false,
       imageTimeout: 15000,
       logging: false,
-      scrollX: -window.scrollX,
-      scrollY: -window.scrollY,
-      width,
-      height,
-      windowWidth: Math.max(document.documentElement.clientWidth, width),
-      windowHeight: Math.max(document.documentElement.clientHeight, height),
-      ignoreElements: (node) => node?.classList?.contains?.('exportIgnore'),
-      onclone: (clonedDocument) => {
-        const clonedWindow = clonedDocument.defaultView
-        const clonedElement = clonedDocument.querySelector('.exportScheduleCanvas')
-
-        if (clonedElement instanceof clonedWindow.HTMLElement) {
-          copyExportLayoutInlineStyles(element, clonedElement, clonedWindow)
-        }
-
-        removeProblematicStylesheetsFromClone(clonedDocument)
-        clearBackgroundImagesInClone(clonedDocument)
-
-        const style = clonedDocument.createElement('style')
-        style.textContent = `
-          .exportScheduleCanvas,
-          .exportScheduleCanvas *{
-            animation:none!important;
-            transition:none!important;
-            caret-color:transparent!important;
-            -webkit-backdrop-filter:none!important;
-            backdrop-filter:none!important;
-            filter:none!important;
-          }
-          .exportScheduleCanvas{
-            width:${width}px!important;
-            min-width:${width}px!important;
-            height:${height}px!important;
-            min-height:${height}px!important;
-            overflow:visible!important;
-            transform:none!important;
-            background:#0f172a!important;
-            color:#f8fafc!important;
-          }
-          .exportScheduleCanvas .semesterPanel,
-          .exportScheduleCanvas .activeSemesterPanel{
-            width:100%!important;
-            height:auto!important;
-            max-height:none!important;
-            overflow:visible!important;
-            transform:none!important;
-            background:#10213d!important;
-            border-color:rgba(147,197,253,.32)!important;
-            color:#f8fafc!important;
-          }
-          .exportScheduleCanvas .timetableGridClean{
-            overflow:hidden!important;
-            background:#0f172a!important;
-            border-color:rgba(147,197,253,.26)!important;
-          }
-          .exportScheduleCanvas .corner,
-          .exportScheduleCanvas .day,
-          .exportScheduleCanvas .period{
-            background:rgba(15,23,42,.62)!important;
-            color:#f8fafc!important;
-            border-color:rgba(147,197,253,.22)!important;
-          }
-          .exportScheduleCanvas .slot{
-            background:rgba(15,23,42,.30)!important;
-            border-color:rgba(147,197,253,.22)!important;
-          }
-          .exportScheduleCanvas .slot.busy{
-            background:rgba(37,99,235,.16)!important;
-          }
-          .exportScheduleCanvas .slotCourse,
-          .exportScheduleCanvas .glassCourse{
-            background:rgba(15,35,72,.72)!important;
-            border-color:rgba(191,219,254,.28)!important;
-            color:#fff!important;
-            box-shadow:0 14px 30px rgba(0,0,0,.24)!important;
-          }
-          .exportScheduleCanvas .slotCourse::before,
-          .exportScheduleCanvas .slotCourse::after,
-          .exportScheduleCanvas .glassCourse::before,
-          .exportScheduleCanvas .glassCourse::after,
-          .exportScheduleCanvas .semesterPanel::before,
-          .exportScheduleCanvas .semesterPanel::after,
-          .exportScheduleCanvas .timetableGridClean::before,
-          .exportScheduleCanvas .timetableGridClean::after{
-            display:none!important;
-            content:none!important;
-          }
-        `
-        clonedDocument.head.appendChild(style)
-
-        if (clonedElement instanceof clonedWindow.HTMLElement) {
-          clonedElement.classList.add('uniplanExportDomCapture')
-          clonedElement.style.width = `${width}px`
-          clonedElement.style.height = `${height}px`
-          clonedElement.style.overflow = 'visible'
-          clonedElement.style.transform = 'none'
-          applyExportSafeDomStyles(clonedElement, clonedWindow)
-        }
-
-        injectExportBackgroundImage(clonedDocument, safeBackgroundUrl)
-        if (clonedElement instanceof clonedWindow.HTMLElement) {
-          applyExportSafeDomStyles(clonedElement, clonedWindow)
-        }
-      },
+      width: built.width,
+      height: built.height,
+      windowWidth: built.width,
+      windowHeight: built.height,
+      scrollX: 0,
+      scrollY: 0,
     })
 
     const blob = await canvasToBlobSafe(canvas)
-    if (!blob) throw new Error('DOM 匯出產生的 canvas 無法輸出 PNG')
+    if (!blob) throw new Error('匯出 canvas 無法輸出 PNG')
 
     const pngUrl = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -978,12 +999,11 @@ export async function exportPngFromDom(element, semester = '課表') {
     URL.revokeObjectURL(pngUrl)
     return true
   } catch (error) {
-    console.error('DOM PNG export failed.', error)
-    alert('PNG 匯出失敗：DOM 擷取失敗。已套用匯出安全色彩處理，若仍失敗請回報 Console 錯誤。')
+    console.error('Stable DOM PNG export failed.', error)
+    alert('PNG 匯出失敗：穩定版課表匯出失敗，請回報 Console 錯誤。')
     return false
   } finally {
-    document.body.style.overflow = originalOverflow
-    restoreExternalBackgrounds()
+    if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
   }
 }
 
