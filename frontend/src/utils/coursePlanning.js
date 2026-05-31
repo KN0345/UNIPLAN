@@ -802,25 +802,21 @@ function readBackgroundFromElement(element) {
 
 function buildStableExportDom(element, semester = '課表') {
   const panel = element.querySelector('.semesterPanel') || element
-  const grid = panel.querySelector('.timetableGridClean') || panel.querySelector('.grid')
-  const header = panel.querySelector('.semesterHeader')
-  const title = makeExportText(header?.querySelector('h3')?.textContent) || semester
-  const creditText = makeExportText(header?.querySelector('span')?.textContent)
-  const badges = Array.from(panel.querySelectorAll('.semesterBadges b')).map((node) => makeExportText(node.textContent)).filter(Boolean)
-  const warnings = Array.from(panel.querySelectorAll('.warnings span')).map((node) => makeExportText(node.textContent)).filter(Boolean)
+  const grid = panel.querySelector('.timetableGridClean') || panel.querySelector('.grid') || panel
   const backgroundUrl = readBackgroundFromElement(panel)
 
-  const exportWidth = 1600
-  const headerHeight = 132 + (warnings.length ? 30 : 0)
-  const gridWidth = exportWidth - 72
-  const cornerW = 86
+  // Export only the timetable body. Do not include semester title, credit badges,
+  // side panels, action buttons, or any outer planner chrome.
+  const cornerW = 78
   const dayCount = 7
   const periodCount = 10
-  const headerRowH = 58
-  const rowH = 76
+  const headerRowH = 54
+  const rowH = 64
+  const dayW = 146
+  const gridWidth = cornerW + dayW * dayCount
   const gridHeight = headerRowH + rowH * periodCount
-  const dayW = (gridWidth - cornerW) / dayCount
-  const exportHeight = headerHeight + gridHeight + 28
+  const exportWidth = gridWidth
+  const exportHeight = gridHeight
 
   const root = document.createElement('section')
   root.className = 'uniplanStableExportRoot'
@@ -829,13 +825,13 @@ function buildStableExportDom(element, semester = '課表') {
     left:-100000px;
     top:0;
     width:${exportWidth}px;
-    min-height:${exportHeight}px;
+    height:${exportHeight}px;
     box-sizing:border-box;
-    padding:24px 28px 28px;
-    background:#0b1f3d;
+    padding:0;
+    margin:0;
+    background:transparent;
     color:#f8fafc;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif;
-    border-radius:0;
     overflow:hidden;
   `
 
@@ -847,61 +843,137 @@ function buildStableExportDom(element, semester = '課表') {
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif!important;
       letter-spacing:0!important;
       text-rendering:geometricPrecision;
-      -webkit-font-smoothing:antialiased;
     }
-    .uniplanStableExportHeader{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:20px;}
-    .uniplanStableExportTitle h1{font-size:34px;line-height:1.1;margin:0 0 8px;font-weight:900;color:#f8fafc;}
-    .uniplanStableExportTitle p{font-size:18px;line-height:1.35;margin:0;color:#cbdaf1;font-weight:750;}
-    .uniplanStableExportBadges{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;max-width:480px;padding-top:6px;}
-    .uniplanStableExportBadge{display:inline-flex;align-items:center;min-height:34px;padding:7px 13px;border-radius:999px;font-size:16px;font-weight:900;background:#fef3c7;color:#92400e!important;border:1px solid #facc15;}
-    .uniplanStableExportBadge.risk{background:rgba(22,163,74,.16);border-color:rgba(74,222,128,.46);color:#4ade80!important;}
-    .uniplanStableExportWarnings{margin:-6px 0 14px;font-size:17px;font-weight:800;color:#e2e8f0;}
-    .uniplanStableExportGrid{position:relative;width:${gridWidth}px;height:${gridHeight}px;border-radius:22px;overflow:hidden;border:1px solid rgba(191,219,254,.34);background:#111f36;box-shadow:0 22px 54px rgba(0,0,0,.30);}
-    .uniplanStableExportBg{position:absolute;inset:0;z-index:0;background-position:center center;background-size:cover;background-repeat:no-repeat;}
-    .uniplanStableExportTint{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,18,36,.32),rgba(7,18,36,.52));z-index:1;}
-    .uniplanStableExportCell{position:absolute;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(191,219,254,.16);border-bottom:1px solid rgba(191,219,254,.14);z-index:2;color:#eef6ff;font-weight:900;font-size:17px;background:rgba(15,23,42,.18);}
-    .uniplanStableExportCell.head,.uniplanStableExportCell.corner,.uniplanStableExportCell.period{background:rgba(15,23,42,.44);}
-    .uniplanStableExportCell.period{font-size:18px;color:#e5edf9;}
-    .uniplanStableExportCourse{position:absolute;z-index:4;border-radius:18px;padding:13px 14px 12px;overflow:hidden;border:1px solid rgba(255,255,255,.30);box-shadow:0 16px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.24);}
-    .uniplanStableExportCourse::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.04) 45%,rgba(255,255,255,.01));pointer-events:none;}
-    .uniplanStableExportCourse::after{content:"";position:absolute;left:12px;right:12px;top:8px;height:1px;background:rgba(255,255,255,.40);pointer-events:none;}
-    .uniplanStableExportCourseTitle{position:relative;z-index:1;display:block;font-size:17px;line-height:1.18;font-weight:950;color:#fff;word-break:break-word;text-shadow:0 1px 2px rgba(0,0,0,.20);}
-    .uniplanStableExportCourseMeta{position:relative;z-index:1;display:block;margin-top:8px;font-size:14px;line-height:1.18;font-weight:800;color:#dbeafe;text-shadow:0 1px 2px rgba(0,0,0,.18);}
-    .uniplanStableExportDot{display:inline-block;width:10px;height:10px;border-radius:999px;background:#93c5fd;margin-right:8px;box-shadow:0 0 0 3px rgba(147,197,253,.20);}
+    .uniplanStableExportGrid{
+      position:relative;
+      width:${gridWidth}px;
+      height:${gridHeight}px;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(147,197,253,.30);
+      background:#111f36;
+      box-shadow:0 18px 46px rgba(0,0,0,.26);
+    }
+    .uniplanStableExportBg{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      object-position:center center;
+      z-index:0;
+      pointer-events:none;
+    }
+    .uniplanStableExportTint{
+      position:absolute;
+      inset:0;
+      background:rgba(8,20,38,.44);
+      z-index:1;
+      pointer-events:none;
+    }
+    .uniplanStableExportCell{
+      position:absolute;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-right:1px solid rgba(190,215,255,.18);
+      border-bottom:1px solid rgba(190,215,255,.16);
+      z-index:2;
+      color:#eef6ff;
+      font-weight:900;
+      font-size:16px;
+      background:rgba(15,23,42,.18);
+    }
+    .uniplanStableExportCell.head,
+    .uniplanStableExportCell.corner,
+    .uniplanStableExportCell.period{
+      background:rgba(15,23,42,.46);
+      color:#f3f8ff;
+      text-shadow:0 1px 8px rgba(0,0,0,.20);
+    }
+    .uniplanStableExportCell.period{
+      font-size:17px;
+      color:#e6eefb;
+    }
+    .uniplanStableExportCourse{
+      position:absolute;
+      z-index:4;
+      border-radius:14px;
+      padding:12px 12px 10px;
+      overflow:hidden;
+      border:1px solid rgba(210,230,255,.24);
+      background:linear-gradient(150deg,rgba(81,132,230,.54),rgba(28,61,137,.42));
+      box-shadow:
+        0 14px 30px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.22),
+        inset 0 -22px 34px rgba(7,20,54,.18);
+    }
+    .uniplanStableExportCourse::before{
+      content:"";
+      position:absolute;
+      left:0;
+      top:0;
+      right:0;
+      height:42%;
+      background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.02));
+      pointer-events:none;
+    }
+    .uniplanStableExportCourse::after{
+      content:"";
+      position:absolute;
+      inset:1px;
+      border-radius:13px;
+      border:1px solid rgba(255,255,255,.08);
+      pointer-events:none;
+    }
+    .uniplanStableExportCourseTitle{
+      position:relative;
+      z-index:1;
+      display:block;
+      font-size:14px;
+      line-height:1.18;
+      font-weight:950;
+      color:#fff;
+      word-break:break-word;
+      overflow:hidden;
+      max-height:50px;
+      text-shadow:0 1px 6px rgba(0,0,0,.22);
+    }
+    .uniplanStableExportCourseMeta{
+      position:relative;
+      z-index:1;
+      display:block;
+      margin-top:7px;
+      font-size:12px;
+      line-height:1.15;
+      font-weight:850;
+      color:#e4efff;
+      opacity:.95;
+    }
+    .uniplanStableExportDot{
+      display:inline-block;
+      width:9px;
+      height:9px;
+      border-radius:999px;
+      background:#60a5fa;
+      margin-right:7px;
+      box-shadow:0 0 0 3px rgba(96,165,250,.20);
+      vertical-align:1px;
+    }
   `
   root.appendChild(style)
 
-  const headerEl = document.createElement('div')
-  headerEl.className = 'uniplanStableExportHeader'
-  const titleEl = document.createElement('div')
-  titleEl.className = 'uniplanStableExportTitle'
-  titleEl.innerHTML = `<h1>${title}</h1><p>${creditText || ''}</p>`
-  const badgeEl = document.createElement('div')
-  badgeEl.className = 'uniplanStableExportBadges'
-  ;(badges.length ? badges : []).forEach((badge, index) => {
-    const span = document.createElement('span')
-    span.className = `uniplanStableExportBadge ${/風險/.test(badge) ? 'risk' : ''}`
-    span.textContent = badge
-    badgeEl.appendChild(span)
-  })
-  headerEl.append(titleEl, badgeEl)
-  root.appendChild(headerEl)
-
-  if (warnings.length) {
-    const w = document.createElement('div')
-    w.className = 'uniplanStableExportWarnings'
-    w.textContent = warnings.join('，')
-    root.appendChild(w)
-  }
-
   const gridEl = document.createElement('div')
   gridEl.className = 'uniplanStableExportGrid'
+
   if (backgroundUrl) {
-    const bg = document.createElement('div')
-    bg.className = 'uniplanStableExportBg'
-    bg.style.backgroundImage = `url("${backgroundUrl}")`
-    gridEl.appendChild(bg)
+    const img = document.createElement('img')
+    img.className = 'uniplanStableExportBg'
+    img.src = backgroundUrl
+    img.alt = ''
+    gridEl.appendChild(img)
   }
+
   const tint = document.createElement('div')
   tint.className = 'uniplanStableExportTint'
   gridEl.appendChild(tint)
@@ -924,25 +996,41 @@ function buildStableExportDom(element, semester = '課表') {
     DAYS.forEach((day, dIndex) => addCell('', '', cornerW + dayW * dIndex, headerRowH + rowH * pIndex, dayW, rowH))
   })
 
-  const rows = Array.from((grid || panel).querySelectorAll('.gridRow'))
+  const rows = Array.from(grid.querySelectorAll('.gridRow'))
   let courseIndex = 0
   rows.slice(0, 10).forEach((row, rowIndex) => {
     const cells = Array.from(row.querySelectorAll('.timetableCell'))
     cells.slice(0, 7).forEach((cell, dayIndex) => {
       const tile = cell.querySelector('.timetableCourseTile, .slotCourse, .glassCourse')
       if (!tile) return
+
       const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
       const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
       const titleText = makeExportText(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
       const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
+      const [from, to] = safeCourseTileTone(courseIndex)
+
       const course = document.createElement('div')
       course.className = 'uniplanStableExportCourse'
       course.style.left = `${cornerW + dayW * dayIndex + 12}px`
       course.style.top = `${headerRowH + rowH * rowIndex + 12}px`
       course.style.width = `${dayW - 24}px`
-      course.style.height = `${rowH * span - 24}px`
-      course.style.background = 'linear-gradient(145deg, rgba(76,129,245,.62), rgba(28,74,170,.46))'
-      course.innerHTML = `<span class="uniplanStableExportCourseTitle"><i class="uniplanStableExportDot"></i>${titleText}</span><span class="uniplanStableExportCourseMeta">${metaText}</span>`
+      course.style.height = `${Math.max(42, rowH * span - 24)}px`
+      course.style.background = `linear-gradient(150deg, ${from}cc, ${to}a8)`
+
+      const title = document.createElement('span')
+      title.className = 'uniplanStableExportCourseTitle'
+      const dot = document.createElement('i')
+      dot.className = 'uniplanStableExportDot'
+      title.appendChild(dot)
+      title.appendChild(document.createTextNode(titleText || '課程'))
+      course.appendChild(title)
+
+      const meta = document.createElement('span')
+      meta.className = 'uniplanStableExportCourseMeta'
+      meta.textContent = metaText
+      course.appendChild(meta)
+
       gridEl.appendChild(course)
       courseIndex += 1
     })
