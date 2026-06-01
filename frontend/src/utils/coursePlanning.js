@@ -258,16 +258,22 @@ export function courseWeekRanges(course) {
   const c = getCourse(course)
   const text = `${c.notes || ''} ${c.name || ''} ${c.time_info || ''}`
   const ranges = []
+  const seen = new Set()
   const patterns = [
     /第\s*(\d{1,2})\s*[-~－～]\s*(\d{1,2})\s*週/g,
-    /(\d{1,2})\s*[-~－～]\s*(\d{1,2})\s*週/g,
+    /(?:^|[^第\d])(\d{1,2})\s*[-~－～]\s*(\d{1,2})\s*週/g,
   ]
   patterns.forEach((pattern) => {
     let match
     while ((match = pattern.exec(text))) {
       const start = Number(match[1])
       const end = Number(match[2])
-      if (start && end) ranges.push({ start: Math.min(start, end), end: Math.max(start, end) })
+      if (!start || !end) continue
+      const normalized = { start: Math.min(start, end), end: Math.max(start, end) }
+      const key = `${normalized.start}-${normalized.end}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      ranges.push(normalized)
     }
   })
   return ranges

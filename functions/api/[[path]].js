@@ -47880,7 +47880,7 @@ function mapCourseRow(row) {
 
 async function handleCourses(request, env) {
   const url = new URL(request.url)
-  const sql = getSql(env)
+  let sql = null
   const keyword = String(url.searchParams.get('keyword') || '').trim()
   const semester = normalizeCourseCatalogTerm(url.searchParams.get('semester') || url.searchParams.get('term') || url.searchParams.get('catalogTerm'))
   const department = String(url.searchParams.get('department') || '').trim()
@@ -47891,6 +47891,7 @@ async function handleCourses(request, env) {
   let rows = []
   let neonError = null
   try {
+    sql = getSql(env)
     rows = await sql`
       SELECT
         id,

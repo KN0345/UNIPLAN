@@ -75,6 +75,10 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
           '--tile-span': span,
           '--stack-index': stackIndex,
           '--stack-count': stackCount,
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+          gridAutoRows: '1fr',
+          alignItems: 'stretch',
         }}
         title="同一課程不同週次，左右分欄顯示"
       >
@@ -85,6 +89,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
               key={uid(course)}
               type="button"
               className="mergedHalfSegment"
+              style={{ minWidth: 0, height: '100%' }}
               draggable
               onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course }))}
               onClick={(e) => handleCourseClick(course, e)}
