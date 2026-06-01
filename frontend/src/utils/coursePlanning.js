@@ -716,8 +716,12 @@ export function readCurrentAppearance() {
   const border = bodyStyle.getPropertyValue('--border').trim() || '#2f4362'
   const accent = bodyStyle.getPropertyValue('--button-accent').trim() || bodyStyle.getPropertyValue('--accent').trim() || '#2563eb'
   const timetableBg = localStorage.getItem('uniplan:timetableBg') || ''
-  const timetableOpacity = Number.parseFloat(rootStyle.getPropertyValue('--timetable-opacity')) || Number.parseFloat(localStorage.getItem('uniplan:timetableOpacity') || '0') || 0
-  const courseCardOpacity = Number.parseFloat(rootStyle.getPropertyValue('--course-card-alpha')) || Number.parseFloat(localStorage.getItem('uniplan:courseCardOpacity') || '.72') || .72
+  const rawTimetableOpacity = Number.parseFloat(rootStyle.getPropertyValue('--timetable-opacity'))
+  const rawStoredTimetableOpacity = Number.parseFloat(localStorage.getItem('uniplan:timetableOpacity') || '0')
+  const rawCourseCardOpacity = Number.parseFloat(rootStyle.getPropertyValue('--course-card-alpha'))
+  const rawStoredCourseCardOpacity = Number.parseFloat(localStorage.getItem('uniplan:courseCardOpacity') || '.72')
+  const timetableOpacity = Number.isFinite(rawTimetableOpacity) ? rawTimetableOpacity : (Number.isFinite(rawStoredTimetableOpacity) ? rawStoredTimetableOpacity : 0)
+  const courseCardOpacity = Number.isFinite(rawCourseCardOpacity) ? rawCourseCardOpacity : (Number.isFinite(rawStoredCourseCardOpacity) ? rawStoredCourseCardOpacity : .72)
   let tint = rootStyle.getPropertyValue('--timetable-tint').trim() || localStorage.getItem('uniplan:timetableTint') || ''
   if (!tint || tint.toLowerCase() === '#ffffff' || tint.toLowerCase() === '#fff') tint = panel
   return { theme, panel, panel2, text, muted, border, accent, timetableBg, timetableOpacity, courseCardOpacity, tint }
@@ -954,10 +958,28 @@ function readBackgroundFromElement(element) {
   return ''
 }
 
+
+function hexToRgbaForExport(hex, alpha = 1) {
+  const value = String(hex || '').trim().replace('#', '')
+  const safe = value.length === 3
+    ? value.split('').map((ch) => ch + ch).join('')
+    : value.padEnd(6, '0').slice(0, 6)
+  const r = Number.parseInt(safe.slice(0, 2), 16)
+  const g = Number.parseInt(safe.slice(2, 4), 16)
+  const b = Number.parseInt(safe.slice(4, 6), 16)
+  return `rgba(${Number.isFinite(r) ? r : 37},${Number.isFinite(g) ? g : 99},${Number.isFinite(b) ? b : 235},${Math.max(0, Math.min(1, alpha))})`
+}
+
 function buildStableExportDom(element, semester = '課表') {
   const panel = element.querySelector('.semesterPanel') || element
   const grid = panel.querySelector('.timetableGridClean') || panel.querySelector('.grid') || panel
   const backgroundUrl = readBackgroundFromElement(panel)
+  const appearance = readCurrentAppearance()
+  const timetableTint = cssColorToRgba(appearance.tint || '#081426', [8, 20, 38, 1])
+  const exportTintOpacity = Math.max(0, Math.min(1, appearance.timetableOpacity ?? 0.44))
+  const exportCardOpacity = Math.max(0, Math.min(1, appearance.courseCardOpacity ?? 0.72))
+  const exportCardStrong = Math.max(0.08, Math.min(0.96, exportCardOpacity))
+  const exportCardSoft = Math.max(0.05, Math.min(0.88, exportCardOpacity * 0.78))
 
   // Export only the timetable body. Do not include semester title, credit badges,
   // side panels, action buttons, or any outer planner chrome.
@@ -1021,7 +1043,7 @@ function buildStableExportDom(element, semester = '課表') {
     .uniplanStableExportTint{
       position:absolute;
       inset:0;
-      background:rgba(8,20,38,.44);
+      background:${rgbaString(timetableTint, exportTintOpacity)};
       z-index:1;
       pointer-events:none;
     }
@@ -1056,7 +1078,7 @@ function buildStableExportDom(element, semester = '課表') {
       padding:12px 12px 10px;
       overflow:hidden;
       border:1px solid rgba(210,230,255,.24);
-      background:linear-gradient(150deg,rgba(81,132,230,.54),rgba(28,61,137,.42));
+      background:linear-gradient(150deg,rgba(81,132,230,${exportCardStrong.toFixed(3)}),rgba(28,61,137,${exportCardSoft.toFixed(3)}));
       box-shadow:
         0 14px 30px rgba(0,0,0,.24),
         inset 0 1px 0 rgba(255,255,255,.22),
@@ -1176,7 +1198,7 @@ function buildStableExportDom(element, semester = '課表') {
         course.style.gridTemplateColumns = '1fr 1fr'
         course.style.gap = '1px'
         course.style.padding = '0'
-        course.style.background = 'rgba(15,35,72,0.70)'
+        course.style.background = `rgba(15,35,72,${Math.max(0.08, exportCardOpacity).toFixed(3)})`
         Array.from(tile.querySelectorAll('.mergedHalfSegment, .halfSemesterSegment')).slice(0, 2).forEach((segment, segmentIndex) => {
           const part = document.createElement('div')
           part.style.position = 'relative'
@@ -1188,7 +1210,7 @@ function buildStableExportDom(element, semester = '課表') {
           const segmentStyle = window.getComputedStyle(segment)
           part.style.background = segmentStyle.backgroundImage && segmentStyle.backgroundImage !== 'none'
             ? segmentStyle.backgroundImage
-            : (segmentStyle.backgroundColor || 'linear-gradient(150deg, rgba(80,128,230,.88), rgba(37,74,150,.78))')
+            : (segmentStyle.backgroundColor || `linear-gradient(150deg, rgba(80,128,230,${exportCardStrong.toFixed(3)}), rgba(37,74,150,${exportCardSoft.toFixed(3)}))`)
           const title = document.createElement('span')
           title.className = 'uniplanStableExportCourseTitle'
           title.style.fontSize = '12px'
@@ -1217,7 +1239,7 @@ function buildStableExportDom(element, semester = '課表') {
       course.style.top = `${topPx}px`
       course.style.width = `${widthPx}px`
       course.style.height = `${heightPx}px`
-      course.style.background = `linear-gradient(150deg, ${from}cc, ${to}a8)`
+      course.style.background = `linear-gradient(150deg, ${hexToRgbaForExport(from, exportCardStrong)}, ${hexToRgbaForExport(to, exportCardSoft)})`
 
       const title = document.createElement('span')
       title.className = 'uniplanStableExportCourseTitle'
@@ -1460,9 +1482,10 @@ export async function exportCleanPng(plan, semester = '課表') {
 
   const tint = cssColorToRgba(appearance.tint || '#07111f', [7, 17, 31, 1])
   const veil = ctx.createLinearGradient(0, 0, 0, canvasH)
-  veil.addColorStop(0, rgbaString(tint, .22))
-  veil.addColorStop(.46, 'rgba(2,6,23,.22)')
-  veil.addColorStop(1, 'rgba(2,6,23,.58)')
+  const exportTintAlpha = Math.max(0, Math.min(1, appearance.timetableOpacity ?? .22))
+  veil.addColorStop(0, rgbaString(tint, exportTintAlpha))
+  veil.addColorStop(.46, `rgba(2,6,23,${Math.max(.06, exportTintAlpha * .82).toFixed(3)})`)
+  veil.addColorStop(1, `rgba(2,6,23,${Math.max(.18, exportTintAlpha + .18).toFixed(3)})`)
   ctx.fillStyle = veil
   ctx.fillRect(0, 0, canvasW, canvasH)
 
@@ -1481,8 +1504,8 @@ export async function exportCleanPng(plan, semester = '課表') {
 
   // Smart timetable plate.
   const plate = ctx.createLinearGradient(tableX, tableY, tableX, tableY + tableH)
-  plate.addColorStop(0, 'rgba(15,23,42,.20)')
-  plate.addColorStop(1, 'rgba(15,23,42,.10)')
+  plate.addColorStop(0, `rgba(15,23,42,${Math.max(.04, exportTintAlpha * .46).toFixed(3)})`)
+  plate.addColorStop(1, `rgba(15,23,42,${Math.max(.03, exportTintAlpha * .28).toFixed(3)})`)
   ctx.save()
   ctx.shadowColor = 'rgba(0,0,0,.22)'
   ctx.shadowBlur = 34
@@ -1588,9 +1611,10 @@ export async function exportCleanPng(plan, semester = '課表') {
     glow.addColorStop(1, 'rgba(255,255,255,0)')
     fillRound(x - 8, y - 8, w + 16, h + 16, 38, glow)
     const card = ctx.createLinearGradient(x, y, x + w, y + h)
-    card.addColorStop(0, rgbaString(top, .88))
-    card.addColorStop(.58, rgbaString(bottom, .78))
-    card.addColorStop(1, rgbaString(deep, .86))
+    const cardAlpha = Math.max(0.05, Math.min(1, appearance.courseCardOpacity ?? .72))
+    card.addColorStop(0, rgbaString(top, Math.min(1, cardAlpha + .16)))
+    card.addColorStop(.58, rgbaString(bottom, cardAlpha))
+    card.addColorStop(1, rgbaString(deep, Math.min(1, cardAlpha + .06)))
     fillRound(x, y, w, h, 34, card)
     ctx.restore()
     strokeRound(x, y, w, h, 34, 'rgba(255,255,255,.42)', 1.25)
@@ -1610,7 +1634,7 @@ export async function exportCleanPng(plan, semester = '課表') {
     if (slotGroup.length > 1) {
       ctx.fillStyle = 'rgba(255,255,255,.18)'
       ctx.fillRect(x + w / 2 - .7, y, 1.4, h)
-      ctx.fillStyle = 'rgba(236,72,153,.18)'
+      ctx.fillStyle = `rgba(236,72,153,${Math.max(.05, (appearance.courseCardOpacity ?? .72) * .22).toFixed(3)})`
       ctx.fillRect(x + w / 2, y, w / 2, h)
     }
     ctx.restore()
