@@ -47888,35 +47888,43 @@ async function handleCourses(request, env) {
   const weekday = String(url.searchParams.get('weekday') || '').trim()
   const period = String(url.searchParams.get('period') || '').trim()
 
-  const rows = await sql`
-    SELECT
-      id,
-      semester_source,
-      serial,
-      code,
-      name,
-      credits,
-      category,
-      teacher,
-      classroom,
-      capacity,
-      time_data,
-      time_info,
-      department,
-      grade,
-      major,
-      sem_seq,
-      class_name,
-      group_type,
-      notes,
-      raw_json
-    FROM courses
-    WHERE (${semester} = '' OR semester_source = ${semester})
-      AND (${department} = '' OR ${department} = '全部' OR department = ${department})
-      AND (${grade} = '' OR ${grade} = '全部' OR grade = ${grade})
-    ORDER BY semester_source, department NULLS LAST, serial NULLS LAST, code NULLS LAST, name
-    LIMIT 5000
-  `
+  let rows = []
+  let neonError = null
+  try {
+    rows = await sql`
+      SELECT
+        id,
+        semester_source,
+        serial,
+        code,
+        name,
+        credits,
+        category,
+        teacher,
+        classroom,
+        capacity,
+        time_data,
+        time_info,
+        department,
+        grade,
+        major,
+        sem_seq,
+        class_name,
+        group_type,
+        notes,
+        raw_json
+      FROM courses
+      WHERE (${semester} = '' OR semester_source = ${semester})
+        AND (${department} = '' OR ${department} = '全部' OR department = ${department})
+        AND (${grade} = '' OR ${grade} = '全部' OR grade = ${grade})
+      ORDER BY semester_source, department NULLS LAST, serial NULLS LAST, code NULLS LAST, name
+      LIMIT 5000
+    `
+  } catch (err) {
+    // Neon / D1 資料庫暫時失敗時，仍回傳本地補丁課程，避免課程搜尋整個 500。
+    neonError = err?.message || 'course database unavailable'
+    rows = []
+  }
 
   const searchParams = new URLSearchParams()
   if (keyword) searchParams.set('keyword', keyword)
@@ -47936,7 +47944,7 @@ async function handleCourses(request, env) {
     .filter((course) => courseMatchesQuery(course, searchParams))
     .slice(0, 500)
 
-  return json({ ok: true, data, total: data.length, source: 'neon-courses-with-local-patches' })
+  return json({ ok: true, data, total: data.length, source: neonError ? 'local-patches-fallback' : 'neon-courses-with-local-patches', warning: neonError || undefined })
 }
 
 
@@ -47982,13 +47990,23 @@ async function handlePublicFeedback(request, env, sql, method) {
 
 async function handleCourseMetadata(request, env) {
   const sql = getSql(env)
-  const [departments, majors, grades, categories, semesters] = await Promise.all([
-    sql`SELECT DISTINCT department AS value FROM courses WHERE department IS NOT NULL AND department <> '' ORDER BY department LIMIT 500`,
-    sql`SELECT DISTINCT major AS value FROM courses WHERE major IS NOT NULL AND major <> '' ORDER BY major LIMIT 500`,
-    sql`SELECT DISTINCT grade AS value FROM courses WHERE grade IS NOT NULL AND grade <> '' ORDER BY grade LIMIT 200`,
-    sql`SELECT DISTINCT category AS value FROM courses WHERE category IS NOT NULL AND category <> '' ORDER BY category LIMIT 300`,
-    sql`SELECT DISTINCT semester_source AS value FROM courses WHERE semester_source IS NOT NULL AND semester_source <> '' ORDER BY semester_source LIMIT 100`,
-  ])
+  let departments = []
+  let majors = []
+  let grades = []
+  let categories = []
+  let semesters = []
+  let neonError = null
+  try {
+    ;[departments, majors, grades, categories, semesters] = await Promise.all([
+      sql`SELECT DISTINCT department AS value FROM courses WHERE department IS NOT NULL AND department <> '' ORDER BY department LIMIT 500`,
+      sql`SELECT DISTINCT major AS value FROM courses WHERE major IS NOT NULL AND major <> '' ORDER BY major LIMIT 500`,
+      sql`SELECT DISTINCT grade AS value FROM courses WHERE grade IS NOT NULL AND grade <> '' ORDER BY grade LIMIT 200`,
+      sql`SELECT DISTINCT category AS value FROM courses WHERE category IS NOT NULL AND category <> '' ORDER BY category LIMIT 300`,
+      sql`SELECT DISTINCT semester_source AS value FROM courses WHERE semester_source IS NOT NULL AND semester_source <> '' ORDER BY semester_source LIMIT 100`,
+    ])
+  } catch (err) {
+    neonError = err?.message || 'course metadata database unavailable'
+  }
   const notClass = (item) => !/^[A-ZＡ-Ｚ]班?$|^[甲乙丙丁戊己庚辛壬癸]班?$|^[A-Z]$/i.test(String(item || '').trim())
   const values = (rows) => rows.map((row) => row.value).filter(Boolean)
   const unique = (items) => [...new Set(items.filter(Boolean))]
@@ -48001,7 +48019,8 @@ async function handleCourseMetadata(request, env) {
       categories: unique([...values(categories), ...PATCHED_COMMON_COURSES.map((c) => c.category)]),
       semesters: unique([...values(semesters).map(normalizeCourseCatalogTerm), ...PATCHED_COMMON_COURSES.map((c) => normalizeCourseCatalogTerm(c.semester_source))]).filter(Boolean).sort(),
     },
-    source: 'neon-courses-with-local-patches',
+    source: neonError ? 'local-patches-fallback' : 'neon-courses-with-local-patches',
+    warning: neonError || undefined,
   })
 }
 

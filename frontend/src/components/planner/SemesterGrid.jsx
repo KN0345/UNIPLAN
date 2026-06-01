@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DAYS, PERIODS, STATUS, credits, getCourse, riskScore, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus, hasAnyConflict, scheduleRuleLabel, mergeableHalfSemesterGroup } from '../../utils/coursePlanning'
+import { DAYS, PERIODS, STATUS, credits, getCourse, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus, hasAnyConflict, scheduleRuleLabel, mergeableHalfSemesterGroup } from '../../utils/coursePlanning'
 
 function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onCourseClick, onEmptySlotClick, onDeleteCourse, onMoveToCandidate }) {
   const warnings = semesterWarnings(semester, courses, plan)
-  const risk = riskScore(semester, courses, plan)
   const [conflictViewer, setConflictViewer] = useState(null)
 
   function handleCourseClick(course, event) {
@@ -125,7 +124,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
 
   return (
     <section className="semesterPanel activeSemesterPanel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => onDropCourse(e, semester)}>
-      <header className="semesterHeader"><div><h3>{semester}</h3><span>{courses.filter((c) => courseStatus(c) !== 'failed').reduce((sum, course) => sum + credits(course), 0)} 學分</span></div><div className="semesterBadges"><b className={`creditStatus ${semesterCreditStatus(courses).tone}`}>{semesterCreditStatus(courses).label}</b><b className={risk.score >= 70 ? 'riskHigh' : risk.score >= 40 ? 'riskMid' : 'riskLow'}>風險 {risk.score}</b></div></header>
+      <header className="semesterHeader"><div><h3>{semester}</h3><span>{courses.filter((c) => courseStatus(c) !== 'failed').reduce((sum, course) => sum + credits(course), 0)} 學分</span></div><div className="semesterBadges"><b className={`creditStatus ${semesterCreditStatus(courses).tone}`}>{semesterCreditStatus(courses).label}</b></div></header>
       {warnings.length ? <div className="warnings">{warnings.slice(0, 3).map((w) => <span key={w}>{w}</span>)}</div> : null}
       <div className="grid timetableGridClean">
         <div className="timetableCorner">節</div>{DAYS.map((d) => <div className="timetableDay" key={d}>週{d}</div>)}

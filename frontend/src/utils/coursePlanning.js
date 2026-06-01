@@ -360,7 +360,8 @@ export function isHalfSemesterLike(course) {
 
 export function mergeableHalfSemesterGroup(a, b) {
   if (!a || !b) return false
-  if (courseMergeIdentity(a) !== courseMergeIdentity(b)) return false
+  // 半學期課程只要星期＋節次完全相同、週次不重疊，就應該合併為同一張左右分欄卡片。
+  // 不再要求課號或課名相同；例如 1-9 週與 10-18 週可能是不同課名但共用同一時段。
   if (primarySlotSignature(a) !== primarySlotSignature(b)) return false
   if (!isHalfSemesterLike(a) || !isHalfSemesterLike(b)) return false
   return !weekRangesOverlap(a, b)
