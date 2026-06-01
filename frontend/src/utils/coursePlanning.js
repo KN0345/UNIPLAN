@@ -983,6 +983,16 @@ function buildStableExportDom(element, semester = '課表') {
   // images leak through even at full opacity and left grey frames at zero matte.
   const exportCardStrong = exportCardOpacity
   const exportCardSoft = exportCardOpacity
+  const cardAccent = cssColorToRgba(appearance.accent || '#2563eb', [37, 99, 235, 1])
+  const cardAlpha = Math.max(0, Math.min(1, exportCardOpacity))
+  const hasCardSurface = cardAlpha > 0.015
+  const exportCourseBackground = hasCardSurface
+    ? `linear-gradient(155deg, ${rgbaString(brightenRgba(cardAccent, .24), cardAlpha)}, ${rgbaString(darkenRgba(cardAccent, .30), cardAlpha)})`
+    : 'transparent'
+  const exportCourseBorder = hasCardSurface ? `1px solid rgba(147,197,253,${Math.min(.46, cardAlpha * .46).toFixed(3)})` : '0'
+  const exportCourseShadow = hasCardSurface ? `0 12px 28px rgba(2,6,23,${Math.min(.32, cardAlpha * .32).toFixed(3)})` : 'none'
+  const exportCourseRadius = hasCardSurface ? '14px' : '0'
+  const exportCoursePadding = hasCardSurface ? '9px 10px' : '4px 10px'
 
   // Export only the timetable body. Do not include semester title, credit badges,
   // side panels, action buttons, or any outer planner chrome.
@@ -1031,7 +1041,7 @@ function buildStableExportDom(element, semester = '課表') {
       overflow:hidden;
       border:1px solid rgba(147,197,253,${(0.30 * exportTintOpacity).toFixed(3)});
       background:${rgbaString(timetableTint, exportTintOpacity)};
-      box-shadow:0 18px 46px rgba(0,0,0,${(0.26 * exportTintOpacity).toFixed(3)});
+      box-shadow:none;
     }
     .uniplanStableExportBg{
       position:absolute;
@@ -1077,52 +1087,36 @@ function buildStableExportDom(element, semester = '課表') {
     .uniplanStableExportCourse{
       position:absolute;
       z-index:4;
-      border-radius:14px;
-      padding:12px 12px 10px;
+      border-radius:${exportCourseRadius};
+      padding:${exportCoursePadding};
       overflow:hidden;
-      border:1px solid rgba(210,230,255,${(0.24 * exportCardOpacity).toFixed(3)});
-      background:linear-gradient(150deg,rgba(81,132,230,${exportCardStrong.toFixed(3)}),rgba(28,61,137,${exportCardSoft.toFixed(3)}));
-      box-shadow:
-        0 14px 30px rgba(0,0,0,${(0.24 * exportCardOpacity).toFixed(3)}),
-        inset 0 1px 0 rgba(255,255,255,${(0.22 * exportCardOpacity).toFixed(3)}),
-        inset 0 -22px 34px rgba(7,20,54,${(0.18 * exportCardOpacity).toFixed(3)});
+      border:${exportCourseBorder};
+      background:${exportCourseBackground}!important;
+      box-shadow:${exportCourseShadow}!important;
     }
-    .uniplanStableExportCourse::before{
-      content:"";
-      position:absolute;
-      left:0;
-      top:0;
-      right:0;
-      height:42%;
-      background:linear-gradient(180deg,rgba(255,255,255,${(0.14 * exportCardOpacity).toFixed(3)}),rgba(255,255,255,${(0.02 * exportCardOpacity).toFixed(3)}));
-      pointer-events:none;
-    }
+    .uniplanStableExportCourse::before,
     .uniplanStableExportCourse::after{
-      content:"";
-      position:absolute;
-      inset:1px;
-      border-radius:13px;
-      border:1px solid rgba(255,255,255,${(0.08 * exportCardOpacity).toFixed(3)});
-      pointer-events:none;
+      content:none!important;
+      display:none!important;
     }
     .uniplanStableExportCourseTitle{
       position:relative;
       z-index:1;
       display:block;
       font-size:14px;
-      line-height:1.18;
+      line-height:1.16;
       font-weight:950;
       color:#fff;
       word-break:break-word;
       overflow:hidden;
-      max-height:50px;
-      text-shadow:0 1px 6px rgba(0,0,0,.22);
+      max-height:52px;
+      text-shadow:0 1px 6px rgba(0,0,0,.25);
     }
     .uniplanStableExportCourseMeta{
       position:relative;
       z-index:1;
       display:block;
-      margin-top:7px;
+      margin-top:6px;
       font-size:12px;
       line-height:1.15;
       font-weight:850;
@@ -1185,10 +1179,10 @@ function buildStableExportDom(element, semester = '課表') {
 
       const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
       const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
-      const left = cornerW + dayW * dayIndex + 12
-      const topPx = headerRowH + rowH * rowIndex + 12
-      const widthPx = dayW - 24
-      const heightPx = Math.max(42, rowH * span - 24)
+      const left = cornerW + dayW * dayIndex + 24
+      const topPx = headerRowH + rowH * rowIndex + 16
+      const widthPx = dayW - 38
+      const heightPx = Math.max(42, rowH * span - 18)
 
       if (tile.classList.contains('mergedHalfTile') || tile.classList.contains('halfSemesterSplitTile')) {
         const course = document.createElement('div')
@@ -1199,21 +1193,22 @@ function buildStableExportDom(element, semester = '課表') {
         course.style.height = `${heightPx}px`
         course.style.display = 'grid'
         course.style.gridTemplateColumns = '1fr 1fr'
-        course.style.gap = '1px'
+        course.style.gap = '0'
         course.style.padding = '0'
-        course.style.background = `rgba(15,35,72,${exportCardOpacity.toFixed(3)})`
+        course.style.background = exportCourseBackground
+        course.style.border = exportCourseBorder
+        course.style.borderRadius = exportCourseRadius
+        course.style.boxShadow = exportCourseShadow
         Array.from(tile.querySelectorAll('.mergedHalfSegment, .halfSemesterSegment')).slice(0, 2).forEach((segment, segmentIndex) => {
           const part = document.createElement('div')
           part.style.position = 'relative'
           part.style.overflow = 'hidden'
-          part.style.padding = '10px 8px'
+          part.style.padding = '4px 7px'
           part.style.display = 'flex'
           part.style.flexDirection = 'column'
-          part.style.justifyContent = 'center'
-          const segmentStyle = window.getComputedStyle(segment)
-          part.style.background = segmentStyle.backgroundImage && segmentStyle.backgroundImage !== 'none'
-            ? segmentStyle.backgroundImage
-            : (segmentStyle.backgroundColor || `linear-gradient(150deg, rgba(80,128,230,${exportCardStrong.toFixed(3)}), rgba(37,74,150,${exportCardSoft.toFixed(3)}))`)
+          part.style.justifyContent = 'flex-start'
+          part.style.background = 'transparent'
+          if (segmentIndex === 1) part.style.borderLeft = hasCardSurface ? '1px solid rgba(147,197,253,.28)' : '1px solid rgba(147,197,253,.20)'
           const title = document.createElement('span')
           title.className = 'uniplanStableExportCourseTitle'
           title.style.fontSize = '12px'
@@ -1234,15 +1229,16 @@ function buildStableExportDom(element, semester = '課表') {
 
       const titleText = makeExportCourseName(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
       const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
-      const [from, to] = safeCourseTileTone(courseIndex)
-
       const course = document.createElement('div')
       course.className = 'uniplanStableExportCourse'
       course.style.left = `${left}px`
       course.style.top = `${topPx}px`
       course.style.width = `${widthPx}px`
       course.style.height = `${heightPx}px`
-      course.style.background = `linear-gradient(150deg, ${hexToRgbaForExport(from, exportCardStrong)}, ${hexToRgbaForExport(to, exportCardSoft)})`
+      course.style.background = exportCourseBackground
+      course.style.border = exportCourseBorder
+      course.style.borderRadius = exportCourseRadius
+      course.style.boxShadow = exportCourseShadow
 
       const title = document.createElement('span')
       title.className = 'uniplanStableExportCourseTitle'
