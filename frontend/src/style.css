@@ -7378,3 +7378,53 @@ body[data-theme="dark"] .programTree{
 .missingCourseFields .feedbackUpload{grid-column:1 / -1;}
 .missingCourseFields input[type="file"]{padding:10px;border:1px dashed var(--border);border-radius:12px;background:var(--panel2);}
 @media(max-width:720px){.missingCourseFields{grid-template-columns:1fr;}}
+
+/* V6.2 half-semester merged timetable card */
+.timetableCourseTile.mergedHalfTile{
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  gap:1px;
+  padding:0!important;
+  overflow:hidden;
+  background:rgba(20,35,66,.68)!important;
+}
+.timetableCourseTile.mergedHalfTile .mergedHalfSegment{
+  min-width:0;
+  height:100%;
+  border:0;
+  border-radius:0;
+  background:linear-gradient(150deg,rgba(85,129,232,.62),rgba(39,76,157,.52));
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:3px;
+  padding:8px 7px;
+  cursor:pointer;
+  text-align:left;
+}
+.timetableCourseTile.mergedHalfTile .mergedHalfSegment + .mergedHalfSegment{
+  background:linear-gradient(150deg,rgba(236,72,153,.58),rgba(124,58,237,.54));
+  border-left:1px solid rgba(255,255,255,.18);
+}
+.timetableCourseTile.mergedHalfTile .tileTitle{
+  font-size:12px;
+  line-height:1.18;
+  max-width:100%;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+.timetableCourseTile.mergedHalfTile .tileMeta{
+  font-size:10px;
+  line-height:1.15;
+  opacity:.88;
+  white-space:normal;
+}
+.timetableCourseTile.mergedHalfTile .courseTypeDot{
+  width:6px;
+  height:6px;
+  flex:0 0 auto;
+}

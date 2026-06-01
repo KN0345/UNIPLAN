@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DAYS, PERIODS, STATUS, credits, getCourse, riskScore, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus, hasAnyConflict, scheduleRuleLabel } from '../../utils/coursePlanning'
+import { DAYS, PERIODS, STATUS, credits, getCourse, riskScore, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus, hasAnyConflict, scheduleRuleLabel, mergeableHalfSemesterGroup } from '../../utils/coursePlanning'
 
 function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onCourseClick, onEmptySlotClick, onDeleteCourse, onMoveToCandidate }) {
   const warnings = semesterWarnings(semester, courses, plan)
@@ -46,6 +46,61 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
     return [label, room || '未列教室'].filter(Boolean).join('｜')
   }
 
+
+  function buildStartingGroups(entries, dayIndex, period) {
+    const groups = []
+    const used = new Set()
+    entries.forEach((course, index) => {
+      if (used.has(index)) return
+      const group = [course]
+      entries.forEach((other, otherIndex) => {
+        if (otherIndex <= index || used.has(otherIndex)) return
+        if (mergeableHalfSemesterGroup(group[0], other)) {
+          group.push(other)
+          used.add(otherIndex)
+        }
+      })
+      used.add(index)
+      groups.push(group)
+    })
+    return groups
+  }
+
+  function mergedHalfTile(group, di, p, stackIndex = 0, stackCount = 1) {
+    const span = Math.max(...group.map((entry) => spanForCourse(entry, di, p)))
+    return (
+      <div
+        key={`merged-${group.map(uid).join('-')}-${di}-${p}`}
+        className={`timetableCourseTile mergedHalfTile ${stackCount > 1 ? 'stackedTile' : ''}`}
+        style={{
+          '--tile-span': span,
+          '--stack-index': stackIndex,
+          '--stack-count': stackCount,
+        }}
+        title="同一課程不同週次，左右分欄顯示"
+      >
+        {group.slice(0, 2).map((course) => {
+          const c = getCourse(course)
+          return (
+            <button
+              key={uid(course)}
+              type="button"
+              className="mergedHalfSegment"
+              draggable
+              onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course }))}
+              onClick={(e) => handleCourseClick(course, e)}
+              title="點擊操作此週次課程"
+            >
+              <b className={`courseTypeDot ${STATUS[courseStatus(course)]?.tone || 'blue'}`} />
+              <span className="tileTitle">{c.name}</span>
+              <span className="tileMeta">{[scheduleRuleLabel(course), c.classroom || c.room || c.location || '未列教室'].filter(Boolean).join('｜')}</span>
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
   function tileButton(course, di, p, stackIndex = 0, stackCount = 1) {
     return (
       <button
@@ -81,7 +136,8 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
               const activeCourses = activeCoursesAt(di, p)
               const startingCourses = startingCoursesAt(di, p)
               const hasCourse = activeCourses.length > 0
-              const hasStartingConflict = startingCourses.length > 1 && hasAnyConflict(startingCourses)
+              const startingGroups = buildStartingGroups(startingCourses, di, p)
+              const hasStartingConflict = startingGroups.length > 1 && hasAnyConflict(startingGroups.map((group) => group[0]))
               const course = startingCourses[0]
               const continuationCourse = activeCourses[0]
               const hasContinuingConflict = !course && activeCourses.length > 1 && hasAnyConflict(activeCourses)
@@ -91,16 +147,18 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
                     <button
                       type="button"
                       className="timetableConflictTile"
-                      style={{ '--tile-span': Math.max(...startingCourses.map((entry) => spanForCourse(entry, di, p))) }}
+                      style={{ '--tile-span': Math.max(...startingGroups.map((group) => Math.max(...group.map((entry) => spanForCourse(entry, di, p))))) }}
                       onClick={(e) => { e.stopPropagation(); setConflictViewer({ day: d, period: `${p}`, courses: startingCourses }) }}
                       title="點擊查看衝堂課程"
                     >
                       <span className="conflictMark">!</span>
-                      <strong>衝堂 {startingCourses.length} 門</strong>
-                      <small>{startingCourses.slice(0, 2).map((entry) => getCourse(entry).name).join('、')}</small>
+                      <strong>衝堂 {startingGroups.length} 組</strong>
+                      <small>{startingGroups.slice(0, 2).map((group) => getCourse(group[0]).name).join('、')}</small>
                     </button>
-                  ) : startingCourses.length ? (
-                    startingCourses.map((entry, index) => tileButton(entry, di, p, index, startingCourses.length))
+                  ) : startingGroups.length ? (
+                    startingGroups.map((group, index) => group.length > 1
+                      ? mergedHalfTile(group, di, p, index, startingGroups.length)
+                      : tileButton(group[0], di, p, index, startingGroups.length))
                   ) : hasCourse ? (
                     <button
                       type="button"

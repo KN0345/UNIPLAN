@@ -58,14 +58,21 @@ export default function FeedbackPage({ notify }) {
 
   async function submitFeedback(e) {
     e.preventDefault()
-    if (!form.title.trim() && !form.detail.trim()) {
+    if (form.type === '缺失課程回報') {
+      if (!form.semester.trim() || !form.courseName.trim()) {
+        notify?.('請先選擇學期並輸入課名')
+        return
+      }
+    } else if (!form.title.trim() && !form.detail.trim()) {
       notify?.('請先輸入回報內容')
       return
     }
     const nextItem = {
       id: makeFeedbackId(),
       type: form.type,
-      title: form.title.trim() || (form.type === '缺失課程回報' ? `${form.semester} ${form.code || ''} ${form.courseName || '缺失課程'}`.trim() : form.type),
+      title: form.type === '缺失課程回報'
+        ? `${form.semester} ${form.courseName}${form.code ? `（${form.code.trim()}）` : ''}`.trim()
+        : (form.title.trim() || form.type),
       detail: form.detail.trim(),
       semester: form.semester,
       code: form.code.trim(),
@@ -103,17 +110,23 @@ export default function FeedbackPage({ notify }) {
         <form className="feedbackForm" onSubmit={submitFeedback}>
           <label>分類<select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{TYPES.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
           {form.type === '缺失課程回報' ? (
-            <div className="missingCourseFields">
-              <label>學期<select value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })}><option value="114上">114上</option><option value="114下">114下</option><option value="其他">其他</option></select></label>
-              <label>課號<input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="例如：D0778" /></label>
-              <label>課名<input value={form.courseName} onChange={(e) => setForm({ ...form, courseName: e.target.value })} placeholder="例如：未來學習與人工智慧" /></label>
-              <label>開課單位<input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} placeholder="例如：TGDXB 教育共同科" /></label>
-              <label className="feedbackUpload">圖片佐證<input type="file" accept="image/*" multiple onChange={handleAttachmentChange} /></label>
-              {form.attachments?.length ? <small className="muted">已附加 {form.attachments.length} 張圖片</small> : null}
-            </div>
-          ) : null}
-          <label>標題<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="例如：課程時間顯示錯誤" /></label>
-          <label>內容<textarea value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} placeholder="簡單描述你遇到的問題" rows={6} /></label>
+            <>
+              <div className="missingCourseFields missingCourseFieldsSimple">
+                <label>學期<span className="requiredMark">*</span><select value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })}><option value="114上">114上</option><option value="114下">114下</option><option value="其他">其他</option></select></label>
+                <label>課名<span className="requiredMark">*</span><input value={form.courseName} onChange={(e) => setForm({ ...form, courseName: e.target.value })} placeholder="例如：未來學習與人工智慧" /></label>
+                <label>課號（選填）<input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="例如：D0778" /></label>
+                <label>開課單位（選填）<input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} placeholder="例如：TGDXB 教育共同科" /></label>
+                <label className="feedbackUpload">圖片佐證（選填）<input type="file" accept="image/*" multiple onChange={handleAttachmentChange} /></label>
+                {form.attachments?.length ? <small className="muted">已附加 {form.attachments.length} 張圖片</small> : null}
+              </div>
+              <label>補充內容（選填）<textarea value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} placeholder="例如：學校課程查詢有這門課，但 UniPlan 搜尋不到。" rows={5} /></label>
+            </>
+          ) : (
+            <>
+              <label>標題<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="例如：課程時間顯示錯誤" /></label>
+              <label>內容<textarea value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} placeholder="簡單描述你遇到的問題" rows={6} /></label>
+            </>
+          )}
           <button>送出回報</button>
           <p className="muted feedbackNote">送出後由管理端處理。</p>
         </form>

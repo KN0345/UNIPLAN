@@ -334,6 +334,38 @@ export function findConflict(course, courses) {
   return courses.filter((c) => courseStatus(c) !== 'failed').find((c) => hasConflict(course, c))
 }
 
+
+export function normalizedCourseNameForMerge(course) {
+  return String(getCourse(course).name || '')
+    .replace(/[\s　]*[（(]\s*[A-Za-zＡ-Ｚａ-ｚ0-9０-９一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]+\s*班\s*[）)]\s*$/u, '')
+    .replace(/\s+/g, '')
+    .trim()
+}
+
+export function courseMergeIdentity(course) {
+  const c = getCourse(course)
+  const code = String(c.code || '').trim()
+  const name = normalizedCourseNameForMerge(course)
+  return code ? `${courseCatalogTermValue(c)}:${code}:${name}` : `${courseCatalogTermValue(c)}:${name}`
+}
+
+export function primarySlotSignature(course) {
+  return slotsOf(course).map((s) => `${s.day}-${s.start}-${s.end}`).sort().join('|')
+}
+
+export function isHalfSemesterLike(course) {
+  const rule = courseWeekPattern(course)
+  return rule.type === 'range' && rule.ranges.length > 0
+}
+
+export function mergeableHalfSemesterGroup(a, b) {
+  if (!a || !b) return false
+  if (courseMergeIdentity(a) !== courseMergeIdentity(b)) return false
+  if (primarySlotSignature(a) !== primarySlotSignature(b)) return false
+  if (!isHalfSemesterLike(a) || !isHalfSemesterLike(b)) return false
+  return !weekRangesOverlap(a, b)
+}
+
 export function credits(course) {
   return Number(getCourse(course).credits || getCourse(course).credit || 0)
 }
@@ -1106,16 +1138,62 @@ function buildStableExportDom(element, semester = '課表') {
 
       const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
       const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
+      const left = cornerW + dayW * dayIndex + 12
+      const topPx = headerRowH + rowH * rowIndex + 12
+      const widthPx = dayW - 24
+      const heightPx = Math.max(42, rowH * span - 24)
+
+      if (tile.classList.contains('mergedHalfTile')) {
+        const course = document.createElement('div')
+        course.className = 'uniplanStableExportCourse uniplanStableMergedHalfCourse'
+        course.style.left = `${left}px`
+        course.style.top = `${topPx}px`
+        course.style.width = `${widthPx}px`
+        course.style.height = `${heightPx}px`
+        course.style.display = 'grid'
+        course.style.gridTemplateColumns = '1fr 1fr'
+        course.style.gap = '1px'
+        course.style.padding = '0'
+        course.style.background = 'rgba(15,35,72,0.70)'
+        Array.from(tile.querySelectorAll('.mergedHalfSegment')).slice(0, 2).forEach((segment, segmentIndex) => {
+          const part = document.createElement('div')
+          part.style.position = 'relative'
+          part.style.overflow = 'hidden'
+          part.style.padding = '10px 8px'
+          part.style.display = 'flex'
+          part.style.flexDirection = 'column'
+          part.style.justifyContent = 'center'
+          part.style.background = segmentIndex === 0
+            ? 'linear-gradient(150deg, rgba(80,128,230,.88), rgba(37,74,150,.78))'
+            : 'linear-gradient(150deg, rgba(236,72,153,.78), rgba(124,58,237,.78))'
+          const title = document.createElement('span')
+          title.className = 'uniplanStableExportCourseTitle'
+          title.style.fontSize = '12px'
+          title.style.maxHeight = '42px'
+          title.textContent = makeExportCourseName(segment.querySelector('.tileTitle')?.textContent || segment.textContent || '課程')
+          const meta = document.createElement('span')
+          meta.className = 'uniplanStableExportCourseMeta'
+          meta.style.fontSize = '10px'
+          meta.textContent = makeExportText(segment.querySelector('.tileMeta')?.textContent || '')
+          part.appendChild(title)
+          part.appendChild(meta)
+          course.appendChild(part)
+        })
+        gridEl.appendChild(course)
+        courseIndex += 1
+        return
+      }
+
       const titleText = makeExportCourseName(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
       const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
       const [from, to] = safeCourseTileTone(courseIndex)
 
       const course = document.createElement('div')
       course.className = 'uniplanStableExportCourse'
-      course.style.left = `${cornerW + dayW * dayIndex + 12}px`
-      course.style.top = `${headerRowH + rowH * rowIndex + 12}px`
-      course.style.width = `${dayW - 24}px`
-      course.style.height = `${Math.max(42, rowH * span - 24)}px`
+      course.style.left = `${left}px`
+      course.style.top = `${topPx}px`
+      course.style.width = `${widthPx}px`
+      course.style.height = `${heightPx}px`
       course.style.background = `linear-gradient(150deg, ${from}cc, ${to}a8)`
 
       const title = document.createElement('span')
@@ -1428,11 +1506,28 @@ export async function exportCleanPng(plan, semester = '課表') {
     ctx.fillText(`${period}`, tableX + 32, y + 8)
   })
 
+  const slotGroups = []
+  const usedSlots = new Set()
+  allSlots.forEach((slot, index) => {
+    if (usedSlots.has(index)) return
+    const group = [slot]
+    allSlots.forEach((other, otherIndex) => {
+      if (otherIndex <= index || usedSlots.has(otherIndex)) return
+      if (slot.day === other.day && slot.start === other.start && slot.end === other.end && mergeableHalfSemesterGroup(slot.course, other.course)) {
+        group.push(other)
+        usedSlots.add(otherIndex)
+      }
+    })
+    usedSlots.add(index)
+    slotGroups.push(group)
+  })
+
   const placedKeys = new Set()
-  allSlots.forEach((slot) => {
+  const drawCourseCard = (slotGroup) => {
+    const slot = slotGroup[0]
     if (!dayToIndex.has(slot.day) || slot.end < firstPeriod || slot.start > lastPeriod) return
     const safeStart = Math.max(firstPeriod, slot.start)
-    const key = `${uid(slot.course)}-${slot.day}-${safeStart}`
+    const key = `${slotGroup.map((entry) => uid(entry.course)).join('-')}-${slot.day}-${safeStart}`
     if (placedKeys.has(key)) return
     placedKeys.add(key)
 
@@ -1488,29 +1583,59 @@ export async function exportCleanPng(plan, semester = '課表') {
     ctx.fillRect(x, y, w, h * .62)
     ctx.fillStyle = 'rgba(2,6,23,.12)'
     ctx.fillRect(x, y + h * .68, w, h * .32)
+
+    if (slotGroup.length > 1) {
+      ctx.fillStyle = 'rgba(255,255,255,.18)'
+      ctx.fillRect(x + w / 2 - .7, y, 1.4, h)
+      ctx.fillStyle = 'rgba(236,72,153,.18)'
+      ctx.fillRect(x + w / 2, y, w / 2, h)
+    }
     ctx.restore()
 
     ctx.save()
     ctx.textAlign = 'center'
     ctx.shadowColor = 'rgba(0,0,0,.36)'
     ctx.shadowBlur = 10
-    ctx.fillStyle = '#ffffff'
-    ctx.font = '900 30px Inter, Noto Sans TC, sans-serif'
-    const nameLines = w >= 210 ? 1 : 2
-    const nameY = y + (h >= 220 ? h * .39 : h * .43) - (nameLines === 2 ? 12 : 0)
-    drawCenteredLines(displayName || '課程', x + w / 2, nameY, w - 34, 32, nameLines)
     const room = c.classroom || c.room || c.location || ''
     const timeRange = span > 1 ? `第 ${safeStart}–${Math.min(lastPeriod, slot.end)} 節` : `第 ${safeStart} 節`
-    ctx.font = '850 22px Inter, Noto Sans TC, sans-serif'
-    ctx.fillStyle = 'rgba(255,255,255,.86)'
-    ctx.fillText(timeRange, x + w / 2, y + h - (room ? 58 : 30))
-    if (room) {
-      ctx.font = '850 21px Inter, Noto Sans TC, sans-serif'
-      ctx.fillStyle = 'rgba(255,255,255,.78)'
-      ctx.fillText(room, x + w / 2, y + h - 25)
+
+    if (slotGroup.length > 1) {
+      slotGroup.slice(0, 2).forEach((entry, partIndex) => {
+        const pc = getCourse(entry.course)
+        const cx = x + (partIndex === 0 ? w * .25 : w * .75)
+        const partW = w / 2 - 18
+        ctx.fillStyle = '#ffffff'
+        ctx.font = '900 22px Inter, Noto Sans TC, sans-serif'
+        drawCenteredLines(displayName || '課程', cx, y + h * .36, partW, 25, 2)
+        ctx.font = '850 18px Inter, Noto Sans TC, sans-serif'
+        ctx.fillStyle = 'rgba(255,255,255,.90)'
+        ctx.fillText(scheduleRuleLabel(entry.course) || timeRange, cx, y + h - (room ? 48 : 24))
+        const partRoom = pc.classroom || pc.room || pc.location || room
+        if (partRoom) {
+          ctx.font = '850 17px Inter, Noto Sans TC, sans-serif'
+          ctx.fillStyle = 'rgba(255,255,255,.78)'
+          ctx.fillText(partRoom, cx, y + h - 21)
+        }
+      })
+    } else {
+      ctx.fillStyle = '#ffffff'
+      ctx.font = '900 30px Inter, Noto Sans TC, sans-serif'
+      const nameLines = w >= 210 ? 1 : 2
+      const nameY = y + (h >= 220 ? h * .39 : h * .43) - (nameLines === 2 ? 12 : 0)
+      drawCenteredLines(displayName || '課程', x + w / 2, nameY, w - 34, 32, nameLines)
+      ctx.font = '850 22px Inter, Noto Sans TC, sans-serif'
+      ctx.fillStyle = 'rgba(255,255,255,.86)'
+      ctx.fillText(scheduleRuleLabel(slot.course) || timeRange, x + w / 2, y + h - (room ? 58 : 30))
+      if (room) {
+        ctx.font = '850 21px Inter, Noto Sans TC, sans-serif'
+        ctx.fillStyle = 'rgba(255,255,255,.78)'
+        ctx.fillText(room, x + w / 2, y + h - 25)
+      }
     }
     ctx.restore()
-  })
+  }
+
+  slotGroups.forEach(drawCourseCard)
   ctx.restore()
 
   ctx.save()
