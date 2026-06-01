@@ -606,6 +606,46 @@ async function imageUrlToDataUrl(src) {
   }
 }
 
+const UNSUPPORTED_CANVAS_COLOR_FN = /(?:^|[^-])(color|oklch|oklab|lab|lch|color-mix)\(/i
+
+function exportSafeCssValue(prop, value) {
+  const raw = String(value || '').trim()
+  if (!raw) return raw
+  if (!UNSUPPORTED_CANVAS_COLOR_FN.test(raw)) return raw
+  const name = String(prop || '').toLowerCase()
+  if (name === 'color' || name === 'caret-color' || name.includes('text-decoration-color')) return '#f8fafc'
+  if (name.includes('border') || name.includes('outline') || name === 'column-rule-color') return 'rgba(147,197,253,0.32)'
+  if (name === 'fill') return '#f8fafc'
+  if (name === 'stroke') return 'rgba(147,197,253,0.55)'
+  if (name.includes('shadow')) return 'none'
+  if (name === 'background' || name === 'background-color') return 'rgba(15,23,42,0.18)'
+  if (name === 'background-image' || name.includes('gradient')) return 'none'
+  return raw.replace(/(?:color|oklch|oklab|lab|lch|color-mix)\([^)]*\)/gi, 'rgba(15,23,42,0.18)')
+}
+
+function sanitizeUnsupportedCanvasCss(root, clonedWindow = window) {
+  if (!root) return
+  const nodes = [root, ...Array.from(root.querySelectorAll?.('*') || [])]
+  nodes.forEach((node) => {
+    if (!(node instanceof clonedWindow.HTMLElement)) return
+    const style = node.style
+    const props = []
+    for (let i = 0; i < style.length; i += 1) props.push(style.item(i))
+    props.forEach((prop) => {
+      const value = style.getPropertyValue(prop)
+      if (!UNSUPPORTED_CANVAS_COLOR_FN.test(String(value || ''))) return
+      const priority = style.getPropertyPriority(prop) || 'important'
+      style.setProperty(prop, exportSafeCssValue(prop, value), priority)
+    })
+    ;['color','background','background-color','background-image','border-color','border-top-color','border-right-color','border-bottom-color','border-left-color','outline-color','box-shadow','text-shadow','fill','stroke','caret-color','accent-color'].forEach((prop) => {
+      const value = style.getPropertyValue(prop)
+      if (UNSUPPORTED_CANVAS_COLOR_FN.test(String(value || ''))) {
+        style.setProperty(prop, exportSafeCssValue(prop, value), 'important')
+      }
+    })
+  })
+}
+
 async function sanitizeExportCloneImages(source, target) {
   if (!(source instanceof Element) || !(target instanceof Element)) return
 
@@ -650,7 +690,8 @@ export function inlineComputedStyles(source, target) {
   const computed = window.getComputedStyle(source)
   let cssText = ''
   for (const prop of computed) {
-    cssText += `${prop}:${computed.getPropertyValue(prop)};`
+    const value = exportSafeCssValue(prop, computed.getPropertyValue(prop))
+    cssText += `${prop}:${value};`
   }
   target.setAttribute('style', `${target.getAttribute('style') || ''};${cssText}`)
   Array.from(source.children).forEach((child, index) => inlineComputedStyles(child, target.children[index]))
@@ -1416,6 +1457,7 @@ export async function exportPngFromDom(element, semester = '課表') {
 
     exportRoot = iframeDoc.importNode(clone, true)
     iframeDoc.body.appendChild(exportRoot)
+    sanitizeUnsupportedCanvasCss(exportRoot, iframe.contentWindow || window)
     exportRoot.style.position = 'relative'
     exportRoot.style.left = '0'
     exportRoot.style.top = '0'
@@ -1432,6 +1474,7 @@ export async function exportPngFromDom(element, semester = '課表') {
 
     const { default: html2canvas } = await import('html2canvas')
     const canvas = await html2canvas(exportRoot, {
+      onclone: (doc) => sanitizeUnsupportedCanvasCss(doc.body, doc.defaultView || window),
       backgroundColor: null,
       scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)),
       useCORS: true,
