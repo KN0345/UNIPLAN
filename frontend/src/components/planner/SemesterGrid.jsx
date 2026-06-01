@@ -110,6 +110,26 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
     return false
   }
 
+  function renderHalfSegment(course, extraClassName = '') {
+    const c = getCourse(course)
+    return (
+      <button
+        key={uid(course)}
+        type="button"
+        className={`halfSemesterSegment ${extraClassName}`}
+        style={{ minWidth: 0, height: '100%' }}
+        draggable
+        onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course }))}
+        onClick={(e) => handleCourseClick(course, e)}
+        title="點擊操作此週次課程"
+      >
+        <b className={`courseTypeDot ${STATUS[courseStatus(course)]?.tone || 'blue'}`} />
+        <span className="tileTitle">{c.name}</span>
+        <span className="tileMeta">{[scheduleRuleLabel(course), c.classroom || c.room || c.location || '未列教室'].filter(Boolean).join('｜')}</span>
+      </button>
+    )
+  }
+
   function mergedHalfTile(group, di, p, stackIndex = 0, stackCount = 1) {
     const span = Math.max(...group.map((entry) => spanForCourse(entry, di, p)))
     return (
@@ -127,25 +147,20 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
         }}
         title="同一課程不同週次，左右分欄顯示"
       >
-        {group.slice(0, 2).map((course) => {
-          const c = getCourse(course)
-          return (
-            <button
-              key={uid(course)}
-              type="button"
-              className="halfSemesterSegment"
-              style={{ minWidth: 0, height: '100%' }}
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course }))}
-              onClick={(e) => handleCourseClick(course, e)}
-              title="點擊操作此週次課程"
-            >
-              <b className={`courseTypeDot ${STATUS[courseStatus(course)]?.tone || 'blue'}`} />
-              <span className="tileTitle">{c.name}</span>
-              <span className="tileMeta">{[scheduleRuleLabel(course), c.classroom || c.room || c.location || '未列教室'].filter(Boolean).join('｜')}</span>
-            </button>
-          )
-        })}
+        {group.slice(0, 2).map((course) => renderHalfSegment(course))}
+      </div>
+    )
+  }
+
+  function halfContinuationHitbox(activeCourses, di, p) {
+    const group = activeCourses
+      .filter((course) => isHalfWeekRule(course) && slotsForDay(course, di).some((slot) => slot.start < p && p <= slot.end))
+      .sort((a, b) => firstWeekNumber(a) - firstWeekNumber(b))
+      .slice(0, 2)
+    if (group.length < 2 || hasAnyConflict(group)) return null
+    return (
+      <div className="halfSemesterContinuationHitbox" aria-hidden="false">
+        {group.map((course) => renderHalfSegment(course, 'halfSemesterContinuationSegment'))}
       </div>
     )
   }
@@ -210,7 +225,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
                       ? mergedHalfTile(group, di, p, index, startingGroups.length)
                       : tileButton(group[0], di, p, index, startingGroups.length))
                   ) : hasCourse ? (
-                    isHalfContinuation ? null : <button
+                    isHalfContinuation ? halfContinuationHitbox(activeCourses, di, p) : <button
                       type="button"
                       className={`occupiedContinuation ${hasContinuingConflict ? 'continuationConflict' : ''}`}
                       title={hasContinuingConflict ? '此節次有衝堂課程，點擊查看' : '此節次已被跨節課程占用，可拖曳或點擊課程'}

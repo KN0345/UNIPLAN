@@ -3059,3 +3059,25 @@ html[style*="--course-card-alpha:0"] .semesterPanel.activeSemesterPanel .halfSem
   .quickActions{grid-column:2!important;grid-row:2!important;height:auto!important;}
   .sideDelete{grid-column:2!important;grid-row:3!important;}
 }
+
+/* UniPlan patch: make later rows of half-semester split cards clickable. */
+.semesterPanel.activeSemesterPanel .halfSemesterContinuationHitbox{
+  position:absolute!important;
+  inset:0!important;
+  z-index:70!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  pointer-events:auto!important;
+  background:transparent!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterContinuationHitbox .halfSemesterContinuationSegment{
+  opacity:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterContinuationHitbox .halfSemesterContinuationSegment *{
+  pointer-events:none!important;
+}

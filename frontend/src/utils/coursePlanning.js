@@ -1262,6 +1262,117 @@ function buildStableExportDom(element, semester = '課表') {
   return { root, width: exportWidth, height: exportHeight }
 }
 
+function sanitizeExportClone(root) {
+  if (!root) return
+  root.querySelectorAll('button').forEach((button) => {
+    button.setAttribute('aria-hidden', 'false')
+    button.style.cursor = 'default'
+  })
+  root.querySelectorAll('.emptySlotButton').forEach((button) => {
+    button.style.display = 'none'
+  })
+  root.querySelectorAll('.halfSemesterContinuationHitbox').forEach((hitbox) => {
+    hitbox.remove()
+  })
+  root.querySelectorAll('.occupiedContinuation').forEach((node) => {
+    node.remove()
+  })
+}
+
+function prepareCompactTimetableExport(root, fallbackWidth = 1180, fallbackHeight = 780) {
+  if (!root) return { width: fallbackWidth, height: fallbackHeight }
+  const panel = root.querySelector('.semesterPanel.activeSemesterPanel') || root.querySelector('.semesterPanel')
+  const grid = root.querySelector('.timetableGridClean')
+  if (!panel || !grid) return { width: fallbackWidth, height: fallbackHeight }
+
+  const dayHeaders = Array.from(grid.querySelectorAll(':scope > .timetableDay'))
+  const rows = Array.from(grid.querySelectorAll(':scope > .gridRow'))
+  const usedDays = new Set()
+  const usedRows = new Set()
+
+  rows.forEach((row, rowIndex) => {
+    const cells = Array.from(row.querySelectorAll(':scope > .timetableCell'))
+    cells.forEach((cell, dayIndex) => {
+      const occupied = cell.classList.contains('hasCourse')
+        || Boolean(cell.querySelector('.timetableCourseTile,.timetableConflictTile,.halfSemesterSplitTile'))
+      if (occupied) {
+        usedDays.add(dayIndex)
+        usedRows.add(rowIndex)
+      }
+    })
+  })
+
+  // 課表匯出預設保留週一到週五；週末只有真的有課才留下。
+  const keepDays = [0, 1, 2, 3, 4].filter((day) => dayHeaders[day])
+  ;[5, 6].forEach((day) => {
+    if (usedDays.has(day) && dayHeaders[day]) keepDays.push(day)
+  })
+  if (!keepDays.length) dayHeaders.slice(0, 5).forEach((_, index) => keepDays.push(index))
+  const keepDaySet = new Set(keepDays)
+
+  dayHeaders.forEach((header, dayIndex) => {
+    if (!keepDaySet.has(dayIndex)) header.remove()
+  })
+
+  const maxUsedRow = usedRows.size ? Math.max(...Array.from(usedRows)) : 9
+  // 保留到最後一堂課所在節次；至少保留 6 節，避免只有上午課時畫面太扁。
+  const keepRowCount = Math.min(10, Math.max(6, maxUsedRow + 1))
+  rows.forEach((row, rowIndex) => {
+    if (rowIndex >= keepRowCount) {
+      row.remove()
+      return
+    }
+    const cells = Array.from(row.querySelectorAll(':scope > .timetableCell'))
+    cells.forEach((cell, dayIndex) => {
+      if (!keepDaySet.has(dayIndex)) cell.remove()
+    })
+  })
+
+  const columnCount = keepDays.length
+  const periodColumn = 56
+  const dayColumn = columnCount <= 5 ? 184 : 168
+  const gridWidth = periodColumn + columnCount * dayColumn
+  const rowHeight = keepRowCount <= 6 ? 68 : 62
+  const headerHeight = 42
+  const gridHeight = headerHeight + keepRowCount * rowHeight
+  const exportWidth = Math.max(760, Math.min(1320, gridWidth + 48))
+  const exportHeight = Math.max(520, Math.min(1100, gridHeight + 118))
+
+  root.classList.add('uniplanCompactScheduleExport')
+  root.style.setProperty('width', `${exportWidth}px`, 'important')
+  root.style.setProperty('min-width', `${exportWidth}px`, 'important')
+  root.style.setProperty('height', `${exportHeight}px`, 'important')
+  root.style.setProperty('min-height', `${exportHeight}px`, 'important')
+  root.style.setProperty('padding', '0', 'important')
+  root.style.setProperty('overflow', 'hidden', 'important')
+
+  panel.style.setProperty('width', `${exportWidth}px`, 'important')
+  panel.style.setProperty('min-width', `${exportWidth}px`, 'important')
+  panel.style.setProperty('height', `${exportHeight}px`, 'important')
+  panel.style.setProperty('min-height', `${exportHeight}px`, 'important')
+  panel.style.setProperty('padding', '22px 24px 24px', 'important')
+  panel.style.setProperty('box-sizing', 'border-box', 'important')
+  panel.style.setProperty('overflow', 'hidden', 'important')
+
+  grid.style.setProperty('width', `${gridWidth}px`, 'important')
+  grid.style.setProperty('max-width', `calc(100% - 0px)`, 'important')
+  grid.style.setProperty('min-width', '0', 'important')
+  grid.style.setProperty('height', `${gridHeight}px`, 'important')
+  grid.style.setProperty('min-height', `${gridHeight}px`, 'important')
+  grid.style.setProperty('grid-template-columns', `${periodColumn}px repeat(${columnCount}, ${dayColumn}px)`, 'important')
+  grid.style.setProperty('grid-auto-rows', `${rowHeight}px`, 'important')
+  grid.style.setProperty('margin', '12px auto 0', 'important')
+  grid.style.setProperty('border-radius', '18px', 'important')
+
+  grid.querySelectorAll('.timetableCourseTile,.timetableConflictTile').forEach((tile) => {
+    tile.style.setProperty('inset', '6px', 'important')
+    tile.style.setProperty('height', 'calc((100% * var(--tile-span, 1)) - 12px)', 'important')
+    tile.style.setProperty('min-height', 'calc((100% * var(--tile-span, 1)) - 12px)', 'important')
+  })
+
+  return { width: exportWidth, height: exportHeight }
+}
+
 export async function exportPngFromDom(element, semester = '課表') {
   if (!element) {
     alert('找不到目前課表畫面，無法匯出 PNG。')
@@ -1271,21 +1382,24 @@ export async function exportPngFromDom(element, semester = '課表') {
   let iframe = null
   let exportRoot = null
   try {
-    const built = buildStableExportDom(element, semester)
-    exportRoot = built.root
+    const rect = element.getBoundingClientRect()
+    const fallbackWidth = Math.ceil(rect.width || element.scrollWidth || 1280)
+    const fallbackHeight = Math.ceil(rect.height || element.scrollHeight || 900)
 
-    // Run html2canvas inside a fully isolated document. html2canvas parses the
-    // stylesheets available in the document it renders. The main UniPlan app uses
-    // many modern CSS color functions such as color-mix(), which html2canvas cannot
-    // parse. A blank iframe prevents html2canvas from seeing those app styles while
-    // the stable export DOM provides its own safe layout CSS.
+    const clone = element.cloneNode(true)
+    inlineComputedStyles(element, clone)
+    sanitizeExportClone(clone)
+    const compactSize = prepareCompactTimetableExport(clone, fallbackWidth, fallbackHeight)
+    const width = compactSize.width
+    const height = compactSize.height
+
     iframe = document.createElement('iframe')
     iframe.setAttribute('aria-hidden', 'true')
     iframe.style.position = 'fixed'
     iframe.style.left = '-100000px'
     iframe.style.top = '0'
-    iframe.style.width = `${built.width}px`
-    iframe.style.height = `${built.height}px`
+    iframe.style.width = `${width}px`
+    iframe.style.height = `${height}px`
     iframe.style.border = '0'
     iframe.style.opacity = '0'
     iframe.style.pointerEvents = 'none'
@@ -1293,24 +1407,24 @@ export async function exportPngFromDom(element, semester = '課表') {
 
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
     if (!iframeDoc) throw new Error('無法建立匯出用 iframe')
-
     iframeDoc.open()
     iframeDoc.write(`<!doctype html><html><head><meta charset="utf-8"><style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        width: ${built.width}px;
-        height: ${built.height}px;
-        overflow: hidden;
-        background: #0b1f3d;
-      }
+      html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden;background:transparent;}
+      *{box-sizing:border-box;animation:none!important;transition:none!important;}
     </style></head><body></body></html>`)
     iframeDoc.close()
 
+    exportRoot = iframeDoc.importNode(clone, true)
     iframeDoc.body.appendChild(exportRoot)
     exportRoot.style.position = 'relative'
     exportRoot.style.left = '0'
     exportRoot.style.top = '0'
+    exportRoot.style.margin = '0'
+    exportRoot.style.transform = 'none'
+    exportRoot.style.width = `${width}px`
+    exportRoot.style.minWidth = `${width}px`
+    exportRoot.style.height = `${height}px`
+    exportRoot.style.minHeight = `${height}px`
 
     await waitForImages(exportRoot)
     if (iframeDoc.fonts?.ready) await iframeDoc.fonts.ready
@@ -1318,16 +1432,16 @@ export async function exportPngFromDom(element, semester = '課表') {
 
     const { default: html2canvas } = await import('html2canvas')
     const canvas = await html2canvas(exportRoot, {
-      backgroundColor: '#0b1f3d',
+      backgroundColor: null,
       scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)),
       useCORS: true,
       allowTaint: false,
       imageTimeout: 15000,
       logging: false,
-      width: built.width,
-      height: built.height,
-      windowWidth: built.width,
-      windowHeight: built.height,
+      width,
+      height,
+      windowWidth: width,
+      windowHeight: height,
       scrollX: 0,
       scrollY: 0,
     })
@@ -1345,14 +1459,15 @@ export async function exportPngFromDom(element, semester = '課表') {
     URL.revokeObjectURL(pngUrl)
     return true
   } catch (error) {
-    console.error('Stable DOM PNG export failed.', error)
-    alert('PNG 匯出失敗：隔離版課表匯出失敗，請回報 Console 錯誤。')
+    console.error('Current view PNG export failed.', error)
+    alert('PNG 匯出失敗：目前畫面匯出失敗，請回報 Console 錯誤。')
     return false
   } finally {
     if (iframe?.parentNode) iframe.parentNode.removeChild(iframe)
     else if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
   }
 }
+
 
 
 
