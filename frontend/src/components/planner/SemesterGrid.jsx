@@ -46,6 +46,22 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
   }
 
 
+  function startsAt(course, dayIndex, period) {
+    return slotsForDay(course, dayIndex).some((slot) => slot.start === period)
+  }
+
+  function canMergeInCurrentCell(a, b, dayIndex, period) {
+    // Prefer the global utility when the full slot signature matches.
+    if (mergeableHalfSemesterGroup(a, b)) return true
+    // Fallback for 淡江 half-semester courses that share the same visible cell
+    // but have slightly different raw slot metadata or extra secondary slots.
+    if (!startsAt(a, dayIndex, period) || !startsAt(b, dayIndex, period)) return false
+    const aLabel = scheduleRuleLabel(a)
+    const bLabel = scheduleRuleLabel(b)
+    if (!/\d+\s*[-－～~]\s*\d+\s*週/.test(aLabel) || !/\d+\s*[-－～~]\s*\d+\s*週/.test(bLabel)) return false
+    return !hasAnyConflict([a, b])
+  }
+
   function buildStartingGroups(entries, dayIndex, period) {
     const groups = []
     const used = new Set()
@@ -54,12 +70,14 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
       const group = [course]
       entries.forEach((other, otherIndex) => {
         if (otherIndex <= index || used.has(otherIndex)) return
-        if (mergeableHalfSemesterGroup(group[0], other)) {
+        if (group.length < 2 && canMergeInCurrentCell(group[0], other, dayIndex, period)) {
           group.push(other)
           used.add(otherIndex)
         }
       })
       used.add(index)
+      // Put 1-9週 on the left and 10-18週 on the right when possible.
+      group.sort((a, b) => String(scheduleRuleLabel(a)).localeCompare(String(scheduleRuleLabel(b)), 'zh-Hant'))
       groups.push(group)
     })
     return groups
@@ -70,7 +88,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
     return (
       <div
         key={`merged-${group.map(uid).join('-')}-${di}-${p}`}
-        className={`timetableCourseTile mergedHalfTile ${stackCount > 1 ? 'stackedTile' : ''}`}
+        className={`halfSemesterSplitTile ${stackCount > 1 ? 'stackedTile' : ''}`}
         style={{
           '--tile-span': span,
           '--stack-index': stackIndex,
@@ -88,7 +106,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
             <button
               key={uid(course)}
               type="button"
-              className="mergedHalfSegment"
+              className="halfSemesterSegment"
               style={{ minWidth: 0, height: '100%' }}
               draggable
               onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course }))}

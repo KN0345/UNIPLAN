@@ -46911,6 +46911,20 @@ const PATCHED_COMMON_COURSES = [
   }
 ]
 
+
+function patchedCourseKey(course) {
+  const c = course?.course || course || {}
+  const term = normalizeCourseCatalogTerm(c.semester_source || c.semester || c.term || c.source_term || c.catalog_term)
+  const serial = String(c.serial || c.open_serial || c.id || '').trim()
+  const code = String(c.code || c.course_code || c.course_id || '').trim()
+  const cls = String(c.class_name || c.class || c.section || '').trim()
+  const name = String(c.name || c.course_name || '').trim()
+  const teacher = String(c.teacher || c.instructor || '').trim()
+  const time = String(c.time_info || c.time || '').trim()
+  if (serial) return `${term}:${serial}`
+  return `${term}:${code}:${cls}:${name}:${teacher}:${time}`
+}
+
 function normalizePatchedCourse(course) {
   return mapCourseRow({ id: patchedCourseKey(course), raw_json: course, ...course })
 }
@@ -47122,6 +47136,17 @@ function normalizeImportCourse(course = {}, fallbackSemester = '') {
 }
 
 async function upsertCourseRow(sql, c) {
+  // 不依賴既有資料庫是否已建立 unique constraint。
+  // Cloudflare/Neon 上若 courses 表早於本版建立，ON CONFLICT 會因缺少唯一索引而 500。
+  // 這裡改成先刪除同一課程鍵，再插入，確保補丁與 HTML 匯入都能穩定寫入後端。
+  await sql`
+    delete from courses
+    where semester_source = ${c.semester_source}
+      and coalesce(serial, '') = ${c.serial}
+      and coalesce(code, '') = ${c.code}
+      and coalesce(class_name, '') = ${c.class_name}
+      and name = ${c.name}
+  `
   await sql`
     insert into courses (
       semester_source, serial, code, name, credits, category, teacher, classroom, capacity,
@@ -47130,23 +47155,6 @@ async function upsertCourseRow(sql, c) {
       ${c.semester_source}, ${c.serial}, ${c.code}, ${c.name}, ${c.credits}, ${c.category}, ${c.teacher}, ${c.classroom}, ${c.capacity},
       ${JSON.stringify(c.time_data)}::jsonb, ${c.time_info}, ${c.department}, ${c.grade}, ${c.major}, ${c.sem_seq}, ${c.class_name}, ${c.group_type}, ${c.notes}, ${JSON.stringify(c.raw_json)}::jsonb, now()
     )
-    on conflict (semester_source, serial, code, class_name, name)
-    do update set
-      credits = excluded.credits,
-      category = excluded.category,
-      teacher = excluded.teacher,
-      classroom = excluded.classroom,
-      capacity = excluded.capacity,
-      time_data = excluded.time_data,
-      time_info = excluded.time_info,
-      department = excluded.department,
-      grade = excluded.grade,
-      major = excluded.major,
-      sem_seq = excluded.sem_seq,
-      group_type = excluded.group_type,
-      notes = excluded.notes,
-      raw_json = excluded.raw_json,
-      updated_at = now()
   `
 }
 
@@ -47631,6 +47639,49 @@ async function handleAdminCourseImport(request, env, sql) {
 }
 
 
+async function handleAdminPatchCourseImport(request, env, sql) {
+  const row = await authUser(request, env, sql)
+  if (!row) return error('尚未登入', 401)
+  const publicRow = publicUser(row)
+  if (publicRow.role !== 'super_admin') return error('沒有管理員權限', 403)
+
+  const body = await readBody(request)
+  const semester = normalizeCourseCatalogTerm(body.semester || body.semester_source || '')
+  const clearSemester = Boolean(body.clearSemester || body.clear_semester)
+  const sourceCourses = PATCHED_COMMON_COURSES
+    .map(normalizePatchedCourse)
+    .filter((course) => !semester || normalizeCourseCatalogTerm(course.semester_source) === semester)
+
+  if (!sourceCourses.length) return error('沒有符合條件的內建補丁課程')
+
+  await ensureCourseSchema(sql)
+  if (clearSemester && semester) {
+    await sql`delete from courses where semester_source = ${semester}`
+  }
+
+  let imported = 0
+  const errors = []
+  const bySemester = {}
+  for (let index = 0; index < sourceCourses.length; index += 1) {
+    const course = normalizeImportCourse(sourceCourses[index], semester)
+    if (!course.semester_source || !course.name) {
+      errors.push({ row: index + 1, message: '缺少學期或課程名稱' })
+      continue
+    }
+    try {
+      await upsertCourseRow(sql, course)
+      imported += 1
+      bySemester[course.semester_source] = (bySemester[course.semester_source] || 0) + 1
+    } catch (err) {
+      errors.push({ row: index + 1, message: err?.message || '匯入失敗' })
+      if (errors.length >= 20) break
+    }
+  }
+
+  return json({ ok: true, imported, failed: errors.length, errors, bySemester, source: 'patched-common-courses' })
+}
+
+
 function getOAuthBaseUrl(request) {
   const url = new URL(request.url)
   return `${url.protocol}//${url.host}`
@@ -47878,53 +47929,25 @@ function mapCourseRow(row) {
   }
 }
 
+function buildLocalPatchCourseResponse(searchParams, warning = '') {
+  const data = PATCHED_COMMON_COURSES
+    .map((course) => {
+      try { return normalizePatchedCourse(course) } catch { return null }
+    })
+    .filter(Boolean)
+    .filter((course) => courseMatchesQuery(course, searchParams))
+    .slice(0, 500)
+  return json({ ok: true, data, total: data.length, source: 'local-patches-fallback', warning })
+}
+
 async function handleCourses(request, env) {
   const url = new URL(request.url)
-  const sql = getSql(env)
   const keyword = String(url.searchParams.get('keyword') || '').trim()
   const semester = normalizeCourseCatalogTerm(url.searchParams.get('semester') || url.searchParams.get('term') || url.searchParams.get('catalogTerm'))
   const department = String(url.searchParams.get('department') || '').trim()
   const grade = String(url.searchParams.get('grade') || '').trim()
   const weekday = String(url.searchParams.get('weekday') || '').trim()
   const period = String(url.searchParams.get('period') || '').trim()
-
-  let rows = []
-  let neonError = null
-  try {
-    rows = await sql`
-      SELECT
-        id,
-        semester_source,
-        serial,
-        code,
-        name,
-        credits,
-        category,
-        teacher,
-        classroom,
-        capacity,
-        time_data,
-        time_info,
-        department,
-        grade,
-        major,
-        sem_seq,
-        class_name,
-        group_type,
-        notes,
-        raw_json
-      FROM courses
-      WHERE (${semester} = '' OR semester_source = ${semester})
-        AND (${department} = '' OR ${department} = '全部' OR department = ${department})
-        AND (${grade} = '' OR ${grade} = '全部' OR grade = ${grade})
-      ORDER BY semester_source, department NULLS LAST, serial NULLS LAST, code NULLS LAST, name
-      LIMIT 5000
-    `
-  } catch (err) {
-    // Neon / D1 資料庫暫時失敗時，仍回傳本地補丁課程，避免課程搜尋整個 500。
-    neonError = err?.message || 'course database unavailable'
-    rows = []
-  }
 
   const searchParams = new URLSearchParams()
   if (keyword) searchParams.set('keyword', keyword)
@@ -47934,17 +47957,40 @@ async function handleCourses(request, env) {
   if (weekday) searchParams.set('weekday', weekday)
   if (period) searchParams.set('period', period)
 
-  const neonCourses = rows.map(mapCourseRow)
-  const existing = new Set(neonCourses.map(patchedCourseKey))
-  const patchedCourses = PATCHED_COMMON_COURSES
-    .map(normalizePatchedCourse)
-    .filter((course) => !existing.has(patchedCourseKey(course)))
+  let rows = []
+  let neonError = ''
+  try {
+    if (!env?.DATABASE_URL) throw new Error('DATABASE_URL 未設定')
+    const sql = getSql(env)
+    rows = await sql`
+      SELECT
+        id, semester_source, serial, code, name, credits, category, teacher, classroom, capacity,
+        time_data, time_info, department, grade, major, sem_seq, class_name, group_type, notes, raw_json
+      FROM courses
+      WHERE (${semester} = '' OR semester_source = ${semester})
+        AND (${department} = '' OR ${department} = '全部' OR department = ${department})
+        AND (${grade} = '' OR ${grade} = '全部' OR grade = ${grade})
+      ORDER BY semester_source, department NULLS LAST, serial NULLS LAST, code NULLS LAST, name
+      LIMIT 5000
+    `
+  } catch (err) {
+    neonError = err?.message || 'course database unavailable'
+    rows = []
+  }
 
-  const data = [...neonCourses, ...patchedCourses]
-    .filter((course) => courseMatchesQuery(course, searchParams))
-    .slice(0, 500)
-
-  return json({ ok: true, data, total: data.length, source: neonError ? 'local-patches-fallback' : 'neon-courses-with-local-patches', warning: neonError || undefined })
+  try {
+    const neonCourses = rows.map(mapCourseRow)
+    const existing = new Set(neonCourses.map(patchedCourseKey))
+    const patchedCourses = PATCHED_COMMON_COURSES
+      .map(normalizePatchedCourse)
+      .filter((course) => !existing.has(patchedCourseKey(course)))
+    const data = [...neonCourses, ...patchedCourses]
+      .filter((course) => courseMatchesQuery(course, searchParams))
+      .slice(0, 500)
+    return json({ ok: true, data, total: data.length, source: neonError ? 'local-patches-fallback' : 'neon-courses-with-local-patches', warning: neonError || undefined })
+  } catch (err) {
+    return buildLocalPatchCourseResponse(searchParams, err?.message || neonError || 'local patch fallback')
+  }
 }
 
 
@@ -48056,6 +48102,7 @@ export async function onRequest(context) {
     if (path === '/user/favorites' && ['GET', 'PUT'].includes(method)) return handleFavorites(request, env, sql, method)
     if (path === '/user/settings' && ['GET', 'PUT', 'POST'].includes(method)) return handleSettings(request, env, sql, method === 'POST' ? 'PUT' : method)
     if (path === '/feedback' && ['GET', 'POST'].includes(method)) return handlePublicFeedback(request, env, sql, method)
+    if (method === 'POST' && path === '/admin/courses/import-patches') return handleAdminPatchCourseImport(request, env, sql)
     if (method === 'POST' && path === '/admin/courses/import') return handleAdminCourseImport(request, env, sql)
     if (method === 'POST' && path === '/schedule') return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/schedule/')) return handleSchedule(request, env, sql, method)

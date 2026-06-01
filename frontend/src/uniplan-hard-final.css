@@ -2799,3 +2799,82 @@ body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateA
   text-overflow:ellipsis!important;
   max-width:100%!important;
 }
+
+/* UniPlan final fix: half-semester courses inside the same slot are one left/right card. */
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile{
+  --frost:var(--course-card-alpha,.72);
+  position:absolute!important;
+  inset:5px!important;
+  z-index:18!important;
+  height:calc((var(--tile-span,1) * 100%) - 10px)!important;
+  min-height:34px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+  gap:1px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:12px!important;
+  border:1px solid rgba(180,200,230,calc(.18 * var(--frost)))!important;
+  background:rgba(15,30,58,calc(.54 + .18 * var(--frost)))!important;
+  box-shadow:0 10px 24px rgba(0,0,0,calc(.22 * var(--frost))), inset 0 1px 0 rgba(255,255,255,calc(.14 * var(--frost)))!important;
+  backdrop-filter:blur(calc(18px * var(--frost))) saturate(calc(100% + 45% * var(--frost)))!important;
+  -webkit-backdrop-filter:blur(calc(18px * var(--frost))) saturate(calc(100% + 45% * var(--frost)))!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile.stackedTile{
+  top:calc(5px + (var(--stack-index,0) * (((var(--tile-span,1) * 56px) - 12px) / var(--stack-count,1))))!important;
+  height:calc((((var(--tile-span,1) * 56px) - 12px) / var(--stack-count,1)) - 4px)!important;
+  min-height:28px!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment{
+  appearance:none!important;
+  min-width:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  border:0!important;
+  border-radius:0!important;
+  color:rgba(255,255,255,.98)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+  gap:3px!important;
+  padding:9px 7px 7px 8px!important;
+  overflow:hidden!important;
+  text-align:left!important;
+  cursor:pointer!important;
+  background:linear-gradient(160deg,rgba(71,119,226,.68),rgba(21,43,92,.58))!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment + .halfSemesterSegment{
+  border-left:1px solid rgba(255,255,255,.18)!important;
+  background:linear-gradient(160deg,rgba(219,67,162,.68),rgba(80,49,140,.58))!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment .courseTypeDot{
+  width:7px!important;
+  height:7px!important;
+  margin:0 0 2px 0!important;
+  flex:0 0 auto!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment .tileTitle{
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  font-size:11px!important;
+  line-height:1.14!important;
+  font-weight:900!important;
+  letter-spacing:-.03em!important;
+  color:#fff!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment .tileMeta{
+  display:block!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:9px!important;
+  line-height:1.1!important;
+  color:rgba(226,232,240,.86)!important;
+}
