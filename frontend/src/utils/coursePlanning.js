@@ -1605,6 +1605,8 @@ export async function exportCleanPng(plan, semester = '課表') {
     const bottom = mixRgba(baseA, baseB, .58)
     const deep = darkenRgba(bottom, .20)
 
+    const cardAlpha = Math.max(0, Math.min(1, appearance.courseCardOpacity ?? .72))
+
     ctx.save()
     ctx.shadowColor = rgbaString(baseA, .52 * cardAlpha)
     ctx.shadowBlur = 34
@@ -1614,7 +1616,6 @@ export async function exportCleanPng(plan, semester = '課表') {
     glow.addColorStop(1, 'rgba(255,255,255,0)')
     fillRound(x - 8, y - 8, w + 16, h + 16, 38, glow)
     const card = ctx.createLinearGradient(x, y, x + w, y + h)
-    const cardAlpha = Math.max(0, Math.min(1, appearance.courseCardOpacity ?? .72))
     card.addColorStop(0, rgbaString(top, cardAlpha))
     card.addColorStop(.58, rgbaString(bottom, cardAlpha))
     card.addColorStop(1, rgbaString(deep, cardAlpha))
