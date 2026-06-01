@@ -7428,3 +7428,75 @@ body[data-theme="dark"] .programTree{
   height:6px;
   flex:0 0 auto;
 }
+
+/* V3.16 planner side panels: keep right working panels the same height as the timetable. */
+.plannerLayout{
+  align-items:stretch!important;
+}
+.plannerLayout .workspace,
+.plannerLayout .semesterScroller,
+.plannerLayout .exportScheduleCanvas,
+.plannerLayout .semesterPanel{
+  height:100%!important;
+  min-height:0!important;
+}
+.plannerTools{
+  height:100%!important;
+  min-height:0!important;
+  align-self:stretch!important;
+  display:grid!important;
+  grid-template-columns:minmax(250px,1fr) 220px!important;
+  grid-template-rows:auto minmax(0,1fr) auto!important;
+  gap:12px!important;
+  overflow:hidden!important;
+}
+.sideCandidateRail{
+  grid-column:1!important;
+  grid-row:1 / 4!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  align-self:stretch!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.semesterPicker{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:start!important;
+}
+.quickActions{
+  grid-column:2!important;
+  grid-row:2!important;
+  min-height:0!important;
+  height:100%!important;
+  align-self:stretch!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.quickActions .plannerActionGrid{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  align-content:start!important;
+}
+.sideDelete{
+  grid-column:2!important;
+  grid-row:3!important;
+  align-self:stretch!important;
+}
+@media(max-width:1280px){
+  .plannerTools{grid-template-columns:minmax(220px,1fr) 200px!important;}
+}
+@media(max-width:1040px){
+  .plannerTools{
+    grid-template-columns:1fr 1fr!important;
+    grid-template-rows:auto auto auto!important;
+    height:auto!important;
+    min-height:360px!important;
+    overflow:visible!important;
+  }
+  .sideCandidateRail{grid-column:1!important;grid-row:1 / 4!important;min-height:320px!important;height:auto!important;}
+  .semesterPicker{grid-column:2!important;grid-row:1!important;}
+  .quickActions{grid-column:2!important;grid-row:2!important;height:auto!important;}
+  .sideDelete{grid-column:2!important;grid-row:3!important;}
+}
