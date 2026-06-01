@@ -47631,6 +47631,49 @@ async function handleAdminCourseImport(request, env, sql) {
 }
 
 
+async function handleAdminPatchCourseImport(request, env, sql) {
+  const row = await authUser(request, env, sql)
+  if (!row) return error('尚未登入', 401)
+  const publicRow = publicUser(row)
+  if (publicRow.role !== 'super_admin') return error('沒有管理員權限', 403)
+
+  const body = await readBody(request)
+  const semester = normalizeCourseCatalogTerm(body.semester || body.semester_source || '')
+  const clearSemester = Boolean(body.clearSemester || body.clear_semester)
+  const sourceCourses = PATCHED_COMMON_COURSES
+    .map(normalizePatchedCourse)
+    .filter((course) => !semester || normalizeCourseCatalogTerm(course.semester_source) === semester)
+
+  if (!sourceCourses.length) return error('沒有符合條件的內建補丁課程')
+
+  await ensureCourseSchema(sql)
+  if (clearSemester && semester) {
+    await sql`delete from courses where semester_source = ${semester}`
+  }
+
+  let imported = 0
+  const errors = []
+  const bySemester = {}
+  for (let index = 0; index < sourceCourses.length; index += 1) {
+    const course = normalizeImportCourse(sourceCourses[index], semester)
+    if (!course.semester_source || !course.name) {
+      errors.push({ row: index + 1, message: '缺少學期或課程名稱' })
+      continue
+    }
+    try {
+      await upsertCourseRow(sql, course)
+      imported += 1
+      bySemester[course.semester_source] = (bySemester[course.semester_source] || 0) + 1
+    } catch (err) {
+      errors.push({ row: index + 1, message: err?.message || '匯入失敗' })
+      if (errors.length >= 20) break
+    }
+  }
+
+  return json({ ok: true, imported, failed: errors.length, errors, bySemester, source: 'patched-common-courses' })
+}
+
+
 function getOAuthBaseUrl(request) {
   const url = new URL(request.url)
   return `${url.protocol}//${url.host}`
@@ -48057,6 +48100,7 @@ export async function onRequest(context) {
     if (path === '/user/favorites' && ['GET', 'PUT'].includes(method)) return handleFavorites(request, env, sql, method)
     if (path === '/user/settings' && ['GET', 'PUT', 'POST'].includes(method)) return handleSettings(request, env, sql, method === 'POST' ? 'PUT' : method)
     if (path === '/feedback' && ['GET', 'POST'].includes(method)) return handlePublicFeedback(request, env, sql, method)
+    if (method === 'POST' && path === '/admin/courses/import-patches') return handleAdminPatchCourseImport(request, env, sql)
     if (method === 'POST' && path === '/admin/courses/import') return handleAdminCourseImport(request, env, sql)
     if (method === 'POST' && path === '/schedule') return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/schedule/')) return handleSchedule(request, env, sql, method)

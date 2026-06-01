@@ -212,6 +212,11 @@ export async function importOfficialCourses(payload) {
   return data
 }
 
+export async function importPatchedCourses(payload = {}) {
+  const { data } = await api.post('/admin/courses/import-patches', payload)
+  return data
+}
+
 export async function fetchImportLogs() {
   const { data } = await api.get('/admin/import-logs')
   return data

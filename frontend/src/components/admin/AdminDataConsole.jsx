@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { readStorageJson } from '../../utils/storage'
 import { PROGRAMS } from '../../data/programs/programData'
 import { GRADUATION_RULE_PREVIEW } from '../../data/graduation/graduationRulesPreview'
-import { importOfficialCourses } from '../../api'
+import { importOfficialCourses, importPatchedCourses } from '../../api'
 
 function getCourse(course) {
   return course?.course || course || {}
@@ -271,6 +271,7 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
   const [importRows, setImportRows] = useState([])
   const [importErrors, setImportErrors] = useState([])
   const [importBusy, setImportBusy] = useState(false)
+  const [patchImportBusy, setPatchImportBusy] = useState(false)
   const [importResult, setImportResult] = useState(null)
   const [clearSemesterBeforeImport, setClearSemesterBeforeImport] = useState(false)
 
@@ -433,6 +434,26 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
     }
   }
 
+
+  async function confirmPatchCourseImport() {
+    setPatchImportBusy(true)
+    setImportResult(null)
+    try {
+      const result = await importPatchedCourses({
+        semester: importSemester,
+        clearSemester: false,
+      })
+      setImportResult(result)
+      notify?.(`已將內建缺失課程寫入後端：${result.imported || 0} 筆`)
+    } catch (error) {
+      const message = error?.response?.data?.error || error?.message || '內建補丁匯入失敗'
+      setImportResult({ ok: false, error: message })
+      notify?.(message)
+    } finally {
+      setPatchImportBusy(false)
+    }
+  }
+
   return (
     <section className="pageCard adminConsolePage">
       <div className="pageHead"><div><h2>管理後台</h2><p className="muted">統計、意見回報與帳號管理。</p></div></div>
@@ -469,7 +490,7 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
             <div className="adminImportHead">
               <div>
                 <h3>課程匯入</h3>
-                <p className="muted">上傳教務處 HTML 課程表，預覽資料後寫入 Neon courses。學期欄可自由輸入新代碼，例如 1151CLASS。</p>
+                <p className="muted">上傳教務處 HTML 課程表，預覽資料後寫入後端 Neon courses；也可將目前內建缺失課程補丁直接寫入後端。學期欄可自由輸入新代碼，例如 1151CLASS。</p>
               </div>
               <div className="adminImportControls">
                 <label>目標學期
@@ -504,6 +525,7 @@ export default function AdminDataConsole({ notify, courses = [], user, profile, 
             {importRows.length ? <div className="adminImportPreview"><table><thead><tr>{COURSE_IMPORT_COLUMNS.slice(1, 9).map(([key, label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{importRows.slice(0, 8).map((row, index) => <tr key={`${row.serial}-${row.name}-${index}`}>{COURSE_IMPORT_COLUMNS.slice(1, 9).map(([key]) => <td key={key}>{row[key] || '—'}</td>)}</tr>)}</tbody></table></div> : <p className="muted">尚未選擇匯入檔案。</p>}
             <div className="adminImportActions">
               <button disabled={!importRows.length || importBusy || importErrors.length > 0} onClick={confirmCourseImport}>{importBusy ? '匯入中…' : '確認匯入 Neon'}</button>
+              <button type="button" disabled={patchImportBusy} onClick={confirmPatchCourseImport}>{patchImportBusy ? '寫入中…' : '將內建缺失課程寫入後端'}</button>
               <button type="button" onClick={() => { setImportRows([]); setImportErrors([]); setImportFileName(''); setImportResult(null) }}>清除預覽</button>
             </div>
             {importResult && <div className={importResult.ok === false ? 'adminImportResult error' : 'adminImportResult'}>
