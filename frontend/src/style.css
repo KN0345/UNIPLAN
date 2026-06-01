@@ -7500,3 +7500,92 @@ body[data-theme="dark"] .programTree{
   .quickActions{grid-column:2!important;grid-row:2!important;height:auto!important;}
   .sideDelete{grid-column:2!important;grid-row:3!important;}
 }
+
+/* V3.21 half-semester split click + candidate rail height fix */
+.semesterPanel.activeSemesterPanel .timetableCourseTile.halfSemesterSplitTile{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-auto-rows:1fr!important;
+  gap:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  z-index:42!important;
+  pointer-events:none!important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile.halfSemesterSplitTile::before,
+.semesterPanel.activeSemesterPanel .timetableCourseTile.halfSemesterSplitTile::after{
+  display:none!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile .halfSemesterSegment{
+  pointer-events:auto!important;
+  min-width:0!important;
+  width:100%!important;
+  height:100%!important;
+  appearance:none!important;
+  border:0!important;
+  border-radius:0!important;
+  color:inherit!important;
+  background:inherit!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  gap:5px!important;
+  padding:8px 7px!important;
+  text-align:left!important;
+  cursor:pointer!important;
+  overflow:hidden!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile .halfSemesterSegment + .halfSemesterSegment{
+  border-left:1px solid rgba(255,255,255,.18)!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile .halfSemesterSegment:hover{
+  background:rgba(255,255,255,.08)!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile .tileTitle{
+  font-size:11px!important;
+  line-height:1.12!important;
+  -webkit-line-clamp:2!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile .tileMeta{
+  font-size:9.5px!important;
+  line-height:1.15!important;
+  white-space:normal!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+
+/* Right-side tools should use natural height, but keep the temporary area taller. */
+.plannerTools{
+  height:auto!important;
+  min-height:0!important;
+  align-self:start!important;
+  overflow:visible!important;
+  display:grid!important;
+  grid-template-columns:minmax(250px,1fr) 220px!important;
+  grid-template-rows:auto auto auto!important;
+  align-items:start!important;
+}
+.sideCandidateRail{
+  height:auto!important;
+  min-height:420px!important;
+  max-height:620px!important;
+  align-self:start!important;
+}
+.liveCandidateList{
+  min-height:220px!important;
+  max-height:500px!important;
+}
+.quickActions{
+  height:auto!important;
+  min-height:0!important;
+  align-self:start!important;
+}
+.sideDelete{
+  align-self:start!important;
+}
+@media(max-width:1040px){
+  .sideCandidateRail{min-height:360px!important;max-height:520px!important;}
+}

@@ -88,15 +88,23 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
     return groups
   }
 
+  function isHalfWeekRule(course) {
+    return /\d{1,2}\s*[-－～~]\s*\d{1,2}\s*週/.test(scheduleRuleLabel(course) || '')
+  }
+
   function isMergedHalfContinuation(activeCourses, dayIndex, period) {
     if (!activeCourses || activeCourses.length < 2) return false
-    const candidates = activeCourses.filter((course) => slotsForDay(course, dayIndex).some((slot) => slot.start < period && period <= slot.end))
+    const candidates = activeCourses.filter((course) => (
+      isHalfWeekRule(course)
+      && slotsForDay(course, dayIndex).some((slot) => slot.start < period && period <= slot.end)
+    ))
     if (candidates.length < 2) return false
     for (let i = 0; i < candidates.length; i += 1) {
       for (let j = i + 1; j < candidates.length; j += 1) {
-        if (canMergeInCurrentCell(candidates[i], candidates[j], dayIndex, slotsForDay(candidates[i], dayIndex).find((slot) => slot.start < period && period <= slot.end)?.start || period)) {
-          return true
-        }
+        // Continuation rows of 1-9週 / 10-18週 pairs must not draw an invisible
+        // occupiedContinuation button, otherwise that later row intercepts the
+        // click and the visible split card becomes unclickable.
+        if (!hasAnyConflict([candidates[i], candidates[j]])) return true
       }
     }
     return false
