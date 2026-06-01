@@ -88,7 +88,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
     return (
       <div
         key={`merged-${group.map(uid).join('-')}-${di}-${p}`}
-        className={`halfSemesterSplitTile ${stackCount > 1 ? 'stackedTile' : ''}`}
+        className={`timetableCourseTile halfSemesterSplitTile ${stackCount > 1 ? 'stackedTile' : ''}`}
         style={{
           '--tile-span': span,
           '--stack-index': stackIndex,
@@ -185,7 +185,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
                     <button
                       type="button"
                       className={`occupiedContinuation ${hasContinuingConflict ? 'continuationConflict' : ''}`}
-                      title={activeCourses.length > 1 ? '此節次有多門週次課程，點擊查看' : hasContinuingConflict ? '此節次有衝堂課程，點擊查看' : '此節次已被跨節課程占用，可拖曳或點擊課程'}
+                      title={hasContinuingConflict ? '此節次有衝堂課程，點擊查看' : '此節次已被跨節課程占用，可拖曳或點擊課程'}
                       draggable={!hasContinuingConflict && activeCourses.length === 1 && Boolean(continuationCourse)}
                       onDragStart={(e) => {
                         if (!continuationCourse || hasContinuingConflict) { e.preventDefault(); return }
@@ -193,7 +193,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
                       }}
                       onClick={(e) => {
                         e.stopPropagation()
-                        if (hasContinuingConflict || activeCourses.length > 1) {
+                        if (hasContinuingConflict) {
                           setConflictViewer({ day: d, period: `${p}`, courses: activeCourses })
                         } else if (continuationCourse) {
                           handleCourseClick(continuationCourse, e)

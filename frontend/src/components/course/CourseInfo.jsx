@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { PROGRAMS } from '../../data/programs/programData'
 import { COURSE_TAGS, countCourseTagVotes, hasUserVotedCourseTag } from '../../data/courses/courseTags'
-import { STATUS, courseCatalogTermValue, courseTermLabel, courseStatus, credits, getCourse, reviewKey } from '../../utils/coursePlanning'
+import { STATUS, courseCatalogTermValue, courseTermLabel, courseStatus, credits, getCourse, reviewKey, requiredTypeLabel } from '../../utils/coursePlanning'
 
 function stripClassSuffix(value) {
   return String(value || '')
@@ -103,7 +103,7 @@ function CourseInfo({ course, reviews = [], tagVotes = {}, onTagVote, userId = '
         <article><span>教室</span><strong>{room}</strong></article>
         <article><span>開課序號</span><strong>{code || '尚無資料'}</strong></article>
         <article><span>開課單位</span><strong>{c.department || c.category || '未列'}</strong></article>
-        <article><span>必/選修</span><strong>{c.required_type || c.requiredType || c.type || '未列'}</strong></article>
+        <article><span>必/選修</span><strong>{requiredTypeLabel(c)}</strong></article>
       </div>
       <div className="courseInfoBlock courseProgramBlock">
         <h3>對應學程</h3>

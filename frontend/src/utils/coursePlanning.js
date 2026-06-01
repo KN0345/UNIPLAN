@@ -373,6 +373,20 @@ export function mergeableHalfSemesterGroup(a, b) {
   return !weekRangesOverlap(a, b)
 }
 
+
+export function requiredTypeLabel(course) {
+  const c = getCourse(course)
+  const candidates = [
+    c.required_type, c.requiredType, c.required, c.requirement, c.requiredElective,
+    c.required_elective, c.requiredOrElective, c.type, c.category, c.group_type,
+    c['必選修'], c['必/選修'], c['修別'], c['類別'], c['選別'], c['必選']
+  ]
+  const value = candidates.map((item) => String(item ?? '').trim()).find(Boolean) || ''
+  if (/^R$|required|必修|必/.test(value)) return '必修'
+  if (/^E$|elective|選修|選/.test(value)) return '選修'
+  return value || '未列'
+}
+
 export function credits(course) {
   return Number(getCourse(course).credits || getCourse(course).credit || 0)
 }
@@ -389,11 +403,12 @@ export function effectiveCourses(plan) {
 export function creditCategory(course) {
   const c = getCourse(course)
   if (c.creditCategory) return c.creditCategory
-  const text = `${c.category || ''} ${c.group_type || ''} ${c.department || ''} ${c.name || ''}`
+  const req = requiredTypeLabel(c)
+  const text = `${c.category || ''} ${c.group_type || ''} ${c.department || ''} ${c.name || ''} ${c.required_type || ''} ${c.requiredType || ''} ${c['必選修'] || ''} ${c['修別'] || ''}`
+  if (/校必|通識|共同|英文|外國語文|中國語文|探索永續|人工智慧導論|體育|國防|服務學習/.test(text)) return 'universityRequired'
   if (/院必|院級/.test(text)) return 'collegeRequired'
-  if (/系必|必修|\(必\)|\(R\)/.test(text)) return 'departmentRequired'
-  if (/通識|共同|校必|英文|外國語文|中國語文|探索永續|人工智慧導論|體育|國防|服務學習/.test(text)) return 'universityRequired'
-  if (/系選|選修|\(選\)|\(E\)/.test(text)) return 'departmentElective'
+  if (/系必|系訂必修|專業必修/.test(text) || req === '必修') return 'departmentRequired'
+  if (/系選|專業選修/.test(text) || req === '選修') return 'departmentElective'
   return 'freeElective'
 }
 
@@ -1150,7 +1165,7 @@ function buildStableExportDom(element, semester = '課表') {
       const widthPx = dayW - 24
       const heightPx = Math.max(42, rowH * span - 24)
 
-      if (tile.classList.contains('mergedHalfTile')) {
+      if (tile.classList.contains('mergedHalfTile') || tile.classList.contains('halfSemesterSplitTile')) {
         const course = document.createElement('div')
         course.className = 'uniplanStableExportCourse uniplanStableMergedHalfCourse'
         course.style.left = `${left}px`
@@ -1162,7 +1177,7 @@ function buildStableExportDom(element, semester = '課表') {
         course.style.gap = '1px'
         course.style.padding = '0'
         course.style.background = 'rgba(15,35,72,0.70)'
-        Array.from(tile.querySelectorAll('.mergedHalfSegment')).slice(0, 2).forEach((segment, segmentIndex) => {
+        Array.from(tile.querySelectorAll('.mergedHalfSegment, .halfSemesterSegment')).slice(0, 2).forEach((segment, segmentIndex) => {
           const part = document.createElement('div')
           part.style.position = 'relative'
           part.style.overflow = 'hidden'
@@ -1170,9 +1185,10 @@ function buildStableExportDom(element, semester = '課表') {
           part.style.display = 'flex'
           part.style.flexDirection = 'column'
           part.style.justifyContent = 'center'
-          part.style.background = segmentIndex === 0
-            ? 'linear-gradient(150deg, rgba(80,128,230,.88), rgba(37,74,150,.78))'
-            : 'linear-gradient(150deg, rgba(236,72,153,.78), rgba(124,58,237,.78))'
+          const segmentStyle = window.getComputedStyle(segment)
+          part.style.background = segmentStyle.backgroundImage && segmentStyle.backgroundImage !== 'none'
+            ? segmentStyle.backgroundImage
+            : (segmentStyle.backgroundColor || 'linear-gradient(150deg, rgba(80,128,230,.88), rgba(37,74,150,.78))')
           const title = document.createElement('span')
           title.className = 'uniplanStableExportCourseTitle'
           title.style.fontSize = '12px'
@@ -1607,13 +1623,22 @@ export async function exportCleanPng(plan, semester = '課表') {
     const timeRange = span > 1 ? `第 ${safeStart}–${Math.min(lastPeriod, slot.end)} 節` : `第 ${safeStart} 節`
 
     if (slotGroup.length > 1) {
-      slotGroup.slice(0, 2).forEach((entry, partIndex) => {
+      const orderedParts = slotGroup.slice(0, 2).sort((a, b) => {
+        const getWeekStart = (item) => {
+          const label = scheduleRuleLabel(item.course) || ''
+          const match = String(label).match(/(\d{1,2})\s*[-－~～]/)
+          return match ? Number(match[1]) : 99
+        }
+        return getWeekStart(a) - getWeekStart(b)
+      })
+      orderedParts.forEach((entry, partIndex) => {
         const pc = getCourse(entry.course)
+        const partName = makeExportCourseName(pc.name || '課程')
         const cx = x + (partIndex === 0 ? w * .25 : w * .75)
         const partW = w / 2 - 18
         ctx.fillStyle = '#ffffff'
         ctx.font = '900 22px Inter, Noto Sans TC, sans-serif'
-        drawCenteredLines(displayName || '課程', cx, y + h * .36, partW, 25, 2)
+        drawCenteredLines(partName || '課程', cx, y + h * .36, partW, 25, 2)
         ctx.font = '850 18px Inter, Noto Sans TC, sans-serif'
         ctx.fillStyle = 'rgba(255,255,255,.90)'
         ctx.fillText(scheduleRuleLabel(entry.course) || timeRange, cx, y + h - (room ? 48 : 24))
