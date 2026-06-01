@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { readStorageJson } from '../utils/storage'
 import { listPublicFeedback, submitPublicFeedback } from '../api'
 
-const TYPES = ['課程/學程資料問題', '帳號問題', '顯示問題', '功能問題']
+const TYPES = ['缺失課程回報', '課程/學程資料問題', '帳號問題', '顯示問題', '功能問題']
 
 function makeFeedbackId() {
   return `fb-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`
@@ -10,7 +10,7 @@ function makeFeedbackId() {
 
 export default function FeedbackPage({ notify }) {
   const [items, setItems] = useState(() => readStorageJson('uniplan:feedbackItems', []))
-  const [form, setForm] = useState({ type: TYPES[0], title: '', detail: '' })
+  const [form, setForm] = useState({ type: TYPES[0], title: '', detail: '', semester: '114上', code: '', courseName: '', department: '', attachments: [] })
   const [remoteLoaded, setRemoteLoaded] = useState(false)
   useEffect(() => {
     let alive = true
@@ -41,6 +41,21 @@ export default function FeedbackPage({ notify }) {
   ]
   const recentView = recent.length ? recent : recentFallback
 
+  function readImageFile(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve({ name: file.name, type: file.type, dataUrl: reader.result })
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(file)
+    })
+  }
+
+  async function handleAttachmentChange(event) {
+    const files = Array.from(event.target.files || []).slice(0, 3)
+    const images = (await Promise.all(files.map(readImageFile))).filter(Boolean)
+    setForm((current) => ({ ...current, attachments: images }))
+  }
+
   async function submitFeedback(e) {
     e.preventDefault()
     if (!form.title.trim() && !form.detail.trim()) {
@@ -50,8 +65,14 @@ export default function FeedbackPage({ notify }) {
     const nextItem = {
       id: makeFeedbackId(),
       type: form.type,
-      title: form.title.trim() || form.type,
+      title: form.title.trim() || (form.type === '缺失課程回報' ? `${form.semester} ${form.code || ''} ${form.courseName || '缺失課程'}`.trim() : form.type),
       detail: form.detail.trim(),
+      semester: form.semester,
+      code: form.code.trim(),
+      courseName: form.courseName.trim(),
+      department: form.department.trim(),
+      courseMeta: { semester: form.semester, code: form.code.trim(), courseName: form.courseName.trim(), department: form.department.trim() },
+      attachments: form.attachments || [],
       status: '待處理',
       createdAt: new Date().toLocaleString('zh-TW', { hour12: false }),
     }
@@ -66,7 +87,7 @@ export default function FeedbackPage({ notify }) {
     const nextItems = [normalized, ...items]
     setItems(nextItems)
     localStorage.setItem('uniplan:feedbackItems', JSON.stringify(nextItems))
-    setForm({ type: TYPES[0], title: '', detail: '' })
+    setForm({ type: TYPES[0], title: '', detail: '', semester: '114上', code: '', courseName: '', department: '', attachments: [] })
     notify?.('已送出回報')
   }
 
@@ -81,6 +102,16 @@ export default function FeedbackPage({ notify }) {
         </div>
         <form className="feedbackForm" onSubmit={submitFeedback}>
           <label>分類<select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{TYPES.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+          {form.type === '缺失課程回報' ? (
+            <div className="missingCourseFields">
+              <label>學期<select value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })}><option value="114上">114上</option><option value="114下">114下</option><option value="其他">其他</option></select></label>
+              <label>課號<input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="例如：D0778" /></label>
+              <label>課名<input value={form.courseName} onChange={(e) => setForm({ ...form, courseName: e.target.value })} placeholder="例如：未來學習與人工智慧" /></label>
+              <label>開課單位<input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} placeholder="例如：TGDXB 教育共同科" /></label>
+              <label className="feedbackUpload">圖片佐證<input type="file" accept="image/*" multiple onChange={handleAttachmentChange} /></label>
+              {form.attachments?.length ? <small className="muted">已附加 {form.attachments.length} 張圖片</small> : null}
+            </div>
+          ) : null}
           <label>標題<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="例如：課程時間顯示錯誤" /></label>
           <label>內容<textarea value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} placeholder="簡單描述你遇到的問題" rows={6} /></label>
           <button>送出回報</button>

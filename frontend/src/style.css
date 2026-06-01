@@ -7332,3 +7332,49 @@ body[data-theme="dark"] .programTree{
 .semesterPanel.activeSemesterPanel .timetableConflictTile small{
   margin-top:4px!important;
 }
+
+/* UniPlan patch: week-rule stacked courses in the same slot
+   Half-semester / odd-even courses can share the same weekday+period without
+   being a conflict. Show every course as an operable mini tile instead of
+   allowing the first course to visually cover the others. */
+.semesterPanel.activeSemesterPanel .timetableCourseTile.stackedTile{
+  top:calc(5px + (var(--stack-index,0) * (((var(--tile-span,1) * 56px) - 12px) / var(--stack-count,1)))) !important;
+  height:calc((((var(--tile-span,1) * 56px) - 12px) / var(--stack-count,1)) - 4px) !important;
+  min-height:24px !important;
+  padding:6px 8px !important;
+  gap:2px !important;
+  z-index:calc(20 + var(--stack-index,0)) !important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile.stackedTile .courseTypeDot{
+  width:6px !important;
+  height:6px !important;
+  margin-bottom:1px !important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile.stackedTile .tileTitle{
+  font-size:11px !important;
+  line-height:1.12 !important;
+  -webkit-line-clamp:1 !important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile.stackedTile .tileMeta{
+  font-size:10px !important;
+  line-height:1.1 !important;
+  opacity:.9 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+/* UniPlan patch: missing course feedback fields */
+.missingCourseFields{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  padding:12px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:16px;
+  background:rgba(15,23,42,.04);
+}
+.missingCourseFields label{min-width:0;}
+.missingCourseFields .feedbackUpload{grid-column:1 / -1;}
+.missingCourseFields input[type="file"]{padding:10px;border:1px dashed var(--border);border-radius:12px;background:var(--panel2);}
+@media(max-width:720px){.missingCourseFields{grid-template-columns:1fr;}}

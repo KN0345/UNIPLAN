@@ -273,11 +273,52 @@ export function courseWeekRanges(course) {
   return ranges
 }
 
+export function courseWeekPattern(course) {
+  const c = getCourse(course)
+  const text = `${c.notes || ''} ${c.name || ''} ${c.time_info || ''}`
+  const ranges = courseWeekRanges(course)
+  const hasOdd = /(^|[^非])單週|奇數週|單數週/.test(text)
+  const hasEven = /(^|[^非])雙週|偶數週|雙數週/.test(text)
+  const hasAlternate = /隔週/.test(text) && !hasOdd && !hasEven
+  if (hasOdd) return { type: 'odd', ranges }
+  if (hasEven) return { type: 'even', ranges }
+  if (hasAlternate) return { type: 'alternate', ranges }
+  if (ranges.length) return { type: 'range', ranges }
+  return { type: 'normal', ranges: [] }
+}
+
+function weeksForRule(rule) {
+  const baseRanges = rule.ranges?.length ? rule.ranges : [{ start: 1, end: 18 }]
+  const weeks = new Set()
+  baseRanges.forEach(({ start, end }) => {
+    for (let week = Math.max(1, start); week <= Math.min(18, end); week += 1) {
+      if (rule.type === 'odd' && week % 2 !== 1) continue
+      if (rule.type === 'even' && week % 2 !== 0) continue
+      weeks.add(week)
+    }
+  })
+  return weeks
+}
+
+export function scheduleRuleLabel(course) {
+  const rule = courseWeekPattern(course)
+  if (rule.type === 'odd') return rule.ranges.length ? `單週｜${rule.ranges.map((r) => `${r.start}-${r.end}週`).join('、')}` : '單週'
+  if (rule.type === 'even') return rule.ranges.length ? `雙週｜${rule.ranges.map((r) => `${r.start}-${r.end}週`).join('、')}` : '雙週'
+  if (rule.type === 'alternate') return rule.ranges.length ? `隔週｜${rule.ranges.map((r) => `${r.start}-${r.end}週`).join('、')}` : '隔週'
+  if (rule.ranges.length) return rule.ranges.map((r) => `${r.start}-${r.end}週`).join('、')
+  return ''
+}
+
 export function weekRangesOverlap(a, b) {
-  const ar = courseWeekRanges(a)
-  const br = courseWeekRanges(b)
-  if (!ar.length || !br.length) return true
-  return ar.some((x) => br.some((y) => Math.max(x.start, y.start) <= Math.min(x.end, y.end)))
+  const ar = courseWeekPattern(a)
+  const br = courseWeekPattern(b)
+  if (ar.type === 'normal' && br.type === 'normal') return true
+  // 「隔週」若沒有明確起始週，保守視為可能重疊。
+  if (ar.type === 'alternate' || br.type === 'alternate') return true
+  const aw = weeksForRule(ar)
+  const bw = weeksForRule(br)
+  for (const week of aw) if (bw.has(week)) return true
+  return false
 }
 
 export function hasConflict(a, b) {

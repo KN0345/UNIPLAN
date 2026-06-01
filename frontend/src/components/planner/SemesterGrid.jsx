@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DAYS, PERIODS, STATUS, credits, getCourse, riskScore, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus, hasAnyConflict } from '../../utils/coursePlanning'
+import { DAYS, PERIODS, STATUS, credits, getCourse, riskScore, semesterCreditStatus, semesterWarnings, slotsOf, uid, courseStatus, hasAnyConflict, scheduleRuleLabel } from '../../utils/coursePlanning'
 
 function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onCourseClick, onEmptySlotClick, onDeleteCourse, onMoveToCandidate }) {
   const warnings = semesterWarnings(semester, courses, plan)
@@ -42,7 +42,30 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
   function courseMeta(course) {
     const c = getCourse(course)
     const room = c.classroom || c.room || c.location || ''
-    return room || '未列教室'
+    const label = scheduleRuleLabel(course)
+    return [label, room || '未列教室'].filter(Boolean).join('｜')
+  }
+
+  function tileButton(course, di, p, stackIndex = 0, stackCount = 1) {
+    return (
+      <button
+        key={uid(course)}
+        className={`timetableCourseTile ${stackCount > 1 ? 'stackedTile' : ''}`}
+        style={{
+          '--tile-span': spanForCourse(course, di, p),
+          '--stack-index': stackIndex,
+          '--stack-count': stackCount,
+        }}
+        draggable
+        onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course }))}
+        onClick={(e) => handleCourseClick(course, e)}
+        title="點擊開啟快速操作"
+      >
+        <b className={`courseTypeDot ${STATUS[courseStatus(course)]?.tone || 'blue'}`} />
+        <span className="tileTitle">{getCourse(course).name}</span>
+        <span className="tileMeta">{courseMeta(course)}</span>
+      </button>
+    )
   }
 
   return (
@@ -76,32 +99,21 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
                       <strong>衝堂 {startingCourses.length} 門</strong>
                       <small>{startingCourses.slice(0, 2).map((entry) => getCourse(entry).name).join('、')}</small>
                     </button>
-                  ) : course ? (
-                    <button
-                      className="timetableCourseTile"
-                      style={{ '--tile-span': spanForCourse(course, di, p) }}
-                      draggable
-                      onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course }))}
-                      onClick={(e) => handleCourseClick(course, e)}
-                      title="點擊開啟快速操作"
-                    >
-                      <b className={`courseTypeDot ${STATUS[courseStatus(course)]?.tone || 'blue'}`} />
-                      <span className="tileTitle">{getCourse(course).name}</span>
-                      <span className="tileMeta">{courseMeta(course)}</span>
-                    </button>
+                  ) : startingCourses.length ? (
+                    startingCourses.map((entry, index) => tileButton(entry, di, p, index, startingCourses.length))
                   ) : hasCourse ? (
                     <button
                       type="button"
                       className={`occupiedContinuation ${hasContinuingConflict ? 'continuationConflict' : ''}`}
-                      title={hasContinuingConflict ? '此節次有衝堂課程，點擊查看' : '此節次已被跨節課程占用，可拖曳或點擊課程'}
-                      draggable={!hasContinuingConflict && Boolean(continuationCourse)}
+                      title={activeCourses.length > 1 ? '此節次有多門週次課程，點擊查看' : hasContinuingConflict ? '此節次有衝堂課程，點擊查看' : '此節次已被跨節課程占用，可拖曳或點擊課程'}
+                      draggable={!hasContinuingConflict && activeCourses.length === 1 && Boolean(continuationCourse)}
                       onDragStart={(e) => {
                         if (!continuationCourse || hasContinuingConflict) { e.preventDefault(); return }
                         e.dataTransfer.setData('application/json', JSON.stringify({ source: 'planned', semester, course: continuationCourse }))
                       }}
                       onClick={(e) => {
                         e.stopPropagation()
-                        if (hasContinuingConflict) {
+                        if (hasContinuingConflict || activeCourses.length > 1) {
                           setConflictViewer({ day: d, period: `${p}`, courses: activeCourses })
                         } else if (continuationCourse) {
                           handleCourseClick(continuationCourse, e)

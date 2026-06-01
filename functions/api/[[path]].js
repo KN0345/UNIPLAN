@@ -321,6 +321,17 @@ async function ensureSchema(sql) {
       unique(user_id, semester)
     )
   `
+  await sql`
+    create table if not exists public_feedback (
+      id text primary key,
+      type text not null,
+      title text,
+      detail text,
+      status text not null default '待處理',
+      payload jsonb not null default '{}'::jsonb,
+      created_at timestamp default now()
+    )
+  `
 }
 
 function publicUser(row) {
@@ -1043,6 +1054,47 @@ async function handleCourses(request, env) {
   return json({ ok: true, data, total: data.length, source: 'neon-courses-with-local-patches' })
 }
 
+
+async function handlePublicFeedback(request, env, sql, method) {
+  if (method === 'GET') {
+    const url = new URL(request.url)
+    const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit') || 20)))
+    const rows = await sql`
+      SELECT id, type, title, detail, status, payload, created_at
+      FROM public_feedback
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `
+    return json({ ok: true, data: rows.map((row) => ({
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      detail: row.detail,
+      status: row.status,
+      attachments: row.payload?.attachments || [],
+      courseMeta: row.payload?.courseMeta || {},
+      created_at: row.created_at,
+    })) })
+  }
+  const body = await readBody(request)
+  const id = String(body.id || `fb-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`)
+  const type = String(body.type || '功能問題').slice(0, 80)
+  const title = String(body.title || type).slice(0, 200)
+  const detail = String(body.detail || '').slice(0, 5000)
+  const attachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 3) : []
+  const payload = { ...body, attachments }
+  await sql`
+    INSERT INTO public_feedback (id, type, title, detail, status, payload)
+    VALUES (${id}, ${type}, ${title}, ${detail}, '待處理', ${JSON.stringify(payload)})
+    ON CONFLICT (id) DO UPDATE SET
+      type = EXCLUDED.type,
+      title = EXCLUDED.title,
+      detail = EXCLUDED.detail,
+      payload = EXCLUDED.payload
+  `
+  return json({ ok: true, data: { id, type, title, detail, status: '待處理', attachments, createdAt: new Date().toISOString() } })
+}
+
 async function handleCourseMetadata(request, env) {
   const sql = getSql(env)
   const [departments, majors, grades, categories, semesters] = await Promise.all([
@@ -1094,11 +1146,12 @@ export async function onRequest(context) {
     if (method === 'GET' && path === '/auth/me') return handleMe(request, env, sql)
     if (method === 'PUT' && path === '/auth/profile') return handleProfile(request, env, sql)
     if (method === 'GET' && path === '/user/data') return handleGetUserData(request, env, sql)
-    if (method === 'PUT' && path === '/user/data') return handlePutUserData(request, env, sql)
+    if (['PUT', 'POST'].includes(method) && path === '/user/data') return handlePutUserData(request, env, sql)
     if (method === 'GET' && path === '/user/welcome') return handleGetWelcome(request, env, sql)
-    if (method === 'PUT' && path === '/user/welcome') return handlePutWelcome(request, env, sql)
+    if (['PUT', 'POST'].includes(method) && path === '/user/welcome') return handlePutWelcome(request, env, sql)
     if (path === '/user/favorites' && ['GET', 'PUT'].includes(method)) return handleFavorites(request, env, sql, method)
-    if (path === '/user/settings' && ['GET', 'PUT'].includes(method)) return handleSettings(request, env, sql, method)
+    if (path === '/user/settings' && ['GET', 'PUT', 'POST'].includes(method)) return handleSettings(request, env, sql, method === 'POST' ? 'PUT' : method)
+    if (path === '/feedback' && ['GET', 'POST'].includes(method)) return handlePublicFeedback(request, env, sql, method)
     if (method === 'POST' && path === '/admin/courses/import') return handleAdminCourseImport(request, env, sql)
     if (method === 'POST' && path === '/schedule') return handleSchedule(request, env, sql, method)
     if (method === 'GET' && path.startsWith('/schedule/')) return handleSchedule(request, env, sql, method)
