@@ -45,6 +45,11 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
     return [label, room || '未列教室'].filter(Boolean).join('｜')
   }
 
+  function firstWeekNumber(course) {
+    const match = String(scheduleRuleLabel(course) || '').match(/(\d{1,2})\s*[-－～~]\s*(\d{1,2})\s*週/)
+    return match ? Number(match[1]) : 99
+  }
+
 
   function startsAt(course, dayIndex, period) {
     return slotsForDay(course, dayIndex).some((slot) => slot.start === period)
@@ -77,10 +82,24 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
       })
       used.add(index)
       // Put 1-9週 on the left and 10-18週 on the right when possible.
-      group.sort((a, b) => String(scheduleRuleLabel(a)).localeCompare(String(scheduleRuleLabel(b)), 'zh-Hant'))
+      group.sort((a, b) => firstWeekNumber(a) - firstWeekNumber(b))
       groups.push(group)
     })
     return groups
+  }
+
+  function isMergedHalfContinuation(activeCourses, dayIndex, period) {
+    if (!activeCourses || activeCourses.length < 2) return false
+    const candidates = activeCourses.filter((course) => slotsForDay(course, dayIndex).some((slot) => slot.start < period && period <= slot.end))
+    if (candidates.length < 2) return false
+    for (let i = 0; i < candidates.length; i += 1) {
+      for (let j = i + 1; j < candidates.length; j += 1) {
+        if (canMergeInCurrentCell(candidates[i], candidates[j], dayIndex, slotsForDay(candidates[i], dayIndex).find((slot) => slot.start < period && period <= slot.end)?.start || period)) {
+          return true
+        }
+      }
+    }
+    return false
   }
 
   function mergedHalfTile(group, di, p, stackIndex = 0, stackCount = 1) {
@@ -163,6 +182,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
               const course = startingCourses[0]
               const continuationCourse = activeCourses[0]
               const hasContinuingConflict = !course && activeCourses.length > 1 && hasAnyConflict(activeCourses)
+              const isHalfContinuation = !course && isMergedHalfContinuation(activeCourses, di, p)
               return (
                 <div className={`timetableCell ${hasCourse ? 'hasCourse' : ''}`} key={`${d}-${p}`}>
                   {hasStartingConflict ? (
@@ -182,7 +202,7 @@ function SemesterGrid({ semester, courses, plan, onDropCourse, onMoveCourse, onC
                       ? mergedHalfTile(group, di, p, index, startingGroups.length)
                       : tileButton(group[0], di, p, index, startingGroups.length))
                   ) : hasCourse ? (
-                    <button
+                    isHalfContinuation ? null : <button
                       type="button"
                       className={`occupiedContinuation ${hasContinuingConflict ? 'continuationConflict' : ''}`}
                       title={hasContinuingConflict ? '此節次有衝堂課程，點擊查看' : '此節次已被跨節課程占用，可拖曳或點擊課程'}

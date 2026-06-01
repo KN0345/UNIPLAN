@@ -2958,3 +2958,104 @@ html[style*="--course-card-alpha:0"] .semesterPanel.activeSemesterPanel .halfSem
 .creditProgressList article{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(148,163,184,.22);border-radius:16px;background:rgba(15,23,42,.36);padding:12px 14px;}
 .creditProgressList strong{display:block;font-size:15px;}
 .creditProgressList span{display:block;margin-top:4px;color:rgba(226,232,240,.72);font-size:12px;}
+
+/* UniPlan patch: split half-semester cards must own all pointer events across every spanned period. */
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile{
+  z-index: 18 !important;
+  pointer-events: auto !important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment{
+  position: relative !important;
+  z-index: 19 !important;
+  pointer-events: auto !important;
+}
+.semesterPanel.activeSemesterPanel .occupiedContinuation{
+  z-index: 3;
+}
+
+/* UniPlan patch: progress modal close alignment + planner side panels return to natural height. */
+.creditProgressModal header{
+  align-items:flex-start!important;
+}
+.creditProgressModal header button{
+  position:relative!important;
+  top:-2px!important;
+  right:0!important;
+  margin:0!important;
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  padding:0!important;
+  border-radius:999px!important;
+  display:grid!important;
+  place-items:center!important;
+  line-height:1!important;
+  font-size:24px!important;
+}
+
+/* Right-side planner panels should size to content, not match timetable height. */
+.plannerLayout{
+  align-items:start!important;
+}
+.plannerTools{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  align-self:start!important;
+  overflow:visible!important;
+  display:grid!important;
+  grid-template-columns:minmax(250px,1fr) 220px!important;
+  grid-template-rows:auto auto auto!important;
+  align-items:start!important;
+  gap:12px!important;
+}
+.sideCandidateRail{
+  grid-column:1!important;
+  grid-row:1 / 4!important;
+  height:auto!important;
+  min-height:220px!important;
+  max-height:420px!important;
+  align-self:start!important;
+  overflow:hidden!important;
+}
+.sideCandidateRail .candidateList,
+.sideCandidateRail .liveCandidateList{
+  max-height:300px!important;
+  overflow:auto!important;
+}
+.semesterPicker{
+  grid-column:2!important;
+  grid-row:1!important;
+  height:auto!important;
+  align-self:start!important;
+}
+.quickActions{
+  grid-column:2!important;
+  grid-row:2!important;
+  height:auto!important;
+  min-height:0!important;
+  align-self:start!important;
+}
+.quickActions .plannerActionGrid{
+  flex:0 0 auto!important;
+}
+.sideDelete{
+  grid-column:2!important;
+  grid-row:3!important;
+  height:auto!important;
+  align-self:start!important;
+}
+@media(max-width:1040px){
+  .plannerTools{
+    grid-template-columns:1fr 1fr!important;
+    grid-template-rows:auto auto auto!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .sideCandidateRail{grid-column:1!important;grid-row:1 / 4!important;min-height:260px!important;max-height:420px!important;height:auto!important;}
+  .semesterPicker{grid-column:2!important;grid-row:1!important;}
+  .quickActions{grid-column:2!important;grid-row:2!important;height:auto!important;}
+  .sideDelete{grid-column:2!important;grid-row:3!important;}
+}
