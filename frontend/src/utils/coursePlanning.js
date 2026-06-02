@@ -621,6 +621,18 @@ const EXPORT_SAFE_STYLE_PROPS = new Set([
   'visibility','pointer-events'
 ])
 
+const EXPORT_SAFE_CUSTOM_PROPS = new Set([
+  '--tile-span',
+  '--stack-index',
+  '--stack-count',
+  '--course-card-alpha',
+  '--timetable-opacity',
+])
+
+function isExportSafeCustomProp(prop) {
+  return EXPORT_SAFE_CUSTOM_PROPS.has(String(prop || '').trim())
+}
+
 function hasUnsupportedCanvasColor(value) {
   return UNSUPPORTED_CANVAS_COLOR_FN.test(String(value || ''))
 }
@@ -641,7 +653,7 @@ function exportSafeCssValue(prop, value) {
   if (!raw) return raw
   if (!hasUnsupportedCanvasColor(raw)) return raw
   const name = String(prop || '').toLowerCase()
-  if (name.startsWith('--')) return ''
+  if (name.startsWith('--')) return isExportSafeCustomProp(name) ? raw : ''
   if (name === 'color' || name === 'caret-color' || name.includes('text-decoration-color')) return '#f8fafc'
   if (name.includes('border') || name.includes('outline') || name === 'column-rule-color') return name === 'border' || name.startsWith('border-') && !name.endsWith('color') ? '1px solid rgba(147,197,253,0.28)' : 'rgba(147,197,253,0.32)'
   if (name === 'fill') return '#f8fafc'
@@ -661,7 +673,7 @@ function sanitizeStyleAttributeText(styleText = '') {
       const splitAt = decl.indexOf(':')
       if (splitAt <= 0) return ''
       const prop = decl.slice(0, splitAt).trim()
-      if (!prop || prop.startsWith('--')) return ''
+      if (!prop || (prop.startsWith('--') && !isExportSafeCustomProp(prop))) return ''
       const value = decl.slice(splitAt + 1).trim()
       if (!value) return ''
       const safe = exportSafeCssValue(prop, value)
@@ -677,14 +689,12 @@ function sanitizeUnsupportedCanvasCss(root, clonedWindow = window) {
   const nodes = [root, ...Array.from(root.querySelectorAll?.('*') || [])]
   nodes.forEach((node) => {
     if (!(node instanceof clonedWindow.HTMLElement)) return
-    const rawStyle = node.getAttribute('style') || ''
-    if (rawStyle) node.setAttribute('style', sanitizeStyleAttributeText(rawStyle))
     const style = node.style
     const props = []
     for (let i = 0; i < style.length; i += 1) props.push(style.item(i))
     props.forEach((prop) => {
       const value = style.getPropertyValue(prop)
-      if (prop.startsWith('--') || hasUnsupportedCanvasColor(value)) {
+      if ((prop.startsWith('--') && !isExportSafeCustomProp(prop)) || hasUnsupportedCanvasColor(value)) {
         const safe = exportSafeCssValue(prop, value)
         if (safe && !hasUnsupportedCanvasColor(safe)) style.setProperty(prop, safe, style.getPropertyPriority(prop) || 'important')
         else style.removeProperty(prop)
@@ -744,15 +754,32 @@ export function canvasToBlobSafe(canvas) {
 
 export function inlineComputedStyles(source, target) {
   if (!(source instanceof Element) || !(target instanceof Element)) return
+
+  // Keep timetable layout variables that are needed after the export clone is resized.
+  const originalStyle = target.getAttribute('style') || ''
+  for (const prop of EXPORT_SAFE_CUSTOM_PROPS) {
+    const match = originalStyle.match(new RegExp(`${prop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*([^;]+)`))
+    if (match?.[1]) target.style.setProperty(prop, match[1].trim())
+  }
+
   const computed = window.getComputedStyle(source)
-  const declarations = []
   for (const prop of computed) {
     if (!EXPORT_SAFE_STYLE_PROPS.has(prop) || prop.startsWith('--')) continue
     const value = exportSafeCssValue(prop, computed.getPropertyValue(prop))
     if (!value || hasUnsupportedCanvasColor(value)) continue
-    declarations.push(`${prop}:${value}`)
+    try {
+      target.style.setProperty(prop, value, computed.getPropertyPriority(prop) || '')
+    } catch {
+      // Ignore properties that cannot be assigned in the export clone.
+    }
   }
-  target.setAttribute('style', sanitizeStyleAttributeText(`${target.getAttribute('style') || ''};${declarations.join(';')}`))
+
+  // Re-apply the variables after computed styles so later compact-export math can read them.
+  for (const prop of EXPORT_SAFE_CUSTOM_PROPS) {
+    const match = originalStyle.match(new RegExp(`${prop.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:\\s*([^;]+)`))
+    if (match?.[1]) target.style.setProperty(prop, match[1].trim())
+  }
+
   Array.from(source.children).forEach((child, index) => inlineComputedStyles(child, target.children[index]))
 }
 
@@ -1465,9 +1492,25 @@ function prepareCompactTimetableExport(root, fallbackWidth = 1180, fallbackHeigh
   grid.style.setProperty('border-radius', '18px', 'important')
 
   grid.querySelectorAll('.timetableCourseTile,.timetableConflictTile').forEach((tile) => {
+    const rawSpan = tile.style.getPropertyValue('--tile-span')
+      || tile.getAttribute('style')?.match(/--tile-span\s*:\s*([^;]+)/)?.[1]
+      || '1'
+    const span = Math.max(1, Number.parseFloat(String(rawSpan).trim()) || 1)
+    const pixelHeight = Math.max(34, Math.round(rowHeight * span - 12))
+
+    // html2canvas and some browsers do not reliably preserve calc() expressions
+    // with custom-property multiplication after the export clone is resized.
+    // Use an explicit px height so multi-period cards keep their real body text
+    // instead of collapsing into only the top strip.
     tile.style.setProperty('inset', '6px', 'important')
-    tile.style.setProperty('height', 'calc((100% * var(--tile-span, 1)) - 12px)', 'important')
-    tile.style.setProperty('min-height', 'calc((100% * var(--tile-span, 1)) - 12px)', 'important')
+    tile.style.setProperty('top', '6px', 'important')
+    tile.style.setProperty('right', '6px', 'important')
+    tile.style.setProperty('bottom', 'auto', 'important')
+    tile.style.setProperty('left', '6px', 'important')
+    tile.style.setProperty('height', `${pixelHeight}px`, 'important')
+    tile.style.setProperty('min-height', `${pixelHeight}px`, 'important')
+    tile.style.setProperty('max-height', `${pixelHeight}px`, 'important')
+    tile.style.setProperty('overflow', 'hidden', 'important')
   })
 
   return { width: exportWidth, height: exportHeight }
