@@ -48061,7 +48061,7 @@ function buildLocalPatchCourseResponse(searchParams, warning = '') {
     })
     .filter(Boolean)
     .filter((course) => courseMatchesQuery(course, searchParams))
-    .slice(0, 500)
+    .slice(0, 1500)
   return json({ ok: true, data, total: data.length, source: 'local-patches-fallback', warning })
 }
 
@@ -48105,7 +48105,7 @@ async function handleCourses(request, env) {
           OR lower(coalesce(notes, '')) LIKE lower(${'%' + keyword + '%'})
         )
       ORDER BY semester_source, department NULLS LAST, serial NULLS LAST, code NULLS LAST, name
-      LIMIT 1000
+      LIMIT 2000
     `
   } catch (err) {
     neonError = err?.message || 'course database unavailable'
@@ -48120,7 +48120,7 @@ async function handleCourses(request, env) {
       .filter((course) => !existing.has(patchedCourseKey(course)))
     const data = [...neonCourses, ...patchedCourses]
       .filter((course) => courseMatchesQuery(course, searchParams))
-      .slice(0, 500)
+      .slice(0, 1500)
     return json({ ok: true, data, total: data.length, source: neonError ? 'local-patches-fallback' : 'neon-courses-with-local-patches', warning: neonError || undefined })
   } catch (err) {
     return buildLocalPatchCourseResponse(searchParams, err?.message || neonError || 'local patch fallback')

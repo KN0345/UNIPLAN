@@ -105,7 +105,8 @@ body{overflow:hidden!important;}
   .topbar{height:50px;min-height:50px;flex-basis:50px;}
   .topbar h1{font-size:18px}.topbar p{display:none}
   .creditStrip{margin-top:6px;margin-bottom:6px;padding:8px 12px;}
-  .creditMini{display:none;}
+  .creditMini{display:grid;grid-template-columns:repeat(5,minmax(80px,1fr));gap:6px;margin-top:6px;font-size:10px;}
+  .creditMiniItem .bar{height:6px;}
   .plannerLayout{padding-bottom:10px;}
   .semesterHeader h3{font-size:20px;}
   .warnings{display:none;}

@@ -133,9 +133,103 @@ function matchesStaticCourse(course, params = {}) {
   return true
 }
 
+
+
+let patchedCoursesCache = null
+
+function staticCourseIdentity(course = {}) {
+  const term = normalizeCatalogTermForApi(course.semester_source || course.semester || course.term || course.source_term || course.catalog_term)
+  const serial = String(course.serial || course.open_serial || course.openSerial || course.open_course_no || course.openCourseNo || course['開課序號'] || '').trim()
+  if (serial) return `${term}:${serial}`
+  const code = String(course.code || course.course_code || course.courseCode || course.course_id || '').trim()
+  const dept = String(course.department || course.department_code || course.unit || course.opening_unit || '').trim()
+  const cls = String(course.class_name || course.className || course.class || course.section || '').trim()
+  const name = String(course.name || course.course_name || '').trim()
+  const teacher = String(course.teacher || course.instructor || '').trim()
+  const time = String(course.time_info || course.time || JSON.stringify(course.time_data || '')).trim()
+  return [term, dept, code, cls, name, teacher, time].filter(Boolean).join(':')
+}
+
+function normalizeStaticCourse(course = {}) {
+  const code = String(course.code || course.course_code || course.course_id || '').trim()
+  const name = String(course.name || course.course_name || '').trim()
+  const term = normalizeCatalogTermForApi(course.semester_source || course.semester || course.term || '')
+  return {
+    ...course,
+    id: course.id || staticCourseIdentity(course),
+    semester_source: term || course.semester_source || '',
+    semester: term || course.semester || course.semester_source || '',
+    code,
+    course_code: code,
+    course_id: code || course.serial || '',
+    name,
+    course_name: name,
+    teacher: course.teacher || course.instructor || '',
+    instructor: course.instructor || course.teacher || '',
+    classroom: course.classroom || course.room || '',
+    room: course.room || course.classroom || '',
+    raw_json: course.raw_json || course,
+  }
+}
+
+async function loadPatchedCourses() {
+  if (patchedCoursesCache) return patchedCoursesCache
+  try {
+    const response = await fetch('/data/patched-common-courses.json', { cache: 'no-store' })
+    if (!response.ok) throw new Error(`patched courses ${response.status}`)
+    const list = await response.json()
+    patchedCoursesCache = Array.isArray(list) ? list.map(normalizeStaticCourse) : []
+  } catch (error) {
+    console.warn('Unable to load patched common courses', error)
+    patchedCoursesCache = []
+  }
+  return patchedCoursesCache
+}
+
+function mergeCourseResults(apiPayload, patchedList, params = {}) {
+  const apiCourses = Array.isArray(apiPayload?.data)
+    ? apiPayload.data
+    : Array.isArray(apiPayload?.courses)
+      ? apiPayload.courses
+      : Array.isArray(apiPayload?.items)
+        ? apiPayload.items
+        : Array.isArray(apiPayload)
+          ? apiPayload
+          : []
+  const map = new Map()
+  for (const course of apiCourses) {
+    const normalized = normalizeStaticCourse(course)
+    const key = staticCourseIdentity(normalized)
+    if (key) map.set(key, normalized)
+  }
+  for (const course of patchedList || []) {
+    if (!matchesStaticCourse(course, params)) continue
+    const key = staticCourseIdentity(course)
+    if (!key || map.has(key)) continue
+    map.set(key, course)
+  }
+  const data = Array.from(map.values())
+  if (apiPayload && typeof apiPayload === 'object' && !Array.isArray(apiPayload)) {
+    return {
+      ...apiPayload,
+      ok: apiPayload.ok !== false,
+      data,
+      total: data.length,
+      source: apiPayload.source ? `${apiPayload.source}+frontend-patches` : 'api+frontend-patches',
+    }
+  }
+  return { ok: true, data, total: data.length, source: 'frontend-patches' }
+}
+
 export async function fetchCourses(params = {}) {
-  const { data } = await api.get('/courses', { params })
-  return data
+  const patched = await loadPatchedCourses()
+  try {
+    const { data } = await api.get('/courses', { params })
+    return mergeCourseResults(data, patched, params)
+  } catch (error) {
+    const filtered = patched.filter((course) => matchesStaticCourse(course, params))
+    return { ok: true, data: filtered, total: filtered.length, source: 'frontend-patches-fallback', warning: error?.message || 'courses api unavailable' }
+  }
 }
 
 export async function fetchMetadata() {

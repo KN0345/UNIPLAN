@@ -1460,6 +1460,38 @@ function buildStableExportDom(element, semester = '課表') {
 }
 
 
+
+function createExportProgressOverlay() {
+  const overlay = document.createElement('div')
+  overlay.setAttribute('data-uniplan-export-overlay', 'true')
+  overlay.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'z-index:2147483647',
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+    'background:rgba(8,20,38,.86)',
+    'color:#f8fafc',
+    'font:600 15px -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","Microsoft JhengHei",Arial,sans-serif',
+    'letter-spacing:.04em',
+    'pointer-events:none'
+  ].join(';')
+  const box = document.createElement('div')
+  box.textContent = '正在匯出課表…'
+  box.style.cssText = [
+    'padding:14px 22px',
+    'border-radius:999px',
+    'background:rgba(15,23,42,.92)',
+    'border:1px solid rgba(147,197,253,.45)',
+    'box-shadow:0 18px 50px rgba(0,0,0,.32)',
+    'color:#f8fafc'
+  ].join(';')
+  overlay.appendChild(box)
+  document.body.appendChild(overlay)
+  return () => overlay.remove()
+}
+
 function disableCanvasUnsafeGlobalStyles(keepRoot) {
   const disabled = []
   const nodes = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
@@ -1617,7 +1649,10 @@ export async function exportPngFromDom(element, semester = '課表') {
 
   let exportRoot = null
   let restoreCanvasStyles = null
+  let removeExportOverlay = null
   try {
+    removeExportOverlay = createExportProgressOverlay()
+    await new Promise((resolve) => requestAnimationFrame(resolve))
     const stable = buildStableExportDom(element, semester)
     exportRoot = stable.root
     document.body.appendChild(exportRoot)
@@ -1664,6 +1699,7 @@ export async function exportPngFromDom(element, semester = '課表') {
       // restore is kept on the function scope through the export root marker
     }
     if (typeof restoreCanvasStyles === 'function') restoreCanvasStyles()
+    if (typeof removeExportOverlay === 'function') removeExportOverlay()
     if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
   }
 }
