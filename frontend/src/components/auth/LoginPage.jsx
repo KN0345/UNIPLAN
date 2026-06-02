@@ -1,27 +1,5 @@
 import { useState } from 'react'
 
-function AuthPasswordInput({ field, placeholder, autoComplete, value, visible, onChange, onToggle }) {
-  return (
-    <div className="authPasswordControl">
-      <input
-        placeholder={placeholder}
-        type={visible ? 'text' : 'password'}
-        value={value || ''}
-        onChange={(e) => onChange(field, e.target.value)}
-        autoComplete={autoComplete}
-      />
-      <button
-        type="button"
-        className="authPasswordToggle"
-        onClick={() => onToggle(field)}
-        aria-label={visible ? '隱藏密碼' : '顯示密碼'}
-      >
-        {visible ? '隱藏' : '顯示'}
-      </button>
-    </div>
-  )
-}
-
 export default function LoginPage({
   authMode,
   setAuthMode,
@@ -48,6 +26,29 @@ export default function LoginPage({
     setVisiblePasswords((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
+  function PasswordInput({ field, placeholder, autoComplete }) {
+    const visible = Boolean(visiblePasswords[field])
+    return (
+      <div className="authPasswordControl">
+        <input
+          placeholder={placeholder}
+          type={visible ? 'text' : 'password'}
+          value={loginForm[field] || ''}
+          onChange={(e) => updateField(field, e.target.value)}
+          autoComplete={autoComplete}
+        />
+        <button
+          type="button"
+          className="authPasswordToggle"
+          onClick={() => togglePasswordVisible(field)}
+          aria-label={visible ? '隱藏密碼' : '顯示密碼'}
+        >
+          {visible ? '隱藏' : '顯示'}
+        </button>
+      </div>
+    )
+  }
+
   async function submitWithLoading(event) {
     event.preventDefault()
     if (isSubmitting) return
@@ -60,7 +61,7 @@ export default function LoginPage({
   }
 
   function updateField(key, value) {
-    setLoginForm((prev) => ({ ...prev, [key]: value }))
+    setLoginForm({ ...loginForm, [key]: value })
   }
 
   function switchMode(mode) {
@@ -154,7 +155,7 @@ export default function LoginPage({
             </label>
             <label className="authField">
               <span>密碼</span>
-              <AuthPasswordInput field="password" placeholder="輸入密碼" autoComplete="current-password" value={loginForm.password} visible={Boolean(visiblePasswords.password)} onChange={updateField} onToggle={togglePasswordVisible} />
+              <PasswordInput field="password" placeholder="輸入密碼" autoComplete="current-password" />
             </label>
           </>
         )}
@@ -205,11 +206,11 @@ export default function LoginPage({
             </div>
             <label className="authField">
               <span>密碼</span>
-              <AuthPasswordInput field="password" placeholder="至少 6 碼" autoComplete="new-password" value={loginForm.password} visible={Boolean(visiblePasswords.password)} onChange={updateField} onToggle={togglePasswordVisible} />
+              <PasswordInput field="password" placeholder="至少 6 碼" autoComplete="new-password" />
             </label>
             <label className="authField">
               <span>確認密碼</span>
-              <AuthPasswordInput field="confirmPassword" placeholder="再次輸入密碼" autoComplete="new-password" value={loginForm.confirmPassword} visible={Boolean(visiblePasswords.confirmPassword)} onChange={updateField} onToggle={togglePasswordVisible} />
+              <PasswordInput field="confirmPassword" placeholder="再次輸入密碼" autoComplete="new-password" />
             </label>
           </>
         )}
@@ -252,11 +253,11 @@ export default function LoginPage({
             </label>
             <label className="authField">
               <span>新密碼</span>
-              <AuthPasswordInput field="newPassword" placeholder="至少 6 碼" autoComplete="new-password" value={loginForm.newPassword} visible={Boolean(visiblePasswords.newPassword)} onChange={updateField} onToggle={togglePasswordVisible} />
+              <PasswordInput field="newPassword" placeholder="至少 6 碼" autoComplete="new-password" />
             </label>
             <label className="authField">
               <span>確認新密碼</span>
-              <AuthPasswordInput field="confirmPassword" placeholder="再次輸入新密碼" autoComplete="new-password" value={loginForm.confirmPassword} visible={Boolean(visiblePasswords.confirmPassword)} onChange={updateField} onToggle={togglePasswordVisible} />
+              <PasswordInput field="confirmPassword" placeholder="再次輸入新密碼" autoComplete="new-password" />
             </label>
           </>
         )}

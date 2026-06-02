@@ -47158,6 +47158,106 @@ async function upsertCourseRow(sql, c) {
   `
 }
 
+async function bulkUpsertCourseRows(sql, courses = []) {
+  if (!Array.isArray(courses) || !courses.length) return 0
+
+  // Cloudflare Workers 單次 invocation 有 subrequests 上限。
+  // 原本每門課 delete + insert 會讓 30 筆補丁課程超限；這裡改成兩個 SQL 批次完成。
+  // 不依賴既有 unique constraint，因此仍相容舊 Neon schema。
+  const payload = courses.map((c) => ({
+    semester_source: String(c.semester_source || ''),
+    serial: String(c.serial || ''),
+    code: String(c.code || ''),
+    name: String(c.name || ''),
+    credits: c.credits === null || c.credits === undefined || c.credits === '' ? null : Number(c.credits),
+    category: String(c.category || ''),
+    teacher: String(c.teacher || ''),
+    classroom: String(c.classroom || ''),
+    capacity: String(c.capacity || ''),
+    time_data: Array.isArray(c.time_data) ? c.time_data : parseCourseTimeData(c.time_data),
+    time_info: String(c.time_info || ''),
+    department: String(c.department || ''),
+    grade: String(c.grade || ''),
+    major: String(c.major || ''),
+    sem_seq: String(c.sem_seq || ''),
+    class_name: String(c.class_name || ''),
+    group_type: String(c.group_type || ''),
+    notes: String(c.notes || ''),
+    raw_json: c.raw_json || c,
+  }))
+  const jsonPayload = JSON.stringify(payload)
+
+  await sql`
+    with incoming as (
+      select * from jsonb_to_recordset(${jsonPayload}::jsonb) as x(
+        semester_source text,
+        serial text,
+        code text,
+        name text,
+        credits numeric,
+        category text,
+        teacher text,
+        classroom text,
+        capacity text,
+        time_data jsonb,
+        time_info text,
+        department text,
+        grade text,
+        major text,
+        sem_seq text,
+        class_name text,
+        group_type text,
+        notes text,
+        raw_json jsonb
+      )
+    )
+    delete from courses c
+    using incoming i
+    where c.semester_source = i.semester_source
+      and coalesce(c.serial, '') = coalesce(i.serial, '')
+      and coalesce(c.code, '') = coalesce(i.code, '')
+      and coalesce(c.class_name, '') = coalesce(i.class_name, '')
+      and c.name = i.name
+  `
+
+  await sql`
+    with incoming as (
+      select * from jsonb_to_recordset(${jsonPayload}::jsonb) as x(
+        semester_source text,
+        serial text,
+        code text,
+        name text,
+        credits numeric,
+        category text,
+        teacher text,
+        classroom text,
+        capacity text,
+        time_data jsonb,
+        time_info text,
+        department text,
+        grade text,
+        major text,
+        sem_seq text,
+        class_name text,
+        group_type text,
+        notes text,
+        raw_json jsonb
+      )
+    )
+    insert into courses (
+      semester_source, serial, code, name, credits, category, teacher, classroom, capacity,
+      time_data, time_info, department, grade, major, sem_seq, class_name, group_type, notes, raw_json, updated_at
+    )
+    select
+      i.semester_source, i.serial, i.code, i.name, i.credits, i.category, i.teacher, i.classroom, i.capacity,
+      coalesce(i.time_data, '[]'::jsonb), i.time_info, i.department, i.grade, i.major, i.sem_seq, i.class_name, i.group_type, i.notes,
+      coalesce(i.raw_json, '{}'::jsonb), now()
+    from incoming i
+  `
+
+  return payload.length
+}
+
 async function ensureSchema(sql) {
   await sql`create extension if not exists pgcrypto`
   await sql`
@@ -47619,19 +47719,24 @@ async function handleAdminCourseImport(request, env, sql) {
   let imported = 0
   const errors = []
   const bySemester = {}
+  const coursesToImport = []
   for (let index = 0; index < rawCourses.length; index += 1) {
     const course = normalizeImportCourse(rawCourses[index], fallbackSemester)
     if (!course.semester_source || !course.name) {
       errors.push({ row: index + 1, message: '缺少學期或課程名稱' })
       continue
     }
+    coursesToImport.push(course)
+  }
+
+  if (coursesToImport.length) {
     try {
-      await upsertCourseRow(sql, course)
-      imported += 1
-      bySemester[course.semester_source] = (bySemester[course.semester_source] || 0) + 1
+      imported = await bulkUpsertCourseRows(sql, coursesToImport)
+      for (const course of coursesToImport) {
+        bySemester[course.semester_source] = (bySemester[course.semester_source] || 0) + 1
+      }
     } catch (err) {
-      errors.push({ row: index + 1, message: err?.message || '匯入失敗' })
-      if (errors.length >= 20) break
+      errors.push({ row: 'batch', message: err?.message || '批次匯入失敗' })
     }
   }
 
@@ -47662,19 +47767,24 @@ async function handleAdminPatchCourseImport(request, env, sql) {
   let imported = 0
   const errors = []
   const bySemester = {}
+  const coursesToImport = []
   for (let index = 0; index < sourceCourses.length; index += 1) {
     const course = normalizeImportCourse(sourceCourses[index], semester)
     if (!course.semester_source || !course.name) {
       errors.push({ row: index + 1, message: '缺少學期或課程名稱' })
       continue
     }
+    coursesToImport.push(course)
+  }
+
+  if (coursesToImport.length) {
     try {
-      await upsertCourseRow(sql, course)
-      imported += 1
-      bySemester[course.semester_source] = (bySemester[course.semester_source] || 0) + 1
+      imported = await bulkUpsertCourseRows(sql, coursesToImport)
+      for (const course of coursesToImport) {
+        bySemester[course.semester_source] = (bySemester[course.semester_source] || 0) + 1
+      }
     } catch (err) {
-      errors.push({ row: index + 1, message: err?.message || '匯入失敗' })
-      if (errors.length >= 20) break
+      errors.push({ row: 'batch', message: err?.message || '批次匯入失敗' })
     }
   }
 

@@ -1105,11 +1105,6 @@ function buildStableExportDom(element, semester = '課表') {
   const timetableTint = cssColorToRgba(appearance.tint || '#081426', [8, 20, 38, 1])
   const exportTintOpacity = Math.max(0, Math.min(1, appearance.timetableOpacity ?? 0.44))
   const exportCardOpacity = Math.max(0, Math.min(1, appearance.courseCardOpacity ?? 0.72))
-  // Export opacity must be literal: 0 = no fill/frame, 1 = fully opaque.
-  // Earlier versions kept minimum alpha for a glass look, but that made background
-  // images leak through even at full opacity and left grey frames at zero matte.
-  const exportCardStrong = exportCardOpacity
-  const exportCardSoft = exportCardOpacity
   const cardAccent = cssColorToRgba(appearance.accent || '#2563eb', [37, 99, 235, 1])
   const cardAlpha = Math.max(0, Math.min(1, exportCardOpacity))
   const hasCardSurface = cardAlpha > 0.015
@@ -1121,15 +1116,38 @@ function buildStableExportDom(element, semester = '課表') {
   const exportCourseRadius = hasCardSurface ? '14px' : '0'
   const exportCoursePadding = hasCardSurface ? '9px 10px' : '4px 10px'
 
-  // Export only the timetable body. Do not include semester title, credit badges,
-  // side panels, action buttons, or any outer planner chrome.
-  const cornerW = 78
-  const dayCount = 7
-  const periodCount = 10
-  const headerRowH = 54
-  const rowH = 64
-  const dayW = 146
-  const gridWidth = cornerW + dayW * dayCount
+  // Build a fresh export-only timetable from the existing timetable data in the DOM.
+  // This avoids the old bug-prone path that cloned live CSS, then fought html2canvas
+  // over calc(), CSS variables, color(), backdrop-filter, and export-only overrides.
+  const rows = Array.from(grid.querySelectorAll(':scope > .gridRow'))
+  const usedDays = new Set()
+  const usedRows = new Set()
+  rows.forEach((row, rowIndex) => {
+    const cells = Array.from(row.querySelectorAll(':scope > .timetableCell'))
+    cells.forEach((cell, dayIndex) => {
+      const hasTile = Boolean(cell.querySelector(':scope > .timetableCourseTile, :scope > .timetableConflictTile'))
+      const occupied = cell.classList.contains('hasCourse') || hasTile
+      if (!occupied) return
+      usedDays.add(dayIndex)
+      usedRows.add(rowIndex)
+      const tile = cell.querySelector(':scope > .timetableCourseTile, :scope > .timetableConflictTile')
+      const spanRaw = tile?.style?.getPropertyValue('--tile-span') || '1'
+      const span = Math.max(1, Number.parseFloat(String(spanRaw).trim()) || 1)
+      for (let i = 1; i < span; i += 1) usedRows.add(rowIndex + i)
+    })
+  })
+
+  const keepDays = [0, 1, 2, 3, 4].filter((day) => day < DAYS.length)
+  ;[5, 6].forEach((day) => { if (usedDays.has(day)) keepDays.push(day) })
+  const maxUsedRow = usedRows.size ? Math.min(9, Math.max(...Array.from(usedRows))) : 9
+  const periodCount = Math.min(10, Math.max(6, maxUsedRow + 1))
+  const columnCount = keepDays.length || 5
+
+  const cornerW = 66
+  const headerRowH = 52
+  const rowH = periodCount <= 6 ? 74 : periodCount <= 8 ? 68 : 62
+  const dayW = columnCount <= 5 ? 186 : 164
+  const gridWidth = cornerW + dayW * columnCount
   const gridHeight = headerRowH + rowH * periodCount
   const exportWidth = gridWidth
   const exportHeight = gridHeight
@@ -1170,23 +1188,8 @@ function buildStableExportDom(element, semester = '課表') {
       background:${rgbaString(timetableTint, exportTintOpacity)};
       box-shadow:none;
     }
-    .uniplanStableExportBg{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      object-position:center center;
-      z-index:0;
-      pointer-events:none;
-    }
-    .uniplanStableExportTint{
-      position:absolute;
-      inset:0;
-      background:${rgbaString(timetableTint, exportTintOpacity)};
-      z-index:1;
-      pointer-events:none;
-    }
+    .uniplanStableExportBg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;z-index:0;pointer-events:none;}
+    .uniplanStableExportTint{position:absolute;inset:0;background:${rgbaString(timetableTint, exportTintOpacity)};z-index:1;pointer-events:none;}
     .uniplanStableExportCell{
       position:absolute;
       display:flex;
@@ -1200,17 +1203,12 @@ function buildStableExportDom(element, semester = '課表') {
       font-size:16px;
       background:rgba(15,23,42,${(0.18 * exportTintOpacity).toFixed(3)});
     }
-    .uniplanStableExportCell.head,
-    .uniplanStableExportCell.corner,
-    .uniplanStableExportCell.period{
+    .uniplanStableExportCell.head,.uniplanStableExportCell.corner,.uniplanStableExportCell.period{
       background:rgba(15,23,42,${(0.46 * exportTintOpacity).toFixed(3)});
       color:#f3f8ff;
       text-shadow:0 1px 8px rgba(0,0,0,.20);
     }
-    .uniplanStableExportCell.period{
-      font-size:17px;
-      color:#e6eefb;
-    }
+    .uniplanStableExportCell.period{font-size:17px;color:#e6eefb;}
     .uniplanStableExportCourse{
       position:absolute;
       z-index:4;
@@ -1221,45 +1219,13 @@ function buildStableExportDom(element, semester = '課表') {
       background:${exportCourseBackground}!important;
       box-shadow:${exportCourseShadow}!important;
     }
-    .uniplanStableExportCourse::before,
-    .uniplanStableExportCourse::after{
-      content:none!important;
-      display:none!important;
-    }
+    .uniplanStableExportCourse::before,.uniplanStableExportCourse::after{content:none!important;display:none!important;}
     .uniplanStableExportCourseTitle{
-      position:relative;
-      z-index:1;
-      display:block;
-      font-size:14px;
-      line-height:1.16;
-      font-weight:950;
-      color:#fff;
-      word-break:break-word;
-      overflow:hidden;
-      max-height:52px;
-      text-shadow:0 1px 6px rgba(0,0,0,.25);
+      position:relative;z-index:1;display:block;font-size:14px;line-height:1.16;font-weight:950;color:#fff;
+      word-break:break-word;overflow:hidden;max-height:52px;text-shadow:0 1px 6px rgba(0,0,0,.25);
     }
-    .uniplanStableExportCourseMeta{
-      position:relative;
-      z-index:1;
-      display:block;
-      margin-top:6px;
-      font-size:12px;
-      line-height:1.15;
-      font-weight:850;
-      color:#e4efff;
-      opacity:.95;
-    }
-    .uniplanStableExportDot{
-      display:inline-block;
-      width:9px;
-      height:9px;
-      border-radius:999px;
-      background:#60a5fa;
-      margin-right:7px;
-      box-shadow:0 0 0 3px rgba(96,165,250,.20);
-      vertical-align:1px;
-    }
+    .uniplanStableExportCourseMeta{position:relative;z-index:1;display:block;margin-top:6px;font-size:12px;line-height:1.15;font-weight:850;color:#e4efff;opacity:.95;}
+    .uniplanStableExportDot{display:inline-block;width:9px;height:9px;border-radius:999px;background:#60a5fa;margin-right:7px;box-shadow:0 0 0 3px rgba(96,165,250,.20);vertical-align:1px;}
   `
   root.appendChild(style)
 
@@ -1290,98 +1256,104 @@ function buildStableExportDom(element, semester = '課表') {
   }
 
   addCell('corner', '節', 0, 0, cornerW, headerRowH)
-  DAYS.forEach((day, index) => addCell('head', `週${day}`, cornerW + dayW * index, 0, dayW, headerRowH))
-  PERIODS.slice(0, 10).forEach((period, index) => addCell('period', String(period), 0, headerRowH + rowH * index, cornerW, rowH))
-  PERIODS.slice(0, 10).forEach((period, pIndex) => {
-    DAYS.forEach((day, dIndex) => addCell('', '', cornerW + dayW * dIndex, headerRowH + rowH * pIndex, dayW, rowH))
+  keepDays.forEach((dayIndex, columnIndex) => addCell('head', `週${DAYS[dayIndex]}`, cornerW + dayW * columnIndex, 0, dayW, headerRowH))
+  PERIODS.slice(0, periodCount).forEach((period, rowIndex) => addCell('period', String(period), 0, headerRowH + rowH * rowIndex, cornerW, rowH))
+  PERIODS.slice(0, periodCount).forEach((period, rowIndex) => {
+    keepDays.forEach((dayIndex, columnIndex) => addCell('', '', cornerW + dayW * columnIndex, headerRowH + rowH * rowIndex, dayW, rowH))
   })
 
-  const rows = Array.from(grid.querySelectorAll('.gridRow'))
   let courseIndex = 0
-  rows.slice(0, 10).forEach((row, rowIndex) => {
-    const cells = Array.from(row.querySelectorAll('.timetableCell'))
-    cells.slice(0, 7).forEach((cell, dayIndex) => {
-      const tile = cell.querySelector('.timetableCourseTile, .slotCourse, .glassCourse')
-      if (!tile) return
+  rows.slice(0, periodCount).forEach((row, rowIndex) => {
+    const cells = Array.from(row.querySelectorAll(':scope > .timetableCell'))
+    keepDays.forEach((dayIndex, columnIndex) => {
+      const cell = cells[dayIndex]
+      if (!cell) return
+      const tiles = Array.from(cell.querySelectorAll(':scope > .timetableCourseTile, :scope > .timetableConflictTile'))
+      if (!tiles.length) return
+      const stackCount = tiles.length
+      tiles.forEach((tile, tileIndex) => {
+        const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
+        const span = Math.max(1, Math.min(periodCount - rowIndex, Math.round(px(spanRaw, 1))))
+        const left = cornerW + dayW * columnIndex + 8
+        const fullTop = headerRowH + rowH * rowIndex + 6
+        const fullHeight = Math.max(42, rowH * span - 12)
+        const topPx = stackCount > 1 ? fullTop + (fullHeight / stackCount) * tileIndex : fullTop
+        const widthPx = dayW - 16
+        const heightPx = stackCount > 1 ? Math.max(32, fullHeight / stackCount - 4) : fullHeight
 
-      const spanRaw = tile.style.getPropertyValue('--tile-span') || window.getComputedStyle(tile).getPropertyValue('--tile-span') || '1'
-      const span = Math.max(1, Math.min(10 - rowIndex, Math.round(px(spanRaw, 1))))
-      const left = cornerW + dayW * dayIndex + 24
-      const topPx = headerRowH + rowH * rowIndex + 16
-      const widthPx = dayW - 38
-      const heightPx = Math.max(42, rowH * span - 18)
+        if (tile.classList.contains('mergedHalfTile') || tile.classList.contains('halfSemesterSplitTile')) {
+          const course = document.createElement('div')
+          course.className = 'uniplanStableExportCourse uniplanStableMergedHalfCourse'
+          course.style.left = `${left}px`
+          course.style.top = `${topPx}px`
+          course.style.width = `${widthPx}px`
+          course.style.height = `${heightPx}px`
+          course.style.display = 'grid'
+          course.style.gridTemplateColumns = '1fr 1fr'
+          course.style.gap = '0'
+          course.style.padding = '0'
+          course.style.background = exportCourseBackground
+          course.style.border = exportCourseBorder
+          course.style.borderRadius = exportCourseRadius
+          course.style.boxShadow = exportCourseShadow
+          const segments = Array.from(tile.querySelectorAll('.mergedHalfSegment, .halfSemesterSegment')).slice(0, 2)
+          segments.forEach((segment, segmentIndex) => {
+            const part = document.createElement('div')
+            part.style.position = 'relative'
+            part.style.overflow = 'hidden'
+            part.style.padding = '6px 7px'
+            part.style.display = 'flex'
+            part.style.flexDirection = 'column'
+            part.style.justifyContent = 'flex-start'
+            part.style.background = 'transparent'
+            if (segmentIndex === 1) part.style.borderLeft = hasCardSurface ? '1px solid rgba(147,197,253,.28)' : '1px solid rgba(147,197,253,.20)'
+            const title = document.createElement('span')
+            title.className = 'uniplanStableExportCourseTitle'
+            title.style.fontSize = '12px'
+            title.style.maxHeight = '44px'
+            title.textContent = makeExportCourseName(segment.querySelector('.tileTitle')?.textContent || segment.textContent || '課程')
+            const meta = document.createElement('span')
+            meta.className = 'uniplanStableExportCourseMeta'
+            meta.style.fontSize = '10px'
+            meta.textContent = makeExportText(segment.querySelector('.tileMeta')?.textContent || '')
+            part.appendChild(title)
+            part.appendChild(meta)
+            course.appendChild(part)
+          })
+          gridEl.appendChild(course)
+          courseIndex += 1
+          return
+        }
 
-      if (tile.classList.contains('mergedHalfTile') || tile.classList.contains('halfSemesterSplitTile')) {
+        const titleText = makeExportCourseName(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
+        const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
         const course = document.createElement('div')
-        course.className = 'uniplanStableExportCourse uniplanStableMergedHalfCourse'
+        course.className = 'uniplanStableExportCourse'
         course.style.left = `${left}px`
         course.style.top = `${topPx}px`
         course.style.width = `${widthPx}px`
         course.style.height = `${heightPx}px`
-        course.style.display = 'grid'
-        course.style.gridTemplateColumns = '1fr 1fr'
-        course.style.gap = '0'
-        course.style.padding = '0'
         course.style.background = exportCourseBackground
         course.style.border = exportCourseBorder
         course.style.borderRadius = exportCourseRadius
         course.style.boxShadow = exportCourseShadow
-        Array.from(tile.querySelectorAll('.mergedHalfSegment, .halfSemesterSegment')).slice(0, 2).forEach((segment, segmentIndex) => {
-          const part = document.createElement('div')
-          part.style.position = 'relative'
-          part.style.overflow = 'hidden'
-          part.style.padding = '4px 7px'
-          part.style.display = 'flex'
-          part.style.flexDirection = 'column'
-          part.style.justifyContent = 'flex-start'
-          part.style.background = 'transparent'
-          if (segmentIndex === 1) part.style.borderLeft = hasCardSurface ? '1px solid rgba(147,197,253,.28)' : '1px solid rgba(147,197,253,.20)'
-          const title = document.createElement('span')
-          title.className = 'uniplanStableExportCourseTitle'
-          title.style.fontSize = '12px'
-          title.style.maxHeight = '42px'
-          title.textContent = makeExportCourseName(segment.querySelector('.tileTitle')?.textContent || segment.textContent || '課程')
-          const meta = document.createElement('span')
-          meta.className = 'uniplanStableExportCourseMeta'
-          meta.style.fontSize = '10px'
-          meta.textContent = makeExportText(segment.querySelector('.tileMeta')?.textContent || '')
-          part.appendChild(title)
-          part.appendChild(meta)
-          course.appendChild(part)
-        })
+
+        const title = document.createElement('span')
+        title.className = 'uniplanStableExportCourseTitle'
+        const dot = document.createElement('i')
+        dot.className = 'uniplanStableExportDot'
+        title.appendChild(dot)
+        title.appendChild(document.createTextNode(titleText || '課程'))
+        course.appendChild(title)
+
+        const meta = document.createElement('span')
+        meta.className = 'uniplanStableExportCourseMeta'
+        meta.textContent = metaText
+        course.appendChild(meta)
+
         gridEl.appendChild(course)
         courseIndex += 1
-        return
-      }
-
-      const titleText = makeExportCourseName(tile.querySelector('.tileTitle')?.textContent || tile.querySelector('strong')?.textContent || tile.textContent)
-      const metaText = makeExportText(tile.querySelector('.tileMeta')?.textContent || tile.querySelector('small')?.textContent || '')
-      const course = document.createElement('div')
-      course.className = 'uniplanStableExportCourse'
-      course.style.left = `${left}px`
-      course.style.top = `${topPx}px`
-      course.style.width = `${widthPx}px`
-      course.style.height = `${heightPx}px`
-      course.style.background = exportCourseBackground
-      course.style.border = exportCourseBorder
-      course.style.borderRadius = exportCourseRadius
-      course.style.boxShadow = exportCourseShadow
-
-      const title = document.createElement('span')
-      title.className = 'uniplanStableExportCourseTitle'
-      const dot = document.createElement('i')
-      dot.className = 'uniplanStableExportDot'
-      title.appendChild(dot)
-      title.appendChild(document.createTextNode(titleText || '課程'))
-      course.appendChild(title)
-
-      const meta = document.createElement('span')
-      meta.className = 'uniplanStableExportCourseMeta'
-      meta.textContent = metaText
-      course.appendChild(meta)
-
-      gridEl.appendChild(course)
-      courseIndex += 1
+      })
     })
   })
 
@@ -1524,14 +1496,9 @@ export async function exportPngFromDom(element, semester = '課表') {
 
   let exportRoot = null
   try {
-    // 匯出課表只需要「課表主體」，但不能直接截 live DOM：
-    // live DOM 目前有裁切、壓縮、半學期點擊 hitbox、CSS 變數與 color() fallback，
-    // 這些在 html2canvas 裡會互相污染，造成卡片變形或透明度失準。
-    // 因此改用穩定的課表主體 renderer：資料仍從目前畫面讀取，版面用固定格線重建。
     const stable = buildStableExportDom(element, semester)
     exportRoot = stable.root
     document.body.appendChild(exportRoot)
-
     await waitForImages(exportRoot)
     if (document.fonts?.ready) await document.fonts.ready
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
@@ -1565,13 +1532,17 @@ export async function exportPngFromDom(element, semester = '課表') {
     URL.revokeObjectURL(pngUrl)
     return true
   } catch (error) {
-    console.error('Current view PNG export failed.', error)
-    alert('匯出課表失敗，請稍後再試。')
+    console.error('Timetable PNG export failed.', error)
+    alert('PNG 匯出失敗：目前畫面匯出失敗，請回報 Console 錯誤。')
     return false
   } finally {
-    exportRoot?.remove()
+    if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
   }
 }
+
+
+
+
 
 export async function exportCleanPng(plan, semester = '課表') {
   // Wallpaper Export V5: smart phone-wallpaper layout.

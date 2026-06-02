@@ -6,7 +6,7 @@ const UI_THEMES = [
   { key: 'night', label: '深夜藍', desc: '深色介面、降低刺眼感' },
   { key: 'mist', label: '櫻霧粉', desc: '柔霧粉白、輕盈溫和' },
   { key: 'forest', label: '松石綠', desc: '深綠木質、安靜專注' },
-  { key: 'lavender', label: '琥珀墨', desc: '琥珀光感、沉穩暖調' },
+  { key: 'amber', label: '琥珀墨', desc: '琥珀光感、沉穩暖調' },
   { key: 'graphite', label: '高對比黑', desc: '黑底高對比、強工作感' },
 ]
 const ACCENT_COLORS = [

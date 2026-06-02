@@ -3081,3 +3081,70 @@ html[style*="--course-card-alpha:0"] .semesterPanel.activeSemesterPanel .halfSem
 .semesterPanel.activeSemesterPanel .halfSemesterContinuationHitbox .halfSemesterContinuationSegment *{
   pointer-events:none!important;
 }
+
+/* UniPlan appearance repair 2026-06: stable theme identity + continuous card matte.
+   Keep this last. It fixes old stored key `lavender` by supporting the new canonical `amber`. */
+body[data-ui-theme="amber"],
+body[data-ui-theme="lavender"]{
+  --bg:#21160f!important;
+  --panel:#302216!important;
+  --panel2:#432f1c!important;
+  --text:#fff7ed!important;
+  --muted:#d6b996!important;
+  --border:#6b4b2a!important;
+  --shadow:0 20px 52px rgba(0,0,0,.34)!important;
+  --table-cell-bg:rgba(48,34,22,.48)!important;
+  --table-head-bg:rgba(67,47,28,.72)!important;
+  --table-line:rgba(217,164,90,.30)!important;
+  --theme-glow:rgba(245,158,11,.18)!important;
+  --sidebar-start:#4a3019!important;
+  --sidebar-mid:#302216!important;
+  --sidebar-end:#1b120b!important;
+  --sidebar-text:#fff7ed!important;
+  --sidebar-muted:#d6b996!important;
+  --sidebar-border:rgba(245,158,11,.24)!important;
+  --sidebar-active-bg:rgba(245,158,11,.18)!important;
+  --sidebar-hover-bg:rgba(245,158,11,.10)!important;
+  --sidebar-glow:rgba(245,158,11,.16)!important;
+}
+body[data-ui-theme="mist"]{
+  --bg:#fff1f5!important;
+  --panel:#fffafd!important;
+  --panel2:#ffe8f0!important;
+  --text:#3a1c2b!important;
+  --muted:#8b5f72!important;
+  --border:#f5c9d8!important;
+  --shadow:0 16px 40px rgba(190,24,93,.10)!important;
+  --table-cell-bg:rgba(255,250,253,.43)!important;
+  --table-head-bg:rgba(255,234,242,.66)!important;
+  --table-line:rgba(244,114,182,.28)!important;
+  --theme-glow:rgba(219,39,119,.14)!important;
+}
+body[data-ui-theme="clean"]{
+  --bg:#f8fbff!important;
+  --panel:#ffffff!important;
+  --panel2:#eef6ff!important;
+  --text:#172033!important;
+  --muted:#64748b!important;
+  --border:#d7e4f5!important;
+  --theme-glow:rgba(37,99,235,.12)!important;
+}
+
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableCourseTile,
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableConflictTile{
+  --frost:clamp(0, var(--course-card-alpha,.72), 1);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,calc(var(--frost) * .18)), transparent 34%),
+    linear-gradient(180deg, rgba(54,70,105,calc(var(--frost) * .78)), rgba(18,30,58,calc(var(--frost) * .58)))!important;
+  border-color:rgba(180,200,230,calc(var(--frost) * .32))!important;
+  box-shadow:
+    0 8px 22px rgba(0,0,0,calc(var(--frost) * .26)),
+    inset 0 1px 0 rgba(255,255,255,calc(var(--frost) * .18)),
+    inset 0 -1px 0 rgba(15,23,42,calc(var(--frost) * .30))!important;
+  backdrop-filter:blur(calc(var(--frost) * 18px)) saturate(calc(100% + var(--frost) * 45%))!important;
+  -webkit-backdrop-filter:blur(calc(var(--frost) * 18px)) saturate(calc(100% + var(--frost) * 45%))!important;
+}
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableCourseTile::before,
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableConflictTile::before{
+  opacity:var(--frost)!important;
+}

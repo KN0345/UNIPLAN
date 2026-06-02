@@ -148,7 +148,7 @@ function App() {
         const settings = res?.settings || {}
         const appearance = settings.appearance || settings
         if (cancelled || !appearance) return
-        if (appearance.uiTheme) setUiTheme(appearance.uiTheme)
+        if (appearance.uiTheme || appearance.theme) setUiTheme(appearance.uiTheme || appearance.theme)
         if (appearance.accent) setAccent(appearance.accent)
         if (appearance.accentColor) setAccent(appearance.accentColor)
         if (appearance.buttonAccent) setButtonAccent(appearance.buttonAccent)
