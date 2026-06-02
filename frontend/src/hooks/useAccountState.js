@@ -42,17 +42,25 @@ export function useAccountState({ notify, applyRemoteBundle, setPlan, setCandida
 
   useEffect(() => {
     const sid = loginForm.studentId.trim()
-    if (!sid || sid === 'admin' || sid === 'super') {
+    const shouldPreview = ['register', 'register-password', 'verify', 'forgot', 'google-setup'].includes(authMode)
+    if (!shouldPreview || !sid || sid === 'admin' || sid === 'super') {
       setStudentIdPreview(null)
       return
     }
     const local = parseTkuStudentIdLocal(sid)
     setStudentIdPreview(local)
     if (!/^\d{9}$/.test(sid)) return
-    parseStudentId(sid)
-      .then((res) => setStudentIdPreview(res?.data || local))
-      .catch(() => setStudentIdPreview(local))
-  }, [loginForm.studentId])
+    let cancelled = false
+    const timer = window.setTimeout(() => {
+      parseStudentId(sid)
+        .then((res) => { if (!cancelled) setStudentIdPreview(res?.data || local) })
+        .catch(() => { if (!cancelled) setStudentIdPreview(local) })
+    }, 220)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [loginForm.studentId, authMode])
 
   useEffect(() => {
     if (user) localStorage.setItem(profileStorageKey(user), JSON.stringify(accountProfile))

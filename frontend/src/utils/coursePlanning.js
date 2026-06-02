@@ -1522,71 +1522,32 @@ export async function exportPngFromDom(element, semester = '課表') {
     return false
   }
 
-  let iframe = null
   let exportRoot = null
   try {
-    const rect = element.getBoundingClientRect()
-    const fallbackWidth = Math.ceil(rect.width || element.scrollWidth || 1280)
-    const fallbackHeight = Math.ceil(rect.height || element.scrollHeight || 900)
-
-    const clone = element.cloneNode(true)
-    inlineComputedStyles(element, clone)
-    sanitizeExportClone(clone)
-    const compactSize = prepareCompactTimetableExport(clone, fallbackWidth, fallbackHeight)
-    const width = compactSize.width
-    const height = compactSize.height
-
-    iframe = document.createElement('iframe')
-    iframe.setAttribute('aria-hidden', 'true')
-    iframe.style.position = 'fixed'
-    iframe.style.left = '-100000px'
-    iframe.style.top = '0'
-    iframe.style.width = `${width}px`
-    iframe.style.height = `${height}px`
-    iframe.style.border = '0'
-    iframe.style.opacity = '0'
-    iframe.style.pointerEvents = 'none'
-    document.body.appendChild(iframe)
-
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
-    if (!iframeDoc) throw new Error('無法建立匯出用 iframe')
-    iframeDoc.open()
-    iframeDoc.write(`<!doctype html><html><head><meta charset="utf-8"><style>
-      html,body{margin:0;padding:0;width:${width}px;height:${height}px;overflow:hidden;background:transparent;}
-      *{box-sizing:border-box;animation:none!important;transition:none!important;}
-    </style></head><body></body></html>`)
-    iframeDoc.close()
-
-    exportRoot = iframeDoc.importNode(clone, true)
-    iframeDoc.body.appendChild(exportRoot)
-    sanitizeUnsupportedCanvasCss(exportRoot, iframe.contentWindow || window)
-    exportRoot.style.position = 'relative'
-    exportRoot.style.left = '0'
-    exportRoot.style.top = '0'
-    exportRoot.style.margin = '0'
-    exportRoot.style.transform = 'none'
-    exportRoot.style.width = `${width}px`
-    exportRoot.style.minWidth = `${width}px`
-    exportRoot.style.height = `${height}px`
-    exportRoot.style.minHeight = `${height}px`
+    // 匯出課表只需要「課表主體」，但不能直接截 live DOM：
+    // live DOM 目前有裁切、壓縮、半學期點擊 hitbox、CSS 變數與 color() fallback，
+    // 這些在 html2canvas 裡會互相污染，造成卡片變形或透明度失準。
+    // 因此改用穩定的課表主體 renderer：資料仍從目前畫面讀取，版面用固定格線重建。
+    const stable = buildStableExportDom(element, semester)
+    exportRoot = stable.root
+    document.body.appendChild(exportRoot)
 
     await waitForImages(exportRoot)
-    if (iframeDoc.fonts?.ready) await iframeDoc.fonts.ready
+    if (document.fonts?.ready) await document.fonts.ready
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 
     const { default: html2canvas } = await import('html2canvas')
     const canvas = await html2canvas(exportRoot, {
-      onclone: (doc) => sanitizeUnsupportedCanvasCss(doc.body, doc.defaultView || window),
       backgroundColor: null,
       scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)),
       useCORS: true,
       allowTaint: false,
       imageTimeout: 15000,
       logging: false,
-      width,
-      height,
-      windowWidth: width,
-      windowHeight: height,
+      width: stable.width,
+      height: stable.height,
+      windowWidth: stable.width,
+      windowHeight: stable.height,
       scrollX: 0,
       scrollY: 0,
     })
@@ -1605,16 +1566,12 @@ export async function exportPngFromDom(element, semester = '課表') {
     return true
   } catch (error) {
     console.error('Current view PNG export failed.', error)
-    alert('PNG 匯出失敗：目前畫面匯出失敗，請回報 Console 錯誤。')
+    alert('匯出課表失敗，請稍後再試。')
     return false
   } finally {
-    if (iframe?.parentNode) iframe.parentNode.removeChild(iframe)
-    else if (exportRoot?.parentNode) exportRoot.parentNode.removeChild(exportRoot)
+    exportRoot?.remove()
   }
 }
-
-
-
 
 export async function exportCleanPng(plan, semester = '課表') {
   // Wallpaper Export V5: smart phone-wallpaper layout.
