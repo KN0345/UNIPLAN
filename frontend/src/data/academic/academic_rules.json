@@ -1,0 +1,1928 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedFor": "UniPlan frontend data mode",
+  "entryYearRuleSelection": {
+    "description": "graduation_rules 仍依使用者入學年度選擇；本檔案同樣使用 entryYearStart/entryYearEnd 分流輔系、輔修、第二主修、雙主修。"
+  },
+  "defaultRules": {
+    "sub_minor": {
+      "requiredCredits": 20,
+      "countIntoGraduationCredits": true,
+      "outside128MaxCredits": 10
+    },
+    "second_major": {
+      "requiredCredits": 40,
+      "countIntoGraduationCredits": true,
+      "outside128MaxCredits": 10
+    },
+    "double_major": {
+      "countIntoGraduationCredits": false,
+      "semesterCreditLimitBonus": 6,
+      "defaultSemesterCreditLimit": 31
+    }
+  },
+  "programs": [
+    {
+      "id": "ai_minor_110",
+      "department": "人工智慧學系",
+      "track": null,
+      "programType": "minor",
+      "entryYearStart": 110,
+      "requiredCredits": 27,
+      "mandatoryCredits": 21,
+      "electiveCredits": 6,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "人工智慧概論",
+            "credits": 3
+          },
+          {
+            "name": "程式設計(一)",
+            "credits": 3
+          },
+          {
+            "name": "程式設計(二)",
+            "credits": 3
+          },
+          {
+            "name": "人工智慧應用實驗(一)",
+            "credits": 1
+          },
+          {
+            "name": "人工智慧應用實驗(二)",
+            "credits": 1
+          },
+          {
+            "name": "機器學習(一)",
+            "credits": 2
+          },
+          {
+            "name": "機器學習(二)",
+            "credits": 2
+          },
+          {
+            "name": "深度學習",
+            "credits": 3
+          },
+          {
+            "name": "自然語言處理",
+            "credits": 3
+          }
+        ],
+        "electivePool": "本系系選修"
+      },
+      "rules": [
+        "department_elective_pool"
+      ],
+      "note": null
+    },
+    {
+      "id": "ai_sub_minor_112",
+      "department": "人工智慧學系",
+      "track": null,
+      "programType": "sub_minor",
+      "entryYearStart": 112,
+      "requiredCredits": 20,
+      "mandatoryCredits": 10,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "人工智慧概論",
+            "credits": 3
+          },
+          {
+            "name": "程式設計(一)",
+            "credits": 3
+          },
+          {
+            "name": "機器學習(一)",
+            "credits": 2
+          },
+          {
+            "name": "機器學習(二)",
+            "credits": 2
+          }
+        ],
+        "elective": [
+          {
+            "name": "程式設計(二)",
+            "credits": 3
+          },
+          {
+            "name": "影像處理",
+            "credits": 3
+          },
+          {
+            "name": "深度學習",
+            "credits": 3
+          },
+          {
+            "name": "自然語言處理",
+            "credits": 3
+          },
+          {
+            "name": "人工智慧實務",
+            "credits": 3
+          },
+          {
+            "name": "畢業專題實驗(一)",
+            "credits": 1
+          },
+          {
+            "name": "畢業專題實驗(二)",
+            "credits": 1
+          }
+        ]
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "ai_second_major_114",
+      "department": "人工智慧學系",
+      "track": null,
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 10,
+      "electiveCredits": 30,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "人工智慧概論",
+            "credits": 3
+          },
+          {
+            "name": "機器學習(一)",
+            "credits": 2
+          },
+          {
+            "name": "機器學習(二)",
+            "credits": 2
+          },
+          {
+            "name": "深度學習",
+            "credits": 3
+          }
+        ],
+        "elective": [
+          {
+            "name": "程式設計(一)",
+            "credits": 3
+          },
+          {
+            "name": "線性代數",
+            "credits": 3
+          },
+          {
+            "name": "網路概論",
+            "credits": 3
+          },
+          {
+            "name": "機率論",
+            "credits": 2
+          },
+          {
+            "name": "程式設計(二)",
+            "credits": 3
+          },
+          {
+            "name": "影像處理",
+            "credits": 3
+          },
+          {
+            "name": "統計學",
+            "credits": 2
+          },
+          {
+            "name": "資料庫",
+            "credits": 3
+          },
+          {
+            "name": "資料結構",
+            "credits": 3
+          },
+          {
+            "name": "人工智慧數學",
+            "credits": 3
+          },
+          {
+            "name": "數據分析",
+            "credits": 3
+          },
+          {
+            "name": "演算法",
+            "credits": 3
+          },
+          {
+            "name": "水資訊概論",
+            "credits": 2
+          },
+          {
+            "name": "人工智慧醫療診斷方法",
+            "credits": 3
+          },
+          {
+            "name": "智慧商務",
+            "credits": 2
+          },
+          {
+            "name": "人工智慧實務",
+            "credits": 3
+          },
+          {
+            "name": "自然語言處理",
+            "credits": 3
+          },
+          {
+            "name": "智慧水資資訊管理概論",
+            "credits": 2
+          },
+          {
+            "name": "人工智慧醫療應用",
+            "credits": 3
+          }
+        ]
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "architecture_sub_minor_112",
+      "department": "建築學系",
+      "track": null,
+      "programType": "sub_minor",
+      "entryYearStart": 112,
+      "requiredCredits": 20,
+      "mandatoryCredits": 0,
+      "electiveCredits": 20,
+      "courses": {
+        "elective": [
+          {
+            "name": "設計方法",
+            "credits": 3
+          },
+          {
+            "name": "當代建築與設計思潮",
+            "credits": 2
+          },
+          {
+            "name": "都市空間",
+            "credits": 2
+          },
+          {
+            "name": "永續建築",
+            "credits": 2
+          },
+          {
+            "name": "建築實務",
+            "credits": 2
+          },
+          {
+            "name": "設計理論",
+            "credits": 2
+          },
+          {
+            "name": "地景建築概論",
+            "credits": 2
+          },
+          {
+            "name": "台灣建築史",
+            "credits": 2
+          },
+          {
+            "name": "空間與社會",
+            "credits": 3
+          },
+          {
+            "name": "社區營造服務",
+            "credits": 2
+          },
+          {
+            "name": "營建管理",
+            "credits": 2
+          }
+        ]
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "architecture_second_major_114",
+      "department": "建築學系",
+      "track": null,
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 0,
+      "electiveCredits": 40,
+      "courses": {
+        "elective": [
+          {
+            "name": "建築人文概論",
+            "credits": 2
+          },
+          {
+            "name": "工程與材料力學",
+            "credits": 3
+          },
+          {
+            "name": "結構學",
+            "credits": 2
+          },
+          {
+            "name": "設計方法",
+            "credits": 3
+          },
+          {
+            "name": "世界建築史(一)",
+            "credits": 3
+          },
+          {
+            "name": "世界建築史(二)",
+            "credits": 3
+          },
+          {
+            "name": "建築結構系統",
+            "credits": 2
+          },
+          {
+            "name": "當代建築與設計思潮",
+            "credits": 2
+          },
+          {
+            "name": "建築物理環境",
+            "credits": 3
+          },
+          {
+            "name": "環境控制系統",
+            "credits": 3
+          },
+          {
+            "name": "建築實務",
+            "credits": 2
+          },
+          {
+            "name": "設計理論",
+            "credits": 2
+          },
+          {
+            "name": "都市空間",
+            "credits": 2
+          },
+          {
+            "name": "地景建築概論",
+            "credits": 2
+          },
+          {
+            "name": "永續建築",
+            "credits": 2
+          },
+          {
+            "name": "台灣建築史",
+            "credits": 2
+          },
+          {
+            "name": "空間與社會",
+            "credits": 3
+          },
+          {
+            "name": "營建管理",
+            "credits": 2
+          },
+          {
+            "name": "社區營造服務",
+            "credits": 2
+          }
+        ]
+      },
+      "rules": [
+        "pure_credit_pool"
+      ],
+      "note": null
+    },
+    {
+      "id": "mechanical_minor_113",
+      "department": "機械與機電工程學系",
+      "track": null,
+      "programType": "minor",
+      "entryYearStart": 113,
+      "requiredCredits": 20,
+      "mandatoryCredits": 20,
+      "electiveCredits": 0,
+      "courses": {
+        "requiredPool": [
+          {
+            "name": "工場實習",
+            "credits": 2
+          },
+          {
+            "name": "電腦繪圖實作",
+            "credits": 1
+          },
+          {
+            "name": "材料力學(一)",
+            "credits": 2
+          },
+          {
+            "name": "應用力學(二)",
+            "credits": 3
+          },
+          {
+            "name": "電路學",
+            "credits": 3
+          },
+          {
+            "name": "材料科學與工程",
+            "credits": 3
+          },
+          {
+            "name": "機動學",
+            "credits": 3
+          },
+          {
+            "name": "熱力學",
+            "credits": 4
+          },
+          {
+            "name": "精密機械設計",
+            "credits": 4
+          },
+          {
+            "name": "流體力學",
+            "credits": 3
+          }
+        ]
+      },
+      "rules": [
+        "required_course_pool",
+        "no_overlap_with_major"
+      ],
+      "note": null
+    },
+    {
+      "id": "mechanical_sub_minor_112",
+      "department": "機械與機電工程學系",
+      "track": null,
+      "programType": "sub_minor",
+      "entryYearStart": 112,
+      "requiredCredits": 20,
+      "mandatoryCredits": 0,
+      "electiveCredits": 20,
+      "courses": {
+        "electivePool": [
+          {
+            "name": "工場實習",
+            "credits": 2
+          },
+          {
+            "name": "應用力學(一)",
+            "credits": 2
+          },
+          {
+            "name": "機械畫",
+            "credits": 1
+          },
+          {
+            "name": "電腦繪圖",
+            "credits": 1
+          },
+          {
+            "name": "材料力學(一)",
+            "credits": 3
+          },
+          {
+            "name": "材料科學與工程",
+            "credits": 3
+          },
+          {
+            "name": "應用力學(二)",
+            "credits": 3
+          },
+          {
+            "name": "機動學",
+            "credits": 3
+          },
+          {
+            "name": "電路學",
+            "credits": 3
+          },
+          {
+            "name": "電子學",
+            "credits": 3
+          },
+          {
+            "name": "熱力學",
+            "credits": 4
+          },
+          {
+            "name": "流體力學",
+            "credits": 3
+          },
+          {
+            "name": "熱傳學",
+            "credits": 3
+          },
+          {
+            "name": "精密機械設計",
+            "credits": 4
+          },
+          {
+            "name": "應用物理學",
+            "credits": 3
+          },
+          {
+            "name": "自動控制",
+            "credits": 3
+          }
+        ]
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "mechanical_second_major_114",
+      "department": "機械與機電工程學系",
+      "track": null,
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 35,
+      "electiveCredits": 6,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "工場實習",
+            "credits": 2
+          },
+          {
+            "name": "應用力學(一)",
+            "credits": 2
+          },
+          {
+            "name": "電腦繪圖實作",
+            "credits": 1
+          },
+          {
+            "name": "材料力學(一)",
+            "credits": 3
+          },
+          {
+            "name": "應用力學(二)",
+            "credits": 3
+          },
+          {
+            "name": "電路學",
+            "credits": 3
+          },
+          {
+            "name": "材料科學與工程",
+            "credits": 3
+          },
+          {
+            "name": "機動學",
+            "credits": 3
+          },
+          {
+            "name": "熱力學",
+            "credits": 4
+          },
+          {
+            "name": "精密機械設計(一)",
+            "credits": 2
+          },
+          {
+            "name": "自動控制",
+            "credits": 3
+          },
+          {
+            "name": "流體力學",
+            "credits": 3
+          },
+          {
+            "name": "熱傳學",
+            "credits": 3
+          }
+        ],
+        "elective": [
+          {
+            "name": "機械畫實作",
+            "credits": 1
+          },
+          {
+            "name": "材料力學(二)",
+            "credits": 3
+          },
+          {
+            "name": "精密機械設計(二)",
+            "credits": 2
+          }
+        ]
+      },
+      "rules": [
+        "no_overlap_with_major"
+      ],
+      "note": "41學分應選40學分修課，主修學系與輔系課程不得重複修習。"
+    },
+    {
+      "id": "electrical_sub_minor_113",
+      "department": "電機工程學系",
+      "track": null,
+      "programType": "sub_minor",
+      "entryYearStart": 113,
+      "requiredCredits": 20,
+      "mandatoryCredits": 10,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "電路學",
+            "credits": 4
+          },
+          {
+            "name": "電子學",
+            "credits": 6
+          }
+        ],
+        "electivePool": "電機系限修本系選修"
+      },
+      "rules": [
+        "department_course_only"
+      ],
+      "note": null
+    },
+    {
+      "id": "electrical_second_major_114",
+      "department": "電機工程學系",
+      "track": null,
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 22,
+      "electiveCredits": 18,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "邏輯設計",
+            "credits": 2
+          },
+          {
+            "name": "電路學",
+            "credits": 2
+          },
+          {
+            "name": "電子學",
+            "credits": 6
+          },
+          {
+            "name": "信號與系統",
+            "credits": 3
+          },
+          {
+            "name": "控制系統",
+            "credits": 3
+          },
+          {
+            "name": "電磁學",
+            "credits": 3
+          },
+          {
+            "name": "通信系統",
+            "credits": 3
+          }
+        ],
+        "electivePool": "電機系限修本系選修"
+      },
+      "rules": [
+        "department_course_only"
+      ],
+      "note": null
+    },
+    {
+      "id": "electrical_minor_電機與系統組_114",
+      "department": "電機工程學系",
+      "track": "電機與系統組",
+      "programType": "minor",
+      "entryYearStart": 114,
+      "requiredCredits": 20,
+      "mandatoryCredits": 10,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "電路學",
+            "credits": 4
+          },
+          {
+            "name": "電子學",
+            "credits": 6
+          }
+        ],
+        "electivePool": "本系電機與系統組專業必修科目"
+      },
+      "rules": [
+        "track_variant",
+        "no_overlap_with_major"
+      ],
+      "note": "除電路學、電子學為輔系必修外，仍需選修本系本組專業必修科目。"
+    },
+    {
+      "id": "electrical_minor_電機通訊組_114",
+      "department": "電機工程學系",
+      "track": "電機通訊組",
+      "programType": "minor",
+      "entryYearStart": 114,
+      "requiredCredits": 20,
+      "mandatoryCredits": 10,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "電路學",
+            "credits": 4
+          },
+          {
+            "name": "電子學",
+            "credits": 6
+          }
+        ],
+        "electivePool": "本系電機通訊組專業必修科目"
+      },
+      "rules": [
+        "track_variant",
+        "no_overlap_with_major"
+      ],
+      "note": "除電路學、電子學為輔系必修外，仍需選修本系本組專業必修科目。"
+    },
+    {
+      "id": "electrical_minor_電機資訊組_114",
+      "department": "電機工程學系",
+      "track": "電機資訊組",
+      "programType": "minor",
+      "entryYearStart": 114,
+      "requiredCredits": 20,
+      "mandatoryCredits": 10,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "電路學",
+            "credits": 4
+          },
+          {
+            "name": "電子學",
+            "credits": 6
+          }
+        ],
+        "electivePool": "本系電機資訊組專業必修科目"
+      },
+      "rules": [
+        "track_variant",
+        "no_overlap_with_major"
+      ],
+      "note": "除電路學、電子學為輔系必修外，仍需選修本系本組專業必修科目。"
+    },
+    {
+      "id": "water_env_minor_113",
+      "department": "水資源及環境工程學系",
+      "track": null,
+      "programType": "minor",
+      "entryYearStart": 113,
+      "requiredCredits": 26,
+      "mandatoryCredits": 21,
+      "electiveCredits": 5,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "環境化學",
+            "credits": 3
+          },
+          {
+            "name": "水資源及環境工程概論",
+            "credits": 2
+          },
+          {
+            "name": "水文學",
+            "credits": 3
+          },
+          {
+            "name": "水質實驗",
+            "credits": 1
+          },
+          {
+            "name": "流體力學(一)",
+            "credits": 3
+          },
+          {
+            "name": "給水工程",
+            "credits": 3
+          },
+          {
+            "name": "污水工程",
+            "credits": 3
+          },
+          {
+            "name": "水資源工程",
+            "credits": 3
+          }
+        ],
+        "elective": [
+          {
+            "name": "環境毒物學",
+            "credits": 2
+          },
+          {
+            "name": "中等水文學",
+            "credits": 3
+          },
+          {
+            "name": "水利工程應用軟體",
+            "credits": 2
+          },
+          {
+            "name": "固體廢棄物",
+            "credits": 3
+          },
+          {
+            "name": "環境規劃與管理",
+            "credits": 3
+          },
+          {
+            "name": "水土保持工程",
+            "credits": 2
+          }
+        ]
+      },
+      "rules": [
+        "department_approval_substitution"
+      ],
+      "note": null
+    },
+    {
+      "id": "french_sub_minor_114",
+      "department": "歐洲語文學系",
+      "track": "法文組",
+      "programType": "sub_minor",
+      "entryYearStart": 114,
+      "requiredCredits": 20,
+      "mandatoryCredits": 8,
+      "electiveCredits": 12,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "閱讀與習作(一)",
+            "credits": 4
+          },
+          {
+            "name": "法語會話(一)",
+            "credits": 4
+          }
+        ],
+        "electivePool": "法文組表列選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "french_minor_113",
+      "department": "歐洲語文學系",
+      "track": "法文組",
+      "programType": "minor",
+      "entryYearStart": 113,
+      "requiredCredits": 32,
+      "mandatoryCredits": 24,
+      "electiveCredits": 8,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "法語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "法語會話(二)",
+            "credits": 4
+          },
+          {
+            "name": "閱讀與習作(一)",
+            "credits": 4
+          },
+          {
+            "name": "閱讀與習作(二)",
+            "credits": 4
+          }
+        ],
+        "electivePool": "法文組必選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "french_minor_115",
+      "department": "歐洲語文學系",
+      "track": "法文組",
+      "programType": "minor",
+      "entryYearStart": 115,
+      "requiredCredits": 24,
+      "mandatoryCredits": 16,
+      "electiveCredits": 8,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "法語會話(一)",
+            "credits": 2
+          },
+          {
+            "name": "法語會話(二)",
+            "credits": 2
+          },
+          {
+            "name": "閱讀與習作(一)",
+            "credits": 2
+          },
+          {
+            "name": "閱讀與習作(二)",
+            "credits": 2
+          },
+          {
+            "name": "法語會話(三)",
+            "credits": 2
+          },
+          {
+            "name": "法語會話(四)",
+            "credits": 2
+          },
+          {
+            "name": "閱讀與習作(三)",
+            "credits": 2
+          },
+          {
+            "name": "閱讀與習作(四)",
+            "credits": 2
+          }
+        ],
+        "electivePool": "法文組必選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "french_second_major_114",
+      "department": "歐洲語文學系",
+      "track": "法文組",
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 20,
+      "electiveCredits": 20,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "閱讀與習作(一)",
+            "credits": 4
+          },
+          {
+            "name": "法語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "法文文法(一)",
+            "credits": 4
+          },
+          {
+            "name": "閱讀與習作(二)",
+            "credits": 4
+          },
+          {
+            "name": "法語會話(二)",
+            "credits": 4
+          }
+        ],
+        "electivePool": "法文組表列選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "french_second_major_115",
+      "department": "歐洲語文學系",
+      "track": "法文組",
+      "programType": "second_major",
+      "entryYearStart": 115,
+      "requiredCredits": 40,
+      "mandatoryCredits": 20,
+      "electiveCredits": 20,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "閱讀與習作(一)",
+            "credits": 2
+          },
+          {
+            "name": "閱讀與習作(二)",
+            "credits": 2
+          },
+          {
+            "name": "法語會話(一)",
+            "credits": 2
+          },
+          {
+            "name": "法語會話(二)",
+            "credits": 2
+          },
+          {
+            "name": "法文文法(一)",
+            "credits": 2
+          },
+          {
+            "name": "法文文法(二)",
+            "credits": 2
+          },
+          {
+            "name": "閱讀與習作(三)",
+            "credits": 2
+          },
+          {
+            "name": "閱讀與習作(四)",
+            "credits": 2
+          },
+          {
+            "name": "法語會話(三)",
+            "credits": 2
+          },
+          {
+            "name": "法語會話(四)",
+            "credits": 2
+          }
+        ],
+        "electivePool": "法文組表列選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "french_double_major_115",
+      "department": "歐洲語文學系",
+      "track": "法文組",
+      "programType": "double_major",
+      "entryYearStart": 115,
+      "requiredCredits": 54,
+      "mandatoryCredits": 54,
+      "electiveCredits": 0,
+      "courses": {
+        "mandatoryPool": "法文組雙主修必修科目表"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "spanish_sub_minor_114",
+      "department": "歐洲語文學系",
+      "track": "西文組",
+      "programType": "sub_minor",
+      "entryYearStart": 114,
+      "requiredCredits": 20,
+      "mandatoryCredits": 0,
+      "electiveCredits": 20,
+      "courses": {
+        "electivePool": "西文組表列32學分自由選20"
+      },
+      "rules": [
+        "course_prerequisite_chain"
+      ],
+      "note": null
+    },
+    {
+      "id": "spanish_minor_114",
+      "department": "歐洲語文學系",
+      "track": "西文組",
+      "programType": "minor",
+      "entryYearStart": 114,
+      "requiredCredits": 32,
+      "mandatoryCredits": 24,
+      "electiveCredits": 8,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "初級西班牙文文法",
+            "credits": 8
+          },
+          {
+            "name": "西班牙語會話(一)",
+            "credits": 8
+          },
+          {
+            "name": "西班牙語會話(二)",
+            "credits": 8
+          }
+        ],
+        "electivePool": "西文組表列選修"
+      },
+      "rules": [
+        "course_prerequisite_chain"
+      ],
+      "note": null
+    },
+    {
+      "id": "spanish_minor_115",
+      "department": "歐洲語文學系",
+      "track": "西文組",
+      "programType": "minor",
+      "entryYearStart": 115,
+      "requiredCredits": 32,
+      "mandatoryCredits": 24,
+      "electiveCredits": 8,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "初級西班牙文文法(一)",
+            "credits": 4
+          },
+          {
+            "name": "初級西班牙文文法(二)",
+            "credits": 4
+          },
+          {
+            "name": "初階西班牙語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "初階西班牙語會話(二)",
+            "credits": 4
+          },
+          {
+            "name": "中階西班牙語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "中階西班牙語會話(二)",
+            "credits": 4
+          }
+        ],
+        "electivePool": "西文組表列選修"
+      },
+      "rules": [
+        "course_prerequisite_chain"
+      ],
+      "note": null
+    },
+    {
+      "id": "spanish_second_major_114",
+      "department": "歐洲語文學系",
+      "track": "西文組",
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 36,
+      "electiveCredits": 4,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "初級西班牙文文法",
+            "credits": 8
+          },
+          {
+            "name": "西班牙語會話(一)",
+            "credits": 8
+          },
+          {
+            "name": "西班牙文閱讀與習作",
+            "credits": 4
+          },
+          {
+            "name": "西班牙語聽力與發音(一)",
+            "credits": 4
+          },
+          {
+            "name": "西班牙語會話(二)",
+            "credits": 8
+          },
+          {
+            "name": "西班牙文作文(一)",
+            "credits": 4
+          }
+        ],
+        "elective": [
+          {
+            "name": "西語國家文化概論",
+            "credits": 2
+          },
+          {
+            "name": "西文辭彙及閱讀",
+            "credits": 2
+          }
+        ]
+      },
+      "rules": [
+        "course_prerequisite_chain"
+      ],
+      "note": null
+    },
+    {
+      "id": "spanish_second_major_115",
+      "department": "歐洲語文學系",
+      "track": "西文組",
+      "programType": "second_major",
+      "entryYearStart": 115,
+      "requiredCredits": 40,
+      "mandatoryCredits": 36,
+      "electiveCredits": 4,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "初級西班牙文文法(一)",
+            "credits": 4
+          },
+          {
+            "name": "初級西班牙文文法(二)",
+            "credits": 4
+          },
+          {
+            "name": "初階西班牙語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "初階西班牙語會話(二)",
+            "credits": 4
+          },
+          {
+            "name": "西班牙文閱讀與習作(一)",
+            "credits": 2
+          },
+          {
+            "name": "西班牙文閱讀與習作(二)",
+            "credits": 2
+          },
+          {
+            "name": "基礎西班牙語聽力與發音(一)",
+            "credits": 2
+          },
+          {
+            "name": "基礎西班牙語聽力與發音(二)",
+            "credits": 2
+          },
+          {
+            "name": "中階西班牙語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "中階西班牙語會話(二)",
+            "credits": 4
+          },
+          {
+            "name": "基礎西班牙文作文(一)",
+            "credits": 2
+          },
+          {
+            "name": "基礎西班牙文作文(二)",
+            "credits": 2
+          }
+        ],
+        "elective": [
+          {
+            "name": "西語國家人文與時尚",
+            "credits": 2
+          },
+          {
+            "name": "西文辭彙及閱讀(一)",
+            "credits": 2
+          }
+        ]
+      },
+      "rules": [
+        "course_prerequisite_chain"
+      ],
+      "note": null
+    },
+    {
+      "id": "spanish_double_major_114",
+      "department": "歐洲語文學系",
+      "track": "西文組",
+      "programType": "double_major",
+      "entryYearStart": 114,
+      "requiredCredits": 56,
+      "mandatoryCredits": 56,
+      "electiveCredits": 0,
+      "courses": {
+        "mandatoryPool": "西文組雙主修必修科目表"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "german_sub_minor_114",
+      "department": "歐洲語文學系",
+      "track": "德文組",
+      "programType": "sub_minor",
+      "entryYearStart": 114,
+      "requiredCredits": 20,
+      "mandatoryCredits": 10,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "初級德文",
+            "credits": 6
+          },
+          {
+            "name": "德語會話(一)",
+            "credits": 2
+          },
+          {
+            "name": "德語語言練習(一)",
+            "credits": 2
+          }
+        ],
+        "electivePool": "德文組表列18學分自由選10"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "german_minor_114",
+      "department": "歐洲語文學系",
+      "track": "德文組",
+      "programType": "minor",
+      "entryYearStart": 114,
+      "requiredCredits": 22,
+      "mandatoryCredits": 20,
+      "electiveCredits": 2,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "德語語言練習(一)",
+            "credits": 4
+          },
+          {
+            "name": "初級德文",
+            "credits": 12
+          },
+          {
+            "name": "德語會話(一)",
+            "credits": 4
+          }
+        ],
+        "electivePool": "德文組選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "german_second_major_114",
+      "department": "歐洲語文學系",
+      "track": "德文組",
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 28,
+      "electiveCredits": 12,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "德語語言練習(一)",
+            "credits": 4
+          },
+          {
+            "name": "德語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "初級德文",
+            "credits": 12
+          },
+          {
+            "name": "中級德文",
+            "credits": 8
+          }
+        ],
+        "electivePool": "德文組選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "german_second_major_115",
+      "department": "歐洲語文學系",
+      "track": "德文組",
+      "programType": "second_major",
+      "entryYearStart": 115,
+      "requiredCredits": 40,
+      "mandatoryCredits": 28,
+      "electiveCredits": 12,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "德語語言練習(一)",
+            "credits": 2
+          },
+          {
+            "name": "德語語言練習(二)",
+            "credits": 2
+          },
+          {
+            "name": "德語會話(一)",
+            "credits": 2
+          },
+          {
+            "name": "德語會話(二)",
+            "credits": 2
+          },
+          {
+            "name": "初級德文(一)",
+            "credits": 6
+          },
+          {
+            "name": "初級德文(二)",
+            "credits": 6
+          },
+          {
+            "name": "中級德文(一)",
+            "credits": 4
+          },
+          {
+            "name": "中級德文(二)",
+            "credits": 4
+          }
+        ],
+        "electivePool": "德文組選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "german_double_major_114",
+      "department": "歐洲語文學系",
+      "track": "德文組",
+      "programType": "double_major",
+      "entryYearStart": 114,
+      "requiredCredits": 52,
+      "mandatoryCredits": 52,
+      "electiveCredits": 0,
+      "courses": {
+        "mandatoryPool": "德文組雙主修必修科目表"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "russian_sub_minor_114",
+      "department": "歐洲語文學系",
+      "track": "俄文組",
+      "programType": "sub_minor",
+      "entryYearStart": 114,
+      "requiredCredits": 20,
+      "mandatoryCredits": 0,
+      "electiveCredits": 20,
+      "courses": {
+        "electivePool": "俄文組任選20學分"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "russian_minor_115",
+      "department": "歐洲語文學系",
+      "track": "俄文組",
+      "programType": "minor",
+      "entryYearStart": 115,
+      "requiredCredits": 24,
+      "mandatoryCredits": 24,
+      "electiveCredits": 0,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "大一俄語(一)",
+            "credits": 4
+          },
+          {
+            "name": "大一俄語(二)",
+            "credits": 4
+          },
+          {
+            "name": "俄語會話(一)",
+            "credits": 2
+          },
+          {
+            "name": "俄語會話(二)",
+            "credits": 2
+          },
+          {
+            "name": "大二俄語(一)",
+            "credits": 4
+          },
+          {
+            "name": "大二俄語(二)",
+            "credits": 4
+          },
+          {
+            "name": "俄語會話(三)",
+            "credits": 2
+          },
+          {
+            "name": "俄語會話(四)",
+            "credits": 2
+          }
+        ]
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "russian_second_major_114",
+      "department": "歐洲語文學系",
+      "track": "俄文組",
+      "programType": "second_major",
+      "entryYearStart": 114,
+      "requiredCredits": 40,
+      "mandatoryCredits": 30,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "大一俄語",
+            "credits": 8
+          },
+          {
+            "name": "俄語語法(一)",
+            "credits": 8
+          },
+          {
+            "name": "俄語會話(一)",
+            "credits": 4
+          },
+          {
+            "name": "大二俄語",
+            "credits": 8
+          },
+          {
+            "name": "俄語語法(二)",
+            "credits": 6
+          },
+          {
+            "name": "俄語會話(二)",
+            "credits": 4
+          }
+        ],
+        "electivePool": "俄文組表列選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "russian_second_major_115",
+      "department": "歐洲語文學系",
+      "track": "俄文組",
+      "programType": "second_major",
+      "entryYearStart": 115,
+      "requiredCredits": 40,
+      "mandatoryCredits": 30,
+      "electiveCredits": 10,
+      "courses": {
+        "mandatory": [
+          {
+            "name": "大一俄語(一)",
+            "credits": 4
+          },
+          {
+            "name": "大一俄語(二)",
+            "credits": 4
+          },
+          {
+            "name": "俄語語法(一)",
+            "credits": 4
+          },
+          {
+            "name": "俄語語法(二)",
+            "credits": 4
+          },
+          {
+            "name": "大二俄語(一)",
+            "credits": 4
+          },
+          {
+            "name": "大二俄語(二)",
+            "credits": 4
+          },
+          {
+            "name": "俄語語法(三)",
+            "credits": 3
+          },
+          {
+            "name": "俄語語法(四)",
+            "credits": 3
+          }
+        ],
+        "electivePool": "俄文組表列選修"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "russian_double_major_114",
+      "department": "歐洲語文學系",
+      "track": "俄文組",
+      "programType": "double_major",
+      "entryYearStart": 114,
+      "requiredCredits": 54,
+      "mandatoryCredits": 54,
+      "electiveCredits": 0,
+      "courses": {
+        "mandatoryPool": "俄文組雙主修必修科目表"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "russian_double_major_115",
+      "department": "歐洲語文學系",
+      "track": "俄文組",
+      "programType": "double_major",
+      "entryYearStart": 115,
+      "requiredCredits": 58,
+      "mandatoryCredits": 58,
+      "electiveCredits": 0,
+      "courses": {
+        "mandatoryPool": "俄文組雙主修必修科目表"
+      },
+      "rules": [],
+      "note": null
+    },
+    {
+      "id": "summary_教育科技學系",
+      "department": "教育科技學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_中國文學學系",
+      "department": "中國文學學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_教育與未來設計學系",
+      "department": "教育與未來設計學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_歷史學系",
+      "department": "歷史學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_大眾傳播學系",
+      "department": "大眾傳播學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_資訊傳播學系",
+      "department": "資訊傳播學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_資訊與圖書館學系",
+      "department": "資訊與圖書館學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_資訊管理學系",
+      "department": "資訊管理學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_資訊工程學系",
+      "department": "資訊工程學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_英文學系",
+      "department": "英文學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_日本語文學系",
+      "department": "日本語文學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_經濟學系",
+      "department": "經濟學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_公共行政暨法律學系",
+      "department": "公共行政暨法律學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_會計學系",
+      "department": "會計學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_企業管理學系",
+      "department": "企業管理學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_管理科學學系",
+      "department": "管理科學學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_財務金融學系",
+      "department": "財務金融學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_風險管理與保險學系",
+      "department": "風險管理與保險學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_統計與資料科學學系",
+      "department": "統計與資料科學學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_運輸管理學系",
+      "department": "運輸管理學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_國際企業學系",
+      "department": "國際企業學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_全球政治經濟學系",
+      "department": "全球政治經濟學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_外交與國際關係學系",
+      "department": "外交與國際關係學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_國際觀光管理學系全英語學士班",
+      "department": "國際觀光管理學系全英語學士班",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_化學學系",
+      "department": "化學學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_物理學系",
+      "department": "物理學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_應用數學與數據科學學系",
+      "department": "應用數學與數據科學學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_航空太空工程學系",
+      "department": "航空太空工程學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_土木工程學系",
+      "department": "土木工程學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    },
+    {
+      "id": "summary_化學工程與材料工程學系",
+      "department": "化學工程與材料工程學系",
+      "programType": "summary",
+      "entryYearStart": 112,
+      "requiredCredits": null,
+      "source": "conversation_collected",
+      "note": "已依前次整理納入學籍規劃索引；詳細課程池可由同檔案後續擴充。"
+    }
+  ],
+  "courseStatus": {
+    "planned": "正常排程",
+    "completed": "已修過",
+    "failed": "已被當",
+    "withdrawn": "停修"
+  }
+}
