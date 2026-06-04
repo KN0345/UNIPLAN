@@ -1,0 +1,28 @@
+export const PROGRAM_RULE_TYPES = {
+  MIN_CREDIT: 'MIN_CREDIT',
+  MIN_COURSE: 'MIN_COURSE',
+  SELECT_N_OF_M: 'SELECT_N_OF_M',
+  MAX_COURSE: 'MAX_COURSE',
+  MAX_CREDIT: 'MAX_CREDIT',
+  ALL_GROUPS_REQUIRED: 'ALL_GROUPS_REQUIRED',
+  MIN_OUTSIDE_MAJOR_CREDIT: 'MIN_OUTSIDE_MAJOR_CREDIT',
+  NOTE: 'NOTE',
+}
+
+export const PROGRAM_STATUS = {
+  ACTIVE: 'ACTIVE',
+  PARTIAL: 'PARTIAL',
+  NEEDS_RULES: 'NEEDS_RULES',
+  HISTORICAL: 'HISTORICAL',
+}
+
+export const PROGRAM_STATUS_LABEL = {
+  ACTIVE: '已建規則',
+  PARTIAL: '部分規則',
+  NEEDS_RULES: '待補規則',
+  HISTORICAL: '歷史資料',
+}
+
+export function programStatusLabel(status) {
+  return PROGRAM_STATUS_LABEL[status] || '未分類'
+}
