@@ -1,0 +1,81 @@
+{
+  "programCount": 111,
+  "departments": [
+    "中國文學學系",
+    "人工智慧學系",
+    "企業管理學系",
+    "全球政治經濟學系",
+    "公共行政暨法律學系",
+    "化學學系",
+    "化學工程與材料工程學系",
+    "國際企業學系",
+    "國際觀光管理學系全英語學士班",
+    "土木工程學系",
+    "外交與國際關係學系",
+    "大眾傳播學系",
+    "建築學系",
+    "應用數學與數據科學學系",
+    "教育科技學系",
+    "教育與未來設計學系",
+    "日本語文學系",
+    "會計學系",
+    "機械與機電工程學系",
+    "歐洲語文學系",
+    "歷史學系",
+    "水資源及環境工程學系",
+    "物理學系",
+    "管理科學學系",
+    "統計與資料科學學系",
+    "經濟學系",
+    "航空太空工程學系",
+    "英文學系",
+    "財務金融學系",
+    "資訊傳播學系",
+    "資訊工程學系",
+    "資訊管理學系",
+    "資訊與圖書館學系",
+    "運輸管理學系",
+    "電機工程學系",
+    "風險管理與保險學系"
+  ],
+  "departmentCount": 36,
+  "byProgramType": {
+    "minor": 34,
+    "sub_minor": 37,
+    "second_major": 31,
+    "double_major": 9
+  },
+  "changedFiles": [
+    "frontend/src/pages/FlexibleProgramsPage.jsx",
+    "frontend/src/components/credits/GraduationRulePreviewPanel.jsx",
+    "frontend/src/data/academic/academic_rules.json",
+    "frontend/src/data/academic/department_required_courses.json"
+  ],
+  "uiChanged": false,
+  "notes": [
+    "雙主修通則改為：修讀該學系所有專業必修。",
+    "若沒有雙主修科目表，UniPlan 先使用 department_required_courses 進行檢測。",
+    "department_required_courses 由 courses.json 中 category=必 的課程彙整，仍需以教務公告校對。",
+    "若缺主系必修清單，才顯示資料不足。"
+  ],
+  "changedRoot": "frontend",
+  "changedFolders": [
+    "frontend/src/pages",
+    "frontend/src/components/layout",
+    "frontend/src/components/credits",
+    "frontend/src/data/academic"
+  ],
+  "latestChanges": [
+    "新增左側彈性學制分頁",
+    "移除畢業學分頁內彈性學制設定",
+    "畢業學分頁只在已選學制後顯示額外進度條",
+    "加入同系新舊制互斥資料欄位",
+    "加入申請年與放棄資格提醒資料欄位",
+    "加入只提供新制則無舊制/只提供舊制則無新制之推導規則"
+  ],
+  "lastUpdate": "double_major_general_rule_department_required",
+  "changedTopLevel": [
+    "frontend"
+  ],
+  "departmentRequiredCourseGroups": 40
+}
