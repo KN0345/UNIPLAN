@@ -1,0 +1,327 @@
+[
+  {
+    "id": "infolib_double_major_113",
+    "department": "資訊與圖書館學系",
+    "track": null,
+    "programType": "double_major",
+    "catalogYear": 113,
+    "entryYearStart": 113,
+    "entryYearEnd": null,
+    "requiredCredits": 53,
+    "mandatoryCredits": 53,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "university_double_major"
+    ],
+    "note": null,
+    "applicationYearStart": 113,
+    "applicationYearEnd": null,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "資訊與圖書館學系::",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "english_double_major_default",
+    "department": "英文學系",
+    "track": null,
+    "programType": "double_major",
+    "catalogYear": 114,
+    "entryYearStart": 114,
+    "entryYearEnd": null,
+    "requiredCredits": null,
+    "mandatoryCredits": 0,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "university_double_major"
+    ],
+    "note": null,
+    "applicationYearStart": 114,
+    "applicationYearEnd": null,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "英文學系::",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "stats_double_major_114",
+    "department": "統計與資料科學學系",
+    "track": null,
+    "programType": "double_major",
+    "catalogYear": 114,
+    "entryYearStart": 114,
+    "entryYearEnd": null,
+    "requiredCredits": 58,
+    "mandatoryCredits": 58,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [
+        {
+          "name": "統計學",
+          "credits": 4
+        },
+        {
+          "name": "高等統計學",
+          "credits": 4
+        },
+        {
+          "name": "微積分",
+          "credits": 4
+        },
+        {
+          "name": "經濟學",
+          "credits": 4
+        },
+        {
+          "name": "會計學",
+          "credits": 4
+        },
+        {
+          "name": "管理學",
+          "credits": 3
+        },
+        {
+          "name": "機率論",
+          "credits": 4
+        },
+        {
+          "name": "線性代數",
+          "credits": 4
+        },
+        {
+          "name": "SAS程式設計",
+          "credits": 3
+        },
+        {
+          "name": "R程式設計",
+          "credits": 3
+        },
+        {
+          "name": "抽樣調查",
+          "credits": 3
+        },
+        {
+          "name": "實驗設計",
+          "credits": 3
+        },
+        {
+          "name": "數理統計",
+          "credits": 6
+        },
+        {
+          "name": "迴歸分析",
+          "credits": 3
+        },
+        {
+          "name": "多變量分析",
+          "credits": 3
+        },
+        {
+          "name": "時間序列",
+          "credits": 3
+        }
+      ],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "course_prerequisite_chain",
+      "minimum_grade_prerequisite"
+    ],
+    "note": null,
+    "applicationYearStart": 114,
+    "applicationYearEnd": null,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "統計與資料科學學系::",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "diplomacy_double_major_114",
+    "department": "外交與國際關係學系",
+    "track": null,
+    "programType": "double_major",
+    "catalogYear": 114,
+    "entryYearStart": 114,
+    "entryYearEnd": null,
+    "requiredCredits": 50,
+    "mandatoryCredits": 50,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": false,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [],
+    "note": null,
+    "applicationYearStart": 114,
+    "applicationYearEnd": null,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "外交與國際關係學系::",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "euro_french_double_major_115",
+    "department": "歐洲語文學系",
+    "track": "法文組",
+    "programType": "double_major",
+    "catalogYear": 115,
+    "entryYearStart": 115,
+    "entryYearEnd": null,
+    "requiredCredits": 54,
+    "mandatoryCredits": 54,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "university_double_major"
+    ],
+    "note": null,
+    "applicationYearStart": 115,
+    "applicationYearEnd": null,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "歐洲語文學系::法文組",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "euro_german_double_major_114",
+    "department": "歐洲語文學系",
+    "track": "德文組",
+    "programType": "double_major",
+    "catalogYear": 114,
+    "entryYearStart": 114,
+    "entryYearEnd": 115,
+    "requiredCredits": 52,
+    "mandatoryCredits": 52,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "university_double_major"
+    ],
+    "note": null,
+    "applicationYearStart": 114,
+    "applicationYearEnd": 115,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "歐洲語文學系::德文組",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "euro_spanish_double_major_114",
+    "department": "歐洲語文學系",
+    "track": "西文組",
+    "programType": "double_major",
+    "catalogYear": 114,
+    "entryYearStart": 114,
+    "entryYearEnd": 115,
+    "requiredCredits": 56,
+    "mandatoryCredits": 56,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "university_double_major"
+    ],
+    "note": null,
+    "applicationYearStart": 114,
+    "applicationYearEnd": 115,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "歐洲語文學系::西文組",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "euro_russian_double_major_114",
+    "department": "歐洲語文學系",
+    "track": "俄文組",
+    "programType": "double_major",
+    "catalogYear": 114,
+    "entryYearStart": 114,
+    "entryYearEnd": 114,
+    "requiredCredits": 54,
+    "mandatoryCredits": 54,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "university_double_major"
+    ],
+    "note": null,
+    "applicationYearStart": 114,
+    "applicationYearEnd": 114,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "歐洲語文學系::俄文組",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  },
+  {
+    "id": "euro_russian_double_major_115",
+    "department": "歐洲語文學系",
+    "track": "俄文組",
+    "programType": "double_major",
+    "catalogYear": 115,
+    "entryYearStart": 115,
+    "entryYearEnd": null,
+    "requiredCredits": 58,
+    "mandatoryCredits": 58,
+    "electiveCredits": 0,
+    "countIntoGraduationCredits": null,
+    "outside128MaxCredits": null,
+    "courses": {
+      "mandatory": [],
+      "elective": []
+    },
+    "variants": [],
+    "rules": [
+      "university_double_major"
+    ],
+    "note": null,
+    "applicationYearStart": 115,
+    "applicationYearEnd": null,
+    "systemFamily": "old",
+    "mutualExclusionGroup": "歐洲語文學系::俄文組",
+    "minimumRetentionPeriod": "1_year",
+    "applicationLimitNote": "每次申請次學年度跨領域修讀，以加選一個為限。UniPlan為規劃工具，僅提醒不強制。"
+  }
+]
