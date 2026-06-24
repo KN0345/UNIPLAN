@@ -232,7 +232,7 @@ export default function PlannerPage(props) {
                       }) : <p className="muted">尚未加入課程。</p>}
                     </div>
                   </section>
-                  <div className="deleteZone sideDelete" onDragOver={(e) => e.preventDefault()} onDrop={dropDelete}>拖曳到此刪除</div>
+                  <div className="deleteZone sideDelete" style={{ transform: 'translateY(12px)' }} onDragOver={(e) => e.preventDefault()} onDrop={dropDelete}>拖曳到此刪除</div>
                 </aside>
               </div>
 
