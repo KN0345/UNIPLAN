@@ -1,0 +1,16 @@
+{
+  "pipeline_version": "1.0.0",
+  "current_parser": "parser_115",
+  "parser_version": "1.0.0",
+  "supported_formats": [
+    "rar",
+    "zip",
+    "folder"
+  ],
+  "normalized_schema_version": 1,
+  "default_publish_targets": [
+    "data/courses.json",
+    "data/course_inventory.db",
+    "frontend/public/data/courses.json"
+  ]
+}
