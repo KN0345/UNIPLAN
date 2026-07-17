@@ -1,0 +1,3633 @@
+/* UniPlan hard final layout override
+   Purpose: loaded after App.jsx re-imports style.css. Keeps the real last CSS order.
+*/
+
+/* Program course cards: stop old required/pending button backgrounds from repainting light blue. */
+.programChooserPage .programCourseList{
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important;
+  gap:22px!important;
+}
+.programChooserPage .programCourseRow,
+.programChooserPage .programCourseRow.normal,
+.programChooserPage .programCourseRow.pending,
+.programChooserPage .programCourseRow.required,
+.programCourseList .programCourseRow,
+.programCourseList .programCourseRow.normal,
+.programCourseList .programCourseRow.pending,
+.programCourseList .programCourseRow.required{
+  position:relative!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:20px!important;
+  background:linear-gradient(180deg,#2b5b95 0%,#1f4d83 100%)!important;
+  color:#f8fbff!important;
+  border:1px solid rgba(147,197,253,.52)!important;
+  box-shadow:0 12px 24px rgba(31,73,122,.14), inset 0 1px 0 rgba(255,255,255,.14)!important;
+  opacity:1!important;
+  filter:none!important;
+}
+.programChooserPage .programCourseRow.selected,
+.programChooserPage .programCourseRow.planned,
+.programCourseList .programCourseRow.selected,
+.programCourseList .programCourseRow.planned{
+  background:linear-gradient(180deg,#234f88 0%,#173d6d 100%)!important;
+  color:#fff!important;
+  border-color:rgba(191,219,254,.72)!important;
+}
+.programChooserPage .programCourseRow.done,
+.programCourseList .programCourseRow.done{
+  background:linear-gradient(180deg,#14865b 0%,#0f6d4b 100%)!important;
+  color:#fff!important;
+  border-color:rgba(134,239,172,.72)!important;
+}
+.programChooserPage .programCourseRow.unavailable,
+.programChooserPage .programCourseRow.disabled,
+.programCourseList .programCourseRow.unavailable,
+.programCourseList .programCourseRow.disabled{
+  background:linear-gradient(180deg,#526176 0%,#415064 100%)!important;
+  color:rgba(248,251,255,.78)!important;
+  border-color:rgba(203,213,225,.46)!important;
+}
+.programChooserPage .programCourseRow::before,
+.programChooserPage .programCourseRow::after,
+.programChooserPage .programCourseMainButton::before,
+.programChooserPage .programCourseMainButton::after,
+.programCourseList .programCourseRow::before,
+.programCourseList .programCourseRow::after,
+.programCourseList .programCourseMainButton::before,
+.programCourseList .programCourseMainButton::after{
+  content:none!important;
+  display:none!important;
+}
+.programChooserPage .programCourseMainButton,
+.programChooserPage .programCourseRow .programCourseMainButton,
+.programChooserPage .programCourseRow.required .programCourseMainButton,
+.programChooserPage .programCourseRow.pending .programCourseMainButton,
+.programChooserPage .programCourseRow.normal .programCourseMainButton,
+.programCourseList .programCourseMainButton,
+.programCourseList .programCourseRow .programCourseMainButton,
+.programCourseList .programCourseRow.required .programCourseMainButton,
+.programCourseList .programCourseRow.pending .programCourseMainButton,
+.programCourseList .programCourseRow.normal .programCourseMainButton{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  padding:48px 46px 26px 28px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-end!important;
+  gap:6px!important;
+  border:0!important;
+  border-radius:20px!important;
+  background:transparent!important;
+  color:inherit!important;
+  text-align:left!important;
+  box-shadow:none!important;
+  opacity:1!important;
+  filter:none!important;
+}
+.programChooserPage .programCourseMainButton strong,
+.programChooserPage .programCourseRow .programCourseMainButton strong,
+.programCourseList .programCourseMainButton strong,
+.programCourseList .programCourseRow .programCourseMainButton strong{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+  color:inherit!important;
+  font-size:18px!important;
+  line-height:1.24!important;
+  font-weight:950!important;
+  letter-spacing:-.02em!important;
+  text-shadow:none!important;
+}
+.programChooserPage .programCourseCreditPill,
+.programChooserPage .programCourseMainButton .programCourseCreditPill,
+.programCourseList .programCourseCreditPill,
+.programCourseList .programCourseMainButton .programCourseCreditPill{
+  position:absolute!important;
+  left:24px!important;
+  top:22px!important;
+  right:auto!important;
+  bottom:auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  height:30px!important;
+  min-height:30px!important;
+  min-width:64px!important;
+  padding:0 14px!important;
+  border-radius:999px!important;
+  background:rgba(219,234,254,.20)!important;
+  border:1px solid rgba(255,255,255,.35)!important;
+  color:inherit!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  opacity:1!important;
+  box-shadow:none!important;
+}
+.programChooserPage .programCourseInfoDot,
+.programCourseList .programCourseInfoDot{
+  position:absolute!important;
+  right:20px!important;
+  bottom:20px!important;
+  z-index:4!important;
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  border-radius:999px!important;
+  display:grid!important;
+  place-items:center!important;
+  background:rgba(219,234,254,.22)!important;
+  color:rgba(255,255,255,.88)!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+  font-weight:900!important;
+}
+
+/* Search cards: compact but readable, with details restored. */
+.searchPage .courseList{
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr))!important;
+  gap:14px!important;
+  align-items:stretch!important;
+}
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  height:162px!important;
+  min-height:162px!important;
+  max-height:162px!important;
+  padding:44px 18px 54px 18px!important;
+  border-radius:18px!important;
+  overflow:hidden!important;
+  background:linear-gradient(180deg,#2e609d 0%,#234f86 100%)!important;
+  color:#f8fafc!important;
+  border:1px solid rgba(147,197,253,.34)!important;
+  box-shadow:0 10px 22px rgba(30,64,119,.16), inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+.searchPage .courseList .courseCard .cardHead,
+.courseList .courseCard .cardHead{
+  min-height:42px!important;
+  max-height:42px!important;
+  padding:0!important;
+  margin:0 0 6px 0!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard .cardHead strong,
+.courseList .courseCard .cardHead strong{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+  color:#f8fbff!important;
+  font-size:16px!important;
+  line-height:1.28!important;
+  font-weight:950!important;
+  letter-spacing:-.02em!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+  width:100%!important;
+  max-width:calc(100% - 78px)!important;
+  min-height:48px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails p,
+.searchPage .courseList .courseCard .courseTeacherName,
+.searchPage .courseList .courseCard .courseDeptName,
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseCardDetails p,
+.courseList .courseCard .courseTeacherName,
+.courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseMetaLine{
+  display:block!important;
+  color:rgba(235,244,255,.88)!important;
+  font-size:12px!important;
+  line-height:1.28!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  opacity:1!important;
+  visibility:visible!important;
+  text-shadow:none!important;
+}
+.searchPage .courseList .courseCard .courseTopBadges,
+.courseList .courseCard .courseTopBadges{
+  position:absolute!important;
+  right:14px!important;
+  top:14px!important;
+  z-index:30!important;
+  display:flex!important;
+  flex-direction:row!important;
+  gap:6px!important;
+}
+.searchPage .courseList .courseCard .courseSerialPill,
+.searchPage .courseList .courseCard .courseCreditPill,
+.courseList .courseCard .courseSerialPill,
+.courseList .courseCard .courseCreditPill{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:50px!important;
+  height:24px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  background:#dceafe!important;
+  color:#12223b!important;
+  border:1px solid rgba(255,255,255,.48)!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+.searchPage .courseList .courseCard .courseSerialBadge,
+.searchPage .courseList .courseCard .courseCreditsBadge,
+.courseList .courseCard .courseSerialBadge,
+.courseList .courseCard .courseCreditsBadge{display:none!important;}
+.searchPage .courseList .courseCard .statusBadge,
+.courseList .courseCard .statusBadge{
+  position:absolute!important;
+  left:16px!important;
+  top:18px!important;
+  width:12px!important;
+  height:12px!important;
+  z-index:30!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  position:absolute!important;
+  right:13px!important;
+  bottom:13px!important;
+  display:flex!important;
+  gap:7px!important;
+  z-index:31!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  padding:0!important;
+  border-radius:11px!important;
+  display:grid!important;
+  place-items:center!important;
+  background:#dbe8fb!important;
+  color:#0f1f38!important;
+  border:1px solid rgba(255,255,255,.42)!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:900!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction{
+  background:#3b82f6!important;
+  color:#fff!important;
+  font-size:14px!important;
+}
+
+@media(max-width:780px){
+  .programChooserPage .programCourseList{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;}
+  .programChooserPage .programCourseRow,.programChooserPage .programCourseMainButton{height:136px!important;min-height:136px!important;max-height:136px!important;}
+  .programChooserPage .programCourseMainButton{padding:42px 38px 24px 18px!important;}
+  .programChooserPage .programCourseMainButton strong{font-size:15px!important;}
+}
+
+/* 2026-05-29 final pass: equalize program cards and allow long time rows to wrap safely. */
+.programChooserPage .programCourseList,
+.programCourseList{
+  align-items:start!important;
+}
+.programChooserPage .programCourseRow,
+.programChooserPage .programCourseRow.selected,
+.programChooserPage .programCourseRow.planned,
+.programChooserPage .programCourseRow.required,
+.programChooserPage .programCourseRow.pending,
+.programChooserPage .programCourseRow.normal,
+.programChooserPage .programCourseRow.unavailable,
+.programChooserPage .programCourseRow.disabled,
+.programCourseList .programCourseRow,
+.programCourseList .programCourseRow.selected,
+.programCourseList .programCourseRow.planned,
+.programCourseList .programCourseRow.required,
+.programCourseList .programCourseRow.pending,
+.programCourseList .programCourseRow.normal,
+.programCourseList .programCourseRow.unavailable,
+.programCourseList .programCourseRow.disabled{
+  box-sizing:border-box!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  transform:none!important;
+}
+.programChooserPage .programCourseRow .programCourseMainButton,
+.programChooserPage .programCourseRow.selected .programCourseMainButton,
+.programChooserPage .programCourseRow.planned .programCourseMainButton,
+.programChooserPage .programCourseRow.required .programCourseMainButton,
+.programChooserPage .programCourseRow.pending .programCourseMainButton,
+.programChooserPage .programCourseRow.normal .programCourseMainButton,
+.programChooserPage .programCourseRow.unavailable .programCourseMainButton,
+.programChooserPage .programCourseRow.disabled .programCourseMainButton,
+.programCourseList .programCourseRow .programCourseMainButton,
+.programCourseList .programCourseRow.selected .programCourseMainButton,
+.programCourseList .programCourseRow.planned .programCourseMainButton,
+.programCourseList .programCourseRow.required .programCourseMainButton,
+.programCourseList .programCourseRow.pending .programCourseMainButton,
+.programCourseList .programCourseRow.normal .programCourseMainButton,
+.programCourseList .programCourseRow.unavailable .programCourseMainButton,
+.programCourseList .programCourseRow.disabled .programCourseMainButton{
+  box-sizing:border-box!important;
+  height:150px!important;
+  min-height:150px!important;
+  max-height:150px!important;
+  transform:none!important;
+}
+
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  height:178px!important;
+  min-height:178px!important;
+  max-height:178px!important;
+  padding-bottom:44px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .courseCardDetails,
+.courseList .courseCard.longTimeMeta .courseCardDetails{
+  max-width:calc(100% - 118px)!important;
+}
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseMetaLine{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  line-height:1.28!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .courseMetaLine,
+.courseList .courseCard.longTimeMeta .courseMetaLine{
+  white-space:normal!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .searchCardActions,
+.courseList .courseCard.longTimeMeta .searchCardActions{
+  bottom:12px!important;
+}
+
+/* 2026-05-29 overlap fix: keep course metadata readable without changing title scale. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  height:158px!important;
+  min-height:158px!important;
+  max-height:158px!important;
+  padding-bottom:48px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  height:182px!important;
+  min-height:182px!important;
+  max-height:182px!important;
+  padding-bottom:54px!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  max-width:calc(100% - 148px)!important;
+  padding-right:0!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .courseCardDetails,
+.courseList .courseCard.longTimeMeta .courseCardDetails{
+  max-width:calc(100% - 148px)!important;
+}
+.searchPage .courseList .courseCard .courseTeacherName,
+.searchPage .courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseTeacherName,
+.courseList .courseCard .courseDeptName{
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseMetaLine{
+  white-space:normal!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  right:12px!important;
+  bottom:14px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .searchCardActions,
+.courseList .courseCard.longTimeMeta .searchCardActions{
+  bottom:14px!important;
+}
+
+/* Program selected variant should include room data and wrap inside the card. */
+.programChooserPage .programSelectedVariant,
+.programSelectedVariant{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  white-space:normal!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  max-width:calc(100% - 44px)!important;
+  line-height:1.25!important;
+}
+
+/* 2026-05-29 metadata vertical cut fix: allow four metadata rows and keep action buttons separate. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  min-height:170px!important;
+  height:170px!important;
+  max-height:none!important;
+  padding:42px 18px 58px 18px!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  min-height:194px!important;
+  height:194px!important;
+  max-height:none!important;
+  padding-bottom:64px!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  max-width:calc(100% - 144px)!important;
+  min-height:0!important;
+  gap:1px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta .courseCardDetails,
+.courseList .courseCard.longTimeMeta .courseCardDetails{
+  max-width:calc(100% - 144px)!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails p,
+.searchPage .courseList .courseCard .courseTeacherName,
+.searchPage .courseList .courseCard .courseDeptName,
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseCardDetails p,
+.courseList .courseCard .courseTeacherName,
+.courseList .courseCard .courseDeptName,
+.courseList .courseCard .courseMetaLine{
+  font-size:12px!important;
+  line-height:1.24!important;
+  margin:0!important;
+}
+.searchPage .courseList .courseCard .courseMetaLine,
+.courseList .courseCard .courseMetaLine{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  white-space:normal!important;
+  overflow:hidden!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  right:14px!important;
+  bottom:16px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+}
+
+/* 2026-05-29 final course metadata/badge refinement: keep room visible and shrink top-right pills. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  min-height:178px!important;
+  height:178px!important;
+  padding:40px 18px 58px 18px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  min-height:202px!important;
+  height:202px!important;
+  padding-bottom:62px!important;
+}
+.searchPage .courseList .courseCard .courseTopBadges,
+.courseList .courseCard .courseTopBadges{
+  top:16px!important;
+  right:16px!important;
+  gap:6px!important;
+}
+.searchPage .courseList .courseCard .courseSerialPill,
+.searchPage .courseList .courseCard .courseCreditPill,
+.courseList .courseCard .courseSerialPill,
+.courseList .courseCard .courseCreditPill{
+  height:26px!important;
+  min-height:26px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  font-size:13px!important;
+  line-height:26px!important;
+  font-weight:900!important;
+  min-width:auto!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails{
+  max-width:calc(100% - 120px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:1px!important;
+}
+.searchPage .courseList .courseCard .courseTimeLine,
+.searchPage .courseList .courseCard .courseRoomLine,
+.courseList .courseCard .courseTimeLine,
+.courseList .courseCard .courseRoomLine{
+  display:block!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:break-word!important;
+  overflow-wrap:anywhere!important;
+  font-size:12px!important;
+  line-height:1.22!important;
+  margin:0!important;
+}
+.searchPage .courseList .courseCard .courseTimeLine,
+.courseList .courseCard .courseTimeLine{
+  max-height:30px!important;
+  overflow:hidden!important;
+}
+.searchPage .courseList .courseCard .courseRoomLine,
+.courseList .courseCard .courseRoomLine{
+  max-height:30px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:32px!important;
+  height:32px!important;
+  min-width:32px!important;
+  border-radius:10px!important;
+  font-size:17px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction{
+  font-size:13px!important;
+}
+
+/* 2026-05-29 final layout: move serial/credit badges to bottom-left to free title area. */
+.searchPage .courseList .courseCard,
+.courseList .courseCard{
+  padding:28px 18px 58px 18px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta,
+.courseList .courseCard.longTimeMeta{
+  padding-bottom:62px!important;
+}
+.searchPage .courseList .courseCard .courseTopBadges,
+.courseList .courseCard .courseTopBadges{
+  display:none!important;
+}
+.searchPage .courseList .courseCard .cardHead,
+.courseList .courseCard .cardHead{
+  max-width:100%!important;
+  padding-right:0!important;
+  margin-right:0!important;
+}
+.searchPage .courseList .courseCard .courseCardDetails,
+.courseList .courseCard .courseCardDetails,
+.searchPage .courseList .courseCard.longTimeMeta .courseCardDetails,
+.courseList .courseCard.longTimeMeta .courseCardDetails{
+  max-width:calc(100% - 112px)!important;
+}
+.searchPage .courseList .courseCard .courseBottomBadges,
+.courseList .courseCard .courseBottomBadges{
+  position:absolute!important;
+  left:18px!important;
+  bottom:18px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  z-index:4!important;
+}
+.searchPage .courseList .courseCard .courseBottomBadges .courseSerialPill,
+.searchPage .courseList .courseCard .courseBottomBadges .courseCreditPill,
+.courseList .courseCard .courseBottomBadges .courseSerialPill,
+.courseList .courseCard .courseBottomBadges .courseCreditPill{
+  height:24px!important;
+  min-height:24px!important;
+  line-height:24px!important;
+  padding:0 9px!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  min-width:auto!important;
+  background:rgba(226,239,255,.96)!important;
+  color:#14243d!important;
+  border:1px solid rgba(255,255,255,.55)!important;
+  box-shadow:0 4px 10px rgba(15,23,42,.08)!important;
+}
+.searchPage .courseList .courseCard .searchCardActions,
+.courseList .courseCard .searchCardActions{
+  right:14px!important;
+  bottom:14px!important;
+  gap:7px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button,
+.courseList .courseCard .searchCardActions button{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  border-radius:11px!important;
+  font-size:17px!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction{
+  font-size:13px!important;
+}
+
+/* V1.0 beta: theme-aware student info dock restore */
+.sideNav .studentInfoDock,
+.studentInfoDock{
+  background:linear-gradient(
+    145deg,
+    color-mix(in srgb,var(--panel) 72%,var(--accent) 10%),
+    color-mix(in srgb,var(--panel2) 82%,transparent)
+  )!important;
+  border:1px solid color-mix(in srgb,var(--border) 72%,var(--accent) 28%)!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,#fff 38%,transparent),
+    0 16px 34px color-mix(in srgb,var(--accent) 12%,transparent)!important;
+  color:var(--text)!important;
+}
+.sideNav .studentInfoDock span,
+.studentInfoDock span{
+  color:color-mix(in srgb,var(--muted) 86%,var(--text) 14%)!important;
+}
+.sideNav .studentInfoDock strong,
+.studentInfoDock strong{
+  color:var(--text)!important;
+}
+.sideNav .studentInfoDock small,
+.studentInfoDock small{
+  color:color-mix(in srgb,var(--muted) 82%,var(--text) 18%)!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock,
+body[data-theme="dark"] .studentInfoDock,
+body[data-ui-theme="night"] .sideNav .studentInfoDock,
+body[data-ui-theme="night"] .studentInfoDock,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock,
+body[data-ui-theme="graphite"] .studentInfoDock,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock,
+body[data-ui-theme="arcane"] .studentInfoDock{
+  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.055))!important;
+  border-color:rgba(255,255,255,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 18px 40px rgba(0,0,0,.22)!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock span,
+body[data-theme="dark"] .studentInfoDock span,
+body[data-ui-theme="night"] .sideNav .studentInfoDock span,
+body[data-ui-theme="night"] .studentInfoDock span,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock span,
+body[data-ui-theme="graphite"] .studentInfoDock span,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock span,
+body[data-ui-theme="arcane"] .studentInfoDock span{
+  color:rgba(226,232,240,.68)!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock strong,
+body[data-theme="dark"] .studentInfoDock strong,
+body[data-ui-theme="night"] .sideNav .studentInfoDock strong,
+body[data-ui-theme="night"] .studentInfoDock strong,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock strong,
+body[data-ui-theme="graphite"] .studentInfoDock strong,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock strong,
+body[data-ui-theme="arcane"] .studentInfoDock strong{
+  color:#fff!important;
+}
+body[data-theme="dark"] .sideNav .studentInfoDock small,
+body[data-theme="dark"] .studentInfoDock small,
+body[data-ui-theme="night"] .sideNav .studentInfoDock small,
+body[data-ui-theme="night"] .studentInfoDock small,
+body[data-ui-theme="graphite"] .sideNav .studentInfoDock small,
+body[data-ui-theme="graphite"] .studentInfoDock small,
+body[data-ui-theme="arcane"] .sideNav .studentInfoDock small,
+body[data-ui-theme="arcane"] .studentInfoDock small{
+  color:rgba(226,232,240,.78)!important;
+}
+
+/* V1.0 beta: custom primary color now drives the visual system in addition to the six base UI themes. */
+:root{
+  --primary-soft:color-mix(in srgb,var(--accent,#2563eb) 10%,transparent);
+  --primary-panel:color-mix(in srgb,var(--panel,#fff) 88%,var(--accent,#2563eb) 12%);
+  --primary-panel-strong:color-mix(in srgb,var(--panel,#fff) 78%,var(--accent,#2563eb) 22%);
+  --primary-border:color-mix(in srgb,var(--border,#cbd5e1) 62%,var(--accent,#2563eb) 38%);
+  --primary-shadow:color-mix(in srgb,var(--accent,#2563eb) 18%,transparent);
+}
+body[data-ui-theme]{
+  background:linear-gradient(135deg,
+    color-mix(in srgb,var(--bg) 86%,var(--accent) 14%) 0%,
+    var(--bg) 46%,
+    color-mix(in srgb,var(--bg) 92%,var(--accent) 8%) 100%
+  )!important;
+}
+body[data-ui-theme="night"],
+body[data-ui-theme="graphite"]{
+  background:linear-gradient(135deg,
+    color-mix(in srgb,var(--bg) 82%,var(--accent) 18%) 0%,
+    var(--bg) 52%,
+    color-mix(in srgb,#020617 86%,var(--accent) 14%) 100%
+  )!important;
+}
+body[data-ui-theme] .topbar,
+body[data-ui-theme] .creditStrip,
+body[data-ui-theme] .toolCard,
+body[data-ui-theme] .filterPanel,
+body[data-ui-theme] .searchSortBar,
+body[data-ui-theme] .pageCard,
+body[data-ui-theme] .infoPanel,
+body[data-ui-theme] .emptyPanel,
+body[data-ui-theme] .appearanceModal,
+body[data-ui-theme] .modalCard,
+body[data-ui-theme] .programSection,
+body[data-ui-theme] .programHeaderCard{
+  border-color:var(--primary-border)!important;
+  box-shadow:var(--shadow),0 0 0 1px color-mix(in srgb,var(--accent) 8%,transparent),0 18px 42px var(--primary-shadow)!important;
+}
+body[data-ui-theme] .sideNav{
+  --sidebar-start:color-mix(in srgb,var(--accent) 32%,#f8fbff 68%);
+  --sidebar-mid:color-mix(in srgb,var(--accent) 18%,#ffffff 82%);
+  --sidebar-end:color-mix(in srgb,var(--accent) 8%,#ffffff 92%);
+  --sidebar-border:color-mix(in srgb,var(--accent) 30%,transparent);
+  --sidebar-active-bg:color-mix(in srgb,var(--accent) 18%,transparent);
+  --sidebar-hover-bg:color-mix(in srgb,var(--accent) 11%,transparent);
+  --sidebar-glow:color-mix(in srgb,var(--accent) 18%,transparent);
+}
+body[data-ui-theme="night"] .sideNav,
+body[data-ui-theme="graphite"] .sideNav{
+  --sidebar-start:color-mix(in srgb,var(--accent) 25%,#020617 75%);
+  --sidebar-mid:color-mix(in srgb,var(--accent) 18%,#0f172a 82%);
+  --sidebar-end:color-mix(in srgb,var(--accent) 8%,#020617 92%);
+  --sidebar-border:color-mix(in srgb,var(--accent) 28%,rgba(255,255,255,.08));
+  --sidebar-active-bg:color-mix(in srgb,var(--accent) 23%,rgba(255,255,255,.06));
+  --sidebar-hover-bg:color-mix(in srgb,var(--accent) 14%,rgba(255,255,255,.04));
+  --sidebar-glow:color-mix(in srgb,var(--accent) 20%,transparent);
+}
+body[data-ui-theme] .sideNav button.active,
+body[data-ui-theme] .sideNav button:hover,
+body[data-ui-theme] .semesterButtons button.active,
+body[data-ui-theme] .tabs button.active,
+body[data-ui-theme] .moveSemesterGrid button.active,
+body[data-ui-theme] .themeChoices button.active,
+body[data-ui-theme] .searchButton,
+body[data-ui-theme] button.primary,
+body[data-ui-theme] .primaryLink{
+  background:linear-gradient(135deg,var(--button-accent),color-mix(in srgb,var(--button-accent) 70%,var(--accent) 30%))!important;
+  border-color:color-mix(in srgb,var(--button-accent) 78%,var(--accent) 22%)!important;
+  color:#fff!important;
+}
+body[data-ui-theme] input:focus,
+body[data-ui-theme] select:focus,
+body[data-ui-theme] textarea:focus{
+  border-color:var(--accent)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)!important;
+  outline:none!important;
+}
+body[data-ui-theme] .bar i,
+body[data-ui-theme] .creditStackBar .plannedSeg,
+body[data-ui-theme] .legendPlan{
+  background:var(--accent)!important;
+}
+body[data-ui-theme] .searchPage .courseList .courseCard,
+body[data-ui-theme] .courseList .courseCard{
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--accent) 54%,#24558c 46%) 0%,
+    color-mix(in srgb,var(--accent) 38%,#15385f 62%) 100%
+  )!important;
+  border-color:color-mix(in srgb,var(--accent) 45%,rgba(255,255,255,.18))!important;
+  box-shadow:0 14px 30px color-mix(in srgb,var(--accent) 18%,rgba(15,23,42,.14))!important;
+}
+body[data-ui-theme] .searchPage .courseList .courseCard:hover,
+body[data-ui-theme] .courseList .courseCard:hover{
+  box-shadow:0 18px 38px color-mix(in srgb,var(--accent) 26%,rgba(15,23,42,.18))!important;
+  border-color:color-mix(in srgb,var(--accent) 62%,rgba(255,255,255,.22))!important;
+}
+body[data-ui-theme] .courseList .courseCard .searchCardActions button.compareAction,
+body[data-ui-theme] .searchPage .courseList .courseCard .searchCardActions button.compareAction{
+  background:linear-gradient(135deg,var(--button-accent),color-mix(in srgb,var(--button-accent) 70%,var(--accent) 30%))!important;
+  border-color:transparent!important;
+  color:#fff!important;
+}
+body[data-ui-theme] .compactAccentGrid button.active{
+  outline-color:color-mix(in srgb,var(--accent) 48%,transparent)!important;
+  box-shadow:0 0 0 2px color-mix(in srgb,#fff 48%,transparent),0 0 0 5px color-mix(in srgb,var(--accent) 24%,transparent)!important;
+}
+
+/* FINAL FIX 2026-05-29: remove extra blank space below timetable background */
+.semesterPanel.activeSemesterPanel .timetableGridClean,
+.semesterPanel.activeSemesterPanel .grid.timetableGridClean{
+  padding-bottom:0!important;
+  margin-bottom:0!important;
+}
+.semesterPanel.activeSemesterPanel .timetableGridClean::after,
+.semesterPanel.activeSemesterPanel .timetableGridClean::before{
+  bottom:0!important;
+}
+.semesterPanel.activeSemesterPanel{
+  padding-bottom:12px!important;
+}
+.plannerLayout .semesterScroller,
+.semesterScroller{
+  padding-bottom:0!important;
+}
+
+/* FINAL FIX 2026-05-29: redesigned course comparison modal */
+.compareOverlay{
+  padding:18px!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(2,6,23,.72)!important;
+  backdrop-filter:blur(8px)!important;
+}
+.comparePanel.comparePanelRedesign,
+.comparePanelRedesign{
+  width:min(1180px,calc(100vw - 36px))!important;
+  max-height:calc(100vh - 36px)!important;
+  overflow:auto!important;
+  border-radius:26px!important;
+  padding:20px!important;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 88%,var(--accent) 12%),var(--panel))!important;
+  border:1px solid var(--primary-border,var(--border))!important;
+  color:var(--text)!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.38)!important;
+}
+.compareHeaderRedesign{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  padding:2px 2px 16px!important;
+  border-bottom:1px solid var(--border)!important;
+  margin-bottom:16px!important;
+}
+.compareHeaderRedesign h2{margin:2px 0 4px!important;font-size:28px!important;line-height:1.15!important;color:var(--text)!important;}
+.compareHeaderRedesign span{color:var(--muted)!important;font-size:14px!important;}
+.compareEyebrow{margin:0!important;font-size:12px!important;font-weight:900!important;letter-spacing:.06em!important;color:var(--accent)!important;}
+.compareCourseCards{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(245px,1fr))!important;
+  gap:12px!important;
+  margin-bottom:14px!important;
+}
+.compareCourseCard{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr)!important;
+  gap:12px!important;
+  min-height:172px!important;
+  padding:15px!important;
+  border-radius:20px!important;
+  border:1px solid color-mix(in srgb,var(--border) 76%,var(--accent) 24%)!important;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--panel2) 82%,var(--accent) 18%),color-mix(in srgb,var(--panel) 96%,var(--accent) 4%))!important;
+  box-shadow:0 12px 28px color-mix(in srgb,var(--accent) 10%,transparent)!important;
+}
+.compareCourseIndex{
+  width:34px!important;
+  height:34px!important;
+  border-radius:13px!important;
+  display:grid!important;
+  place-items:center!important;
+  font-weight:950!important;
+  color:#fff!important;
+  background:linear-gradient(135deg,var(--button-accent),var(--accent))!important;
+}
+.compareCourseCardBody{min-width:0!important;display:grid!important;gap:7px!important;padding-bottom:44px!important;}
+.compareCourseCard strong{
+  color:var(--text)!important;
+  font-size:16px!important;
+  line-height:1.28!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  overflow:hidden!important;
+}
+.compareCourseCard p{margin:0!important;color:var(--muted)!important;font-size:13px!important;line-height:1.35!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.compareCourseMetaChips{display:flex!important;flex-wrap:wrap!important;gap:6px!important;}
+.compareCourseMetaChips span{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:24px!important;
+  padding:0 9px!important;
+  border-radius:999px!important;
+  font-size:12px!important;
+  font-weight:850!important;
+  color:var(--text)!important;
+  background:color-mix(in srgb,var(--panel) 72%,var(--accent) 12%)!important;
+  border:1px solid var(--border)!important;
+}
+.compareCourseCard button{
+  position:absolute!important;
+  left:61px!important;
+  bottom:15px!important;
+  height:34px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  border:1px solid color-mix(in srgb,var(--accent) 42%,var(--border) 58%)!important;
+  background:color-mix(in srgb,var(--accent) 14%,var(--panel))!important;
+  color:var(--text)!important;
+  font-weight:900!important;
+}
+.compareInsightPanel{
+  margin:0 0 14px!important;
+  padding:14px!important;
+  border-radius:18px!important;
+  background:color-mix(in srgb,var(--accent) 8%,var(--panel2))!important;
+  border:1px solid var(--border)!important;
+}
+.compareInsightPanel>b{display:block!important;margin-bottom:10px!important;color:var(--text)!important;font-size:16px!important;}
+.compareInsightList{display:flex!important;flex-wrap:wrap!important;gap:8px!important;}
+.compareInsightList span{
+  display:inline-flex!important;
+  align-items:center!important;
+  max-width:100%!important;
+  padding:7px 11px!important;
+  border-radius:999px!important;
+  background:var(--panel)!important;
+  border:1px solid var(--border)!important;
+  color:var(--text)!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+}
+.compareMatrix{
+  overflow:auto!important;
+  border:1px solid var(--border)!important;
+  border-radius:20px!important;
+  background:var(--panel)!important;
+}
+.compareMatrixHeader,
+.compareMatrixRow{
+  display:grid!important;
+  grid-template-columns:130px repeat(var(--compare-columns,4),minmax(190px,1fr))!important;
+  min-width:820px!important;
+}
+.compareMatrixHeader{background:color-mix(in srgb,var(--accent) 18%,var(--panel2))!important;position:sticky!important;top:0!important;z-index:1!important;}
+.compareMatrixHeader span,
+.compareMatrixHeader b,
+.compareMatrixLabel,
+.compareMatrixRow p{
+  min-width:0!important;
+  padding:13px 16px!important;
+  border-bottom:1px solid var(--border)!important;
+  color:var(--text)!important;
+}
+.compareMatrixHeader span,
+.compareMatrixHeader b{font-size:14px!important;font-weight:950!important;line-height:1.3!important;}
+.compareMatrixLabel{font-weight:950!important;color:var(--muted)!important;background:color-mix(in srgb,var(--panel2) 68%,transparent)!important;}
+.compareMatrixRow p{margin:0!important;color:var(--text)!important;font-size:14px!important;line-height:1.45!important;white-space:normal!important;word-break:break-word!important;}
+.compareMatrixRow:last-child .compareMatrixLabel,
+.compareMatrixRow:last-child p{border-bottom:0!important;}
+@media(max-width:760px){
+  .compareOverlay{padding:8px!important;align-items:stretch!important;}
+  .comparePanelRedesign{width:100%!important;max-height:calc(100vh - 16px)!important;border-radius:20px!important;padding:14px!important;}
+  .compareCourseCards{grid-template-columns:1fr!important;}
+  .compareMatrixHeader,.compareMatrixRow{grid-template-columns:106px repeat(var(--compare-columns,4),minmax(170px,1fr))!important;min-width:720px!important;}
+}
+
+/* FINAL FIX 2026-05-30: simple comparison list with danger and tag colors */
+.comparePanel.comparePanelSimple,
+.comparePanelSimple{
+  width:min(1120px,calc(100vw - 40px))!important;
+  max-height:calc(100vh - 40px)!important;
+  padding:18px!important;
+}
+.comparePanelSimple .compareCourseCards,
+.comparePanelSimple .compareInsightPanel,
+.comparePanelSimple .compareMatrix{
+  display:none!important;
+}
+.compareSimpleGrid{
+  overflow:auto!important;
+  border:1px solid color-mix(in srgb,var(--border) 82%,var(--accent) 18%)!important;
+  border-radius:20px!important;
+  background:color-mix(in srgb,var(--panel) 94%,var(--accent) 6%)!important;
+}
+.compareSimpleRow{
+  display:grid!important;
+  grid-template-columns:128px repeat(var(--compare-columns,4),minmax(210px,1fr))!important;
+  min-width:820px!important;
+  border-bottom:1px solid color-mix(in srgb,var(--border) 86%,transparent)!important;
+}
+.compareSimpleRow:last-child{border-bottom:0!important;}
+.compareSimpleHeader{
+  position:sticky!important;
+  top:0!important;
+  z-index:2!important;
+  background:color-mix(in srgb,var(--accent) 18%,var(--panel2))!important;
+}
+.compareSimpleLabel,
+.compareSimpleHeader b,
+.compareSimpleRow p,
+.compareSimpleTags,
+.compareSimpleActions{
+  min-width:0!important;
+  padding:13px 16px!important;
+  margin:0!important;
+  color:var(--text)!important;
+  font-size:15px!important;
+  line-height:1.5!important;
+  word-break:break-word!important;
+  white-space:normal!important;
+}
+.compareSimpleLabel{
+  font-weight:950!important;
+  color:var(--muted)!important;
+  background:color-mix(in srgb,var(--panel2) 76%,transparent)!important;
+}
+.compareSimpleHeader b{
+  font-weight:950!important;
+  color:var(--text)!important;
+  font-size:16px!important;
+  line-height:1.35!important;
+}
+.compareSimpleRow p{
+  font-weight:780!important;
+}
+.compareSimpleRow p.compareValueDanger{
+  color:#ef4444!important;
+  font-weight:950!important;
+}
+.compareTagChips{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+}
+.compareTagChip,
+.compareNoTags{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:28px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  border:1px solid var(--border)!important;
+  background:color-mix(in srgb,var(--panel2) 82%,transparent)!important;
+  color:var(--muted)!important;
+}
+.compareTagChip.positive{
+  color:#22c55e!important;
+  border-color:color-mix(in srgb,#22c55e 45%,var(--border) 55%)!important;
+  background:color-mix(in srgb,#22c55e 12%,var(--panel) 88%)!important;
+}
+.compareTagChip.negative{
+  color:#ef4444!important;
+  border-color:color-mix(in srgb,#ef4444 45%,var(--border) 55%)!important;
+  background:color-mix(in srgb,#ef4444 12%,var(--panel) 88%)!important;
+}
+.compareSimpleActions button{
+  min-height:36px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border) 55%)!important;
+  background:color-mix(in srgb,var(--accent) 16%,var(--panel))!important;
+  color:var(--text)!important;
+  font-weight:950!important;
+}
+@media(max-width:760px){
+  .comparePanel.comparePanelSimple,.comparePanelSimple{width:100%!important;max-height:calc(100vh - 16px)!important;padding:14px!important;}
+  .compareSimpleRow{grid-template-columns:96px repeat(var(--compare-columns,4),minmax(170px,1fr))!important;min-width:680px!important;}
+  .compareSimpleLabel,.compareSimpleHeader b,.compareSimpleRow p,.compareSimpleTags,.compareSimpleActions{padding:11px 12px!important;font-size:13px!important;}
+}
+
+/* FINAL FIX 2026-05-30: swap compare and candidate button emphasis. */
+.searchPage .courseList .courseCard .searchCardActions button.compareAction,
+.courseList .courseCard .searchCardActions button.compareAction,
+body[data-ui-theme] .searchPage .courseList .courseCard .searchCardActions button.compareAction,
+body[data-ui-theme] .courseList .courseCard .searchCardActions button.compareAction{
+  background:#dbe8fb!important;
+  color:#0f1f38!important;
+  border:1px solid rgba(255,255,255,.42)!important;
+  box-shadow:0 4px 12px rgba(15,23,42,.10)!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.compareAction.active,
+.courseList .courseCard .searchCardActions button.compareAction.active,
+body[data-ui-theme] .searchPage .courseList .courseCard .searchCardActions button.compareAction.active,
+body[data-ui-theme] .courseList .courseCard .searchCardActions button.compareAction.active{
+  background:#dbe8fb!important;
+  color:#0f1f38!important;
+  border:1px solid rgba(255,255,255,.42)!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.candidateAction,
+.courseList .courseCard .searchCardActions button.candidateAction,
+body[data-ui-theme] .searchPage .courseList .courseCard .searchCardActions button.candidateAction,
+body[data-ui-theme] .courseList .courseCard .searchCardActions button.candidateAction{
+  background:linear-gradient(135deg,var(--button-accent,#3b82f6),color-mix(in srgb,var(--button-accent,#3b82f6) 72%,var(--accent,#2563eb) 28%))!important;
+  color:#fff!important;
+  border-color:transparent!important;
+  box-shadow:0 8px 18px color-mix(in srgb,var(--button-accent,#3b82f6) 28%,transparent)!important;
+}
+.searchPage .courseList .courseCard .searchCardActions button.candidateAction.active,
+.courseList .courseCard .searchCardActions button.candidateAction.active,
+.searchPage .courseList .courseCard .searchCardActions button.candidateAction:disabled,
+.courseList .courseCard .searchCardActions button.candidateAction:disabled{
+  opacity:.68!important;
+  filter:saturate(.82)!important;
+}
+
+/* === Local account login system === */
+.authPage{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:minmax(320px, 0.95fr) minmax(360px, 520px);
+  gap:28px;
+  align-items:center;
+  padding:clamp(24px, 5vw, 72px);
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--accent, #2f80ed) 26%, transparent), transparent 32%),
+    linear-gradient(135deg, #08172d 0%, #10284b 48%, #071426 100%);
+  color:#f8fbff;
+}
+.authHero,
+.authCard{
+  border:1px solid rgba(191,215,255,.28);
+  background:rgba(12,31,58,.72);
+  box-shadow:0 24px 70px rgba(0,0,0,.28);
+  backdrop-filter:blur(18px);
+}
+.authHero{
+  border-radius:34px;
+  padding:42px;
+}
+.authBrandMark{
+  width:max-content;
+  padding:10px 16px;
+  border-radius:999px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.22);
+  font-weight:900;
+  letter-spacing:.05em;
+  margin-bottom:22px;
+}
+.authHero h1{
+  margin:0 0 16px;
+  font-size:clamp(2.2rem, 5vw, 4.8rem);
+  line-height:1.05;
+}
+.authHero p{
+  margin:0;
+  max-width:660px;
+  color:#c6d6ee;
+  font-size:1.05rem;
+  line-height:1.8;
+}
+.authFeatureGrid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:28px;
+}
+.authFeatureGrid span{
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);
+  color:#eaf2ff;
+  font-weight:800;
+}
+.authCard{
+  border-radius:30px;
+  padding:30px;
+}
+.authCard h2{
+  margin:0 0 8px;
+  font-size:2rem;
+}
+.authCard > p{
+  margin:0 0 20px;
+  color:#bed0ea;
+  line-height:1.6;
+}
+.authSwitch{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:8px;
+  padding:6px;
+  border-radius:18px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  margin-bottom:18px;
+}
+.authSwitch button{
+  border:0;
+  border-radius:14px;
+  padding:11px 10px;
+  color:#cfe0f7;
+  background:transparent;
+  font-weight:900;
+  cursor:pointer;
+}
+.authSwitch button.active{
+  background:linear-gradient(135deg, var(--accent, #2f80ed), color-mix(in srgb, var(--accent, #2f80ed) 76%, #ffffff));
+  color:#fff;
+  box-shadow:0 10px 24px rgba(0,0,0,.2);
+}
+.authField{
+  display:grid;
+  gap:7px;
+  margin-bottom:14px;
+  color:#d6e5fa;
+  font-weight:850;
+}
+.authField input{
+  height:48px;
+  border-radius:16px;
+  border:1px solid rgba(195,217,255,.28);
+  background:rgba(3,14,29,.54);
+  color:#fff;
+  padding:0 15px;
+  font-size:1rem;
+  outline:none;
+}
+.authField input:focus{
+  border-color:color-mix(in srgb, var(--accent, #2f80ed) 72%, white);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--accent, #2f80ed) 24%, transparent);
+}
+.authSubmit,
+.authGuest{
+  width:100%;
+  min-height:50px;
+  border-radius:16px;
+  border:0;
+  font-weight:950;
+  font-size:1rem;
+  cursor:pointer;
+}
+.authSubmit{
+  background:linear-gradient(135deg, var(--accent, #2f80ed), color-mix(in srgb, var(--accent, #2f80ed) 74%, #ffffff));
+  color:#fff;
+  margin-top:6px;
+}
+.authGuest{
+  margin-top:10px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);
+  color:#eaf2ff;
+}
+.authCard small{
+  display:block;
+  margin-top:14px;
+  color:#9fb3ce;
+  line-height:1.5;
+}
+.studentIdHint,
+.authError{
+  margin:8px 0 12px;
+  padding:10px 12px;
+  border-radius:14px;
+  font-weight:850;
+}
+.studentIdHint.ok{
+  color:#b9f7ce;
+  background:rgba(34,197,94,.12);
+  border:1px solid rgba(34,197,94,.24);
+}
+.studentIdHint.bad,
+.authError{
+  color:#ffd1d1;
+  background:rgba(239,68,68,.12);
+  border:1px solid rgba(239,68,68,.24);
+}
+@media (max-width: 920px){
+  .authPage{grid-template-columns:1fr; padding:22px;}
+  .authHero{display:none;}
+  .authCard{max-width:540px; width:100%; margin:auto;}
+}
+
+/* === Auth readability final fix ===
+   The login/register panel can inherit light theme surface styles from the app shell.
+   Keep the auth page readable regardless of current theme/accent selection. */
+.authPage.login,
+.login.authPage{
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--accent, #2f80ed) 26%, transparent), transparent 32%),
+    linear-gradient(135deg, #08172d 0%, #10284b 48%, #071426 100%)!important;
+  color:#f8fbff!important;
+}
+.login.authPage .authCard{
+  background:linear-gradient(180deg, rgba(246,250,255,.98) 0%, rgba(232,240,252,.98) 100%)!important;
+  color:#10233f!important;
+  border:1px solid rgba(130,166,215,.45)!important;
+  box-shadow:0 24px 70px rgba(3,15,32,.28)!important;
+}
+.login.authPage .authCard h2,
+.login.authPage .authCard > p,
+.login.authPage .authField,
+.login.authPage .authField span,
+.login.authPage .authSwitch button,
+.login.authPage .authCard small{
+  text-shadow:none!important;
+}
+.login.authPage .authCard h2{
+  color:#10233f!important;
+}
+.login.authPage .authCard > p{
+  color:#47617f!important;
+}
+.login.authPage .authSwitch{
+  background:rgba(220,231,248,.92)!important;
+  border:1px solid rgba(151,181,225,.48)!important;
+}
+.login.authPage .authSwitch button{
+  color:#4f6684!important;
+}
+.login.authPage .authSwitch button.active{
+  color:#ffffff!important;
+  background:linear-gradient(135deg, var(--accent, #2f80ed), color-mix(in srgb, var(--accent, #2f80ed) 72%, #ffffff))!important;
+}
+.login.authPage .authField{
+  color:#2d4461!important;
+}
+.login.authPage .authField input{
+  background:#ffffff!important;
+  color:#10233f!important;
+  border:1px solid rgba(116,148,191,.46)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72)!important;
+}
+.login.authPage .authField input::placeholder{
+  color:#7f91a8!important;
+  opacity:1!important;
+}
+.login.authPage .authSubmit{
+  color:#ffffff!important;
+  background:linear-gradient(135deg, var(--accent, #2f80ed), color-mix(in srgb, var(--accent, #2f80ed) 72%, #ffffff))!important;
+}
+.login.authPage .authGuest{
+  background:#ffffff!important;
+  color:#24405f!important;
+  border:1px solid rgba(151,181,225,.55)!important;
+}
+.login.authPage .authCard small{
+  color:#637a98!important;
+}
+.login.authPage .studentIdHint.ok{
+  color:#13733a!important;
+  background:rgba(34,197,94,.12)!important;
+  border-color:rgba(34,197,94,.28)!important;
+}
+.login.authPage .studentIdHint.bad,
+.login.authPage .authError{
+  color:#b42323!important;
+  background:rgba(239,68,68,.1)!important;
+  border-color:rgba(239,68,68,.24)!important;
+}
+
+/* === Auth v3 redesign: cleaner account center + safer reset flow === */
+.authV3Page{
+  min-height:100vh!important;
+  height:100vh!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(420px,1fr) minmax(420px,520px)!important;
+  align-items:center!important;
+  gap:clamp(28px,5vw,84px)!important;
+  padding:clamp(28px,5vw,72px)!important;
+}
+.authV3Hero{
+  min-height:420px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+  border-radius:36px!important;
+  background:linear-gradient(145deg,rgba(14,38,75,.72),rgba(8,24,48,.86))!important;
+}
+.authV3Hero h1{
+  font-size:clamp(3.2rem,6vw,5.6rem)!important;
+  letter-spacing:-.06em!important;
+}
+.authV3Card{
+  width:100%!important;
+  max-width:520px!important;
+  max-height:calc(100vh - 56px)!important;
+  overflow:auto!important;
+  padding:34px!important;
+  border-radius:28px!important;
+  scrollbar-gutter:stable!important;
+}
+.authV3Card::-webkit-scrollbar{width:8px!important;}
+.authV3Card::-webkit-scrollbar-thumb{background:rgba(71,97,127,.28)!important;border-radius:999px!important;}
+.authV3Header{margin-bottom:22px!important;}
+.authV3Eyebrow{
+  display:inline-flex!important;
+  margin-bottom:10px!important;
+  padding:7px 11px!important;
+  border-radius:999px!important;
+  background:rgba(47,128,237,.11)!important;
+  color:#2563eb!important;
+  font-weight:900!important;
+  font-size:.82rem!important;
+  letter-spacing:.04em!important;
+}
+.authV3Card h2{
+  margin:0 0 10px!important;
+  font-size:clamp(2rem,4vw,2.6rem)!important;
+  line-height:1.08!important;
+  letter-spacing:-.04em!important;
+  color:#10233f!important;
+}
+.authV3Card .authV3Header p{
+  margin:0!important;
+  color:#506783!important;
+  font-size:1rem!important;
+  line-height:1.65!important;
+}
+.authV3Card .authField{
+  margin-bottom:16px!important;
+  gap:8px!important;
+}
+.authV3Card .authField span{
+  color:#263f5e!important;
+  font-size:.98rem!important;
+}
+.authV3Card .authField input{
+  height:54px!important;
+  border-radius:16px!important;
+  font-size:1.02rem!important;
+  padding:0 16px!important;
+}
+.authV3Card.registerMode .authField{
+  margin-bottom:12px!important;
+}
+.authV3Card.registerMode .authField input{
+  height:50px!important;
+}
+.authV3Card .authSubmit{
+  min-height:54px!important;
+  border-radius:16px!important;
+  margin-top:8px!important;
+  font-size:1.05rem!important;
+  box-shadow:0 14px 28px color-mix(in srgb,var(--accent,#2f80ed) 24%,transparent)!important;
+}
+.authGoogleStub{
+  width:100%!important;
+  min-height:50px!important;
+  border-radius:16px!important;
+  margin-top:12px!important;
+  border:1px dashed rgba(79,102,132,.38)!important;
+  background:rgba(255,255,255,.62)!important;
+  color:#6b7f98!important;
+  font-weight:900!important;
+  cursor:not-allowed!important;
+}
+.authV3Links{
+  display:flex!important;
+  justify-content:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+  margin:16px 0 2px!important;
+}
+.authV3Links button{
+  border:0!important;
+  background:transparent!important;
+  color:#2563eb!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+  padding:8px 10px!important;
+  border-radius:999px!important;
+}
+.authV3Links button:hover{
+  background:rgba(37,99,235,.08)!important;
+}
+.authV3Card .authGuest{
+  margin-top:8px!important;
+  min-height:48px!important;
+  border-radius:16px!important;
+}
+.login.authPage .authNotice,
+.authNotice{
+  margin:8px 0 12px!important;
+  padding:11px 13px!important;
+  border-radius:14px!important;
+  color:#125c35!important;
+  background:rgba(34,197,94,.12)!important;
+  border:1px solid rgba(34,197,94,.28)!important;
+  font-weight:850!important;
+}
+.authV3Card small{
+  margin-top:14px!important;
+  color:#687d99!important;
+}
+@media (max-width: 1020px){
+  .authV3Page{
+    grid-template-columns:1fr!important;
+    padding:22px!important;
+    overflow:auto!important;
+    height:auto!important;
+  }
+  .authV3Hero{display:none!important;}
+  .authV3Card{margin:auto!important; max-height:none!important;}
+}
+@media (max-height: 760px){
+  .authV3Page{grid-template-columns:1fr!important; overflow:auto!important; height:auto!important; align-items:start!important;}
+  .authV3Hero{display:none!important;}
+  .authV3Card{margin:0 auto!important; max-height:none!important;}
+}
+
+/* === Auth v4: compact staged registration + Google login === */
+.login.authPage.authV4Page,
+.authV4Page{
+  min-height:100vh!important;
+  height:100vh!important;
+  overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(360px, 0.95fr) minmax(380px, 520px)!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:clamp(36px, 6vw, 96px)!important;
+  padding:clamp(28px, 5vw, 72px)!important;
+  background:radial-gradient(circle at 18% 20%, rgba(46,110,245,.24), transparent 34%), linear-gradient(135deg,#071a33 0%,#112f58 52%,#071c36 100%)!important;
+  color:#10233f!important;
+}
+.authV4Hero{
+  max-width:760px!important;
+  padding:44px 48px!important;
+  border:1px solid rgba(210,226,255,.2)!important;
+  border-radius:32px!important;
+  background:rgba(7,25,50,.38)!important;
+  box-shadow:0 30px 90px rgba(0,0,0,.22)!important;
+  color:#f7fbff!important;
+}
+.authV4Hero h1{
+  margin:28px 0 18px!important;
+  font-size:clamp(3rem, 5.6vw, 5.6rem)!important;
+  line-height:1.05!important;
+  letter-spacing:-.06em!important;
+  color:#fff!important;
+}
+.authV4Hero p{font-size:1.25rem!important;line-height:1.75!important;color:rgba(235,244,255,.88)!important;max-width:620px!important;}
+.authV4Card{
+  width:min(100%, 520px)!important;
+  max-height:calc(100vh - 56px)!important;
+  overflow:auto!important;
+  padding:38px 42px 30px!important;
+  border-radius:28px!important;
+  background:linear-gradient(180deg,#f5f9ff 0%,#e9f1fb 100%)!important;
+  border:1px solid rgba(185,207,238,.9)!important;
+  box-shadow:0 28px 90px rgba(0,0,0,.26)!important;
+}
+.authV4Card::-webkit-scrollbar{width:7px!important;}
+.authV4Card::-webkit-scrollbar-thumb{background:rgba(58,86,122,.28)!important;border-radius:999px!important;}
+.authV4Header{margin-bottom:24px!important;}
+.authV4Eyebrow{
+  display:inline-flex!important;
+  width:max-content!important;
+  padding:8px 15px!important;
+  border-radius:999px!important;
+  background:#dceafe!important;
+  color:#2563eb!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+  margin-bottom:14px!important;
+}
+.authV4Card h2{
+  margin:0!important;
+  font-size:clamp(2.15rem, 3.2vw, 3.45rem)!important;
+  line-height:1.05!important;
+  letter-spacing:-.055em!important;
+  color:#10233f!important;
+}
+.authV4Header p{margin:16px 0 0!important;color:#526d91!important;font-size:1.05rem!important;line-height:1.7!important;}
+.authV4Card .authField{gap:8px!important;margin:0 0 18px!important;color:#203a5f!important;font-weight:900!important;}
+.authV4Card .authField span{font-size:1rem!important;color:#284469!important;}
+.authV4Card .authField input{
+  height:54px!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  border:1px solid #bfd2ec!important;
+  color:#10233f!important;
+  font-size:1.05rem!important;
+  font-weight:800!important;
+  padding:0 18px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important;
+}
+.authV4Card .authField input::placeholder{color:#8798ad!important;opacity:1!important;font-weight:800!important;}
+.authV4Card .authField input:focus{outline:none!important;border-color:#4b82ff!important;box-shadow:0 0 0 4px rgba(59,130,246,.16)!important;}
+.authV4Card .authSubmit{
+  width:100%!important;
+  height:56px!important;
+  margin:12px 0 0!important;
+  border:0!important;
+  border-radius:18px!important;
+  background:linear-gradient(135deg,#2563eb,#5c8df7)!important;
+  color:white!important;
+  font-size:1.1rem!important;
+  font-weight:950!important;
+  box-shadow:0 16px 28px rgba(37,99,235,.28)!important;
+}
+.authDivider{display:flex!important;align-items:center!important;gap:14px!important;margin:18px 0!important;color:#6f83a0!important;font-weight:900!important;}
+.authDivider::before,.authDivider::after{content:"";height:1px!important;flex:1!important;background:#c8d8ee!important;}
+.authGoogleButton{
+  width:100%!important;
+  height:54px!important;
+  border-radius:18px!important;
+  border:1px solid #c5d5eb!important;
+  background:#fff!important;
+  color:#10233f!important;
+  font-size:1.05rem!important;
+  font-weight:950!important;
+  box-shadow:0 10px 24px rgba(40,67,106,.08)!important;
+}
+.authGoogleButton::before{content:"G";display:inline-grid!important;place-items:center!important;width:28px!important;height:28px!important;margin-right:10px!important;border-radius:50%!important;background:#f1f5f9!important;color:#2563eb!important;font-weight:950!important;}
+.authSummaryBox{
+  display:grid!important;
+  gap:4px!important;
+  padding:14px 16px!important;
+  margin:0 0 18px!important;
+  border-radius:18px!important;
+  border:1px solid #c5d5eb!important;
+  background:rgba(255,255,255,.7)!important;
+  color:#284469!important;
+}
+.authSummaryBox strong{font-size:1.1rem!important;color:#10233f!important;}
+.authSummaryBox span{font-weight:800!important;color:#526d91!important;}
+.authV4Links{display:flex!important;justify-content:center!important;gap:14px!important;flex-wrap:wrap!important;margin:18px 0 10px!important;}
+.authV4Links button{
+  border:0!important;
+  background:transparent!important;
+  color:#315d9d!important;
+  font-weight:900!important;
+  font-size:.98rem!important;
+  padding:6px 8px!important;
+}
+.authV4Card .authGuest{
+  width:100%!important;
+  height:48px!important;
+  border-radius:16px!important;
+  border:1px solid #c5d5eb!important;
+  background:#fff!important;
+  color:#10233f!important;
+  font-weight:900!important;
+  margin-top:4px!important;
+}
+.authV4Card small{display:block!important;margin-top:18px!important;color:#6c809b!important;line-height:1.55!important;font-weight:750!important;}
+.authV4Card .authError,.authV4Card .authNotice,.authV4Card .studentIdHint{margin:8px 0 10px!important;border-radius:14px!important;padding:10px 12px!important;font-weight:850!important;}
+.authV4Card .authError{background:#fee2e2!important;color:#991b1b!important;}
+.authV4Card .authNotice,.authV4Card .studentIdHint.ok{background:#dcfce7!important;color:#166534!important;}
+.authV4Card .studentIdHint.bad{background:#ffedd5!important;color:#9a3412!important;}
+@media (max-width:1100px){
+  .login.authPage.authV4Page,.authV4Page{grid-template-columns:1fr!important;padding:24px!important;overflow:auto!important;height:auto!important;min-height:100vh!important;}
+  .authV4Hero{display:none!important;}
+  .authV4Card{margin:auto!important;max-height:none!important;}
+}
+@media (max-height:780px){
+  .authV4Hero{display:none!important;}
+  .login.authPage.authV4Page,.authV4Page{grid-template-columns:1fr!important;overflow:auto!important;height:auto!important;align-items:start!important;}
+  .authV4Card{margin:0 auto!important;max-height:none!important;padding:30px 36px 26px!important;}
+  .authV4Card h2{font-size:2.25rem!important;}
+}
+
+/* === Auth v4 layout polish: right-centered compact card + left brand stage === */
+.login.authPage.authV4Page,
+.authV4Page{
+  grid-template-columns:minmax(520px, 1fr) minmax(360px, 440px)!important;
+  justify-content:stretch!important;
+  align-items:center!important;
+  gap:clamp(48px, 7vw, 132px)!important;
+  padding:clamp(42px, 6vw, 86px) clamp(52px, 7vw, 112px)!important;
+  overflow:hidden!important;
+}
+.authV4Hero{
+  display:flex!important;
+  min-height:min(560px, calc(100vh - 150px))!important;
+  max-width:820px!important;
+  justify-content:center!important;
+  padding:clamp(40px, 5vw, 68px)!important;
+  border-radius:38px!important;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(83,142,255,.22), transparent 34%),
+    linear-gradient(145deg, rgba(11,33,66,.72), rgba(5,20,43,.86))!important;
+}
+.authV4Hero .authBrandMark{
+  font-size:1rem!important;
+  padding:10px 18px!important;
+  background:rgba(255,255,255,.13)!important;
+}
+.authV4Hero h1{
+  max-width:720px!important;
+  margin:28px 0 18px!important;
+  font-size:clamp(3.8rem, 6.8vw, 6.8rem)!important;
+  line-height:.98!important;
+}
+.authV4Hero p{
+  max-width:650px!important;
+  font-size:1.18rem!important;
+  line-height:1.75!important;
+}
+.authV4Hero .authFeatureGrid{
+  margin-top:34px!important;
+  max-width:680px!important;
+}
+.authV4Hero .authFeatureGrid span{
+  padding:10px 16px!important;
+  background:rgba(255,255,255,.105)!important;
+}
+.authV4Card{
+  justify-self:end!important;
+  width:100%!important;
+  max-width:440px!important;
+  max-height:min(720px, calc(100vh - 86px))!important;
+  padding:30px 34px 26px!important;
+  border-radius:30px!important;
+}
+.authV4Header{margin-bottom:20px!important;}
+.authV4Eyebrow{
+  padding:7px 13px!important;
+  font-size:.84rem!important;
+  margin-bottom:12px!important;
+}
+.authV4Card h2{
+  font-size:clamp(2rem, 3vw, 2.7rem)!important;
+  letter-spacing:-.05em!important;
+}
+.authV4Header p{
+  margin-top:12px!important;
+  font-size:.98rem!important;
+  line-height:1.62!important;
+}
+.authV4Card .authField{
+  margin-bottom:14px!important;
+  gap:7px!important;
+}
+.authV4Card .authField span{
+  font-size:.95rem!important;
+}
+.authV4Card .authField input{
+  height:50px!important;
+  border-radius:16px!important;
+  font-size:1rem!important;
+}
+.authV4Card .authSubmit,
+.authGoogleButton{
+  height:50px!important;
+  min-height:50px!important;
+  border-radius:16px!important;
+  font-size:1rem!important;
+}
+.authDivider{margin:15px 0!important;}
+.authV4Links{margin:14px 0 8px!important;}
+.authV4Card .authGuest{height:46px!important;min-height:46px!important;}
+.authV4Card small{margin-top:14px!important;font-size:.82rem!important;}
+
+@media (max-width: 1100px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    grid-template-columns:1fr!important;
+    justify-content:center!important;
+    padding:24px!important;
+    overflow:auto!important;
+    min-height:100vh!important;
+    height:auto!important;
+  }
+  .authV4Hero{display:none!important;}
+  .authV4Card{justify-self:center!important;max-width:480px!important;max-height:none!important;margin:auto!important;}
+}
+@media (min-width: 1101px) and (max-height: 820px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    grid-template-columns:minmax(500px, 1fr) minmax(340px, 420px)!important;
+    align-items:center!important;
+    overflow:hidden!important;
+    height:100vh!important;
+    padding:30px clamp(42px, 6vw, 92px)!important;
+    gap:clamp(38px, 6vw, 104px)!important;
+  }
+  .authV4Hero{
+    display:flex!important;
+    min-height:calc(100vh - 78px)!important;
+    padding:34px 44px!important;
+  }
+  .authV4Hero h1{font-size:clamp(3.2rem, 5.6vw, 5.5rem)!important;}
+  .authV4Hero p{font-size:1.06rem!important;line-height:1.65!important;}
+  .authV4Card{
+    justify-self:end!important;
+    max-width:420px!important;
+    max-height:calc(100vh - 60px)!important;
+    margin:0!important;
+    padding:24px 30px 22px!important;
+  }
+  .authV4Card h2{font-size:2.15rem!important;}
+  .authV4Header p{font-size:.94rem!important;line-height:1.55!important;}
+  .authV4Card .authField{margin-bottom:11px!important;}
+  .authV4Card .authField input{height:46px!important;}
+  .authV4Card .authSubmit,
+  .authGoogleButton{height:46px!important;min-height:46px!important;}
+  .authDivider{margin:12px 0!important;}
+  .authV4Links{margin:10px 0 6px!important;}
+  .authV4Card .authGuest{height:42px!important;min-height:42px!important;}
+  .authV4Card small{display:none!important;}
+}
+
+/* === Final: modal close real alignment + Google first-run setup polish === */
+.adminModal header,
+.programCourseModal header,
+.modalHeader,
+.manualCourseHeader{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+}
+.adminModal header h3,
+.programCourseModal header h3,
+.modalHeader h2,
+.modalHeader h3,
+.manualCourseHeader h3{
+  margin:0!important;
+  line-height:1.2!important;
+}
+.adminModal header button,
+.modalClose,
+.modalCloseButton,
+.manualCourseHeader > button{
+  position:static!important;
+  transform:none!important;
+  flex:0 0 auto!important;
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  min-height:40px!important;
+  padding:0!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  line-height:1!important;
+  border-radius:999px!important;
+}
+.authGoogleIdentity{
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  padding:12px 14px!important;
+  margin:0 0 16px!important;
+  border:1px solid rgba(148,163,184,.35)!important;
+  border-radius:18px!important;
+  background:rgba(255,255,255,.62)!important;
+  color:#10233f!important;
+}
+.authGoogleIdentity img{
+  width:42px!important;
+  height:42px!important;
+  border-radius:999px!important;
+  object-fit:cover!important;
+  box-shadow:0 0 0 3px rgba(59,130,246,.12)!important;
+}
+.authGoogleIdentity strong,
+.authGoogleIdentity span{
+  display:block!important;
+  max-width:300px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.authGoogleIdentity strong{font-weight:950!important;color:#10233f!important;font-size:.98rem!important;}
+.authGoogleIdentity span{font-weight:750!important;color:#526d91!important;font-size:.86rem!important;margin-top:2px!important;}
+.authV4Card.googleSetupMode{max-height:min(660px, calc(100vh - 76px))!important;}
+
+
+/* === 2026-05-30 Course search density + real department filter final fix === */
+.searchPage.singleColumn{
+  height:calc(100dvh - 46px)!important;
+  padding:10px 20px 10px!important;
+  overflow:hidden!important;
+}
+.searchPage.singleColumn .searchColumn{
+  height:100%!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.searchPage .searchTabs{
+  flex:0 0 auto!important;
+  margin:0 0 8px!important;
+  padding:6px!important;
+  min-height:42px!important;
+  width:max-content!important;
+  max-width:100%!important;
+}
+.searchPage .searchTabs button{
+  min-height:36px!important;
+  padding:0 14px!important;
+  border-radius:12px!important;
+  font-size:.94rem!important;
+}
+.searchPage .courseSearchToolbar{
+  flex:0 0 auto!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 112px!important;
+  gap:10px!important;
+  margin:0 0 8px!important;
+}
+.searchPage .courseSearchToolbar .searchInput,
+.searchPage .courseSearchToolbar input{
+  min-height:44px!important;
+  height:44px!important;
+  padding:0 14px!important;
+  border-radius:13px!important;
+}
+.searchPage .courseSearchToolbar .searchButton{
+  min-height:44px!important;
+  height:44px!important;
+  padding:0 18px!important;
+  border-radius:13px!important;
+}
+.searchPage .courseFilters{
+  flex:0 0 auto!important;
+  display:grid!important;
+  grid-template-columns:1.05fr repeat(6, minmax(108px, .72fr)) 96px!important;
+  gap:8px!important;
+  align-items:end!important;
+  padding:8px 10px!important;
+  margin:0 0 8px!important;
+  border-radius:14px!important;
+}
+.searchPage .courseFilters label{
+  gap:3px!important;
+  font-size:.78rem!important;
+  line-height:1.1!important;
+  font-weight:850!important;
+}
+.searchPage .courseFilters select,
+.searchPage .courseFilters button{
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 10px!important;
+  border-radius:12px!important;
+  font-size:.9rem!important;
+}
+.searchPage .searchSortBar{
+  flex:0 0 auto!important;
+  min-height:42px!important;
+  padding:7px 10px!important;
+  margin:0 0 8px!important;
+  border-radius:14px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+}
+.searchPage .searchSortBar label:first-child{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:0!important;
+  white-space:nowrap!important;
+}
+.searchPage .searchSortBar select{
+  min-height:34px!important;
+  height:34px!important;
+  padding:0 28px 0 10px!important;
+  border-radius:11px!important;
+}
+.searchPage .searchSortBar .checkLine{
+  margin:0!important;
+  font-size:.88rem!important;
+}
+.searchPage .searchMeta.searchMetaWithCompare{
+  flex:0 0 auto!important;
+  min-height:34px!important;
+  margin:0 0 6px!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.searchPage .searchMetaWithCompare .compareControl button{
+  min-height:32px!important;
+  height:32px!important;
+  padding:0 12px!important;
+  border-radius:999px!important;
+  font-size:.84rem!important;
+}
+.searchPage .courseList{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow:auto!important;
+  margin-top:0!important;
+  padding:0 4px 12px 0!important;
+  display:grid!important;
+  grid-template-columns:repeat(auto-fill, minmax(330px, 1fr))!important;
+  align-content:start!important;
+  gap:12px!important;
+}
+.searchPage .courseList .courseCard{
+  min-height:178px!important;
+}
+.searchPage .courseList .courseCard.longTimeMeta{
+  min-height:190px!important;
+}
+@media (max-width: 1280px){
+  .searchPage .courseFilters{
+    grid-template-columns:repeat(4, minmax(130px, 1fr))!important;
+  }
+}
+@media (max-width: 900px){
+  .searchPage.singleColumn{height:auto!important;min-height:100dvh!important;overflow:auto!important;padding:12px!important;}
+  .searchPage .courseFilters{grid-template-columns:repeat(2, minmax(0,1fr))!important;}
+  .searchPage .courseList{overflow:visible!important;grid-template-columns:1fr!important;}
+}
+
+/* === 2026-05-30 Auth v5 formal landing redesign === */
+.login.authPage.authV4Page,
+.authV4Page{
+  grid-template-columns:minmax(520px, 1fr) minmax(360px, 460px)!important;
+  gap:clamp(44px, 7vw, 118px)!important;
+  padding:clamp(38px, 6vw, 78px) clamp(52px, 7vw, 108px)!important;
+  background:
+    radial-gradient(circle at 20% 22%, rgba(54,109,220,.26), transparent 34%),
+    radial-gradient(circle at 78% 52%, rgba(58,111,205,.14), transparent 31%),
+    linear-gradient(135deg,#07182f 0%,#102d54 50%,#071a33 100%)!important;
+}
+.authV5Hero{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:space-between!important;
+  min-height:min(620px, calc(100vh - 128px))!important;
+  max-width:820px!important;
+  padding:clamp(38px, 5vw, 60px)!important;
+  border-radius:34px!important;
+  background:
+    linear-gradient(145deg, rgba(10,31,61,.74), rgba(6,22,47,.88)),
+    radial-gradient(circle at 86% 14%, rgba(102,151,255,.14), transparent 32%)!important;
+  border:1px solid rgba(207,224,255,.18)!important;
+  box-shadow:0 30px 92px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.06)!important;
+  color:#f7fbff!important;
+}
+.authV5BrandRow{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+}
+.authV5BrandMark{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:42px!important;
+  padding:0 18px!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.12)!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  color:#fff!important;
+  font-size:1.1rem!important;
+  font-weight:950!important;
+  letter-spacing:.015em!important;
+}
+.authV5SchoolTag{
+  color:rgba(226,238,255,.72)!important;
+  font-size:.92rem!important;
+  font-weight:850!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+.authV5HeroText{margin-top:clamp(48px, 7vh, 86px)!important;}
+.authV5Kicker{
+  width:max-content!important;
+  margin:0 0 16px!important;
+  padding:8px 14px!important;
+  border-radius:999px!important;
+  color:#cfe0ff!important;
+  background:rgba(73,128,235,.16)!important;
+  border:1px solid rgba(147,178,237,.2)!important;
+  font-size:.95rem!important;
+  font-weight:900!important;
+}
+.authV5Hero h1{
+  max-width:720px!important;
+  margin:0!important;
+  color:#fff!important;
+  font-size:clamp(3rem, 5.2vw, 5.4rem)!important;
+  line-height:1.04!important;
+  letter-spacing:-.07em!important;
+  font-weight:950!important;
+}
+.authV5Lead{
+  max-width:580px!important;
+  margin:24px 0 0!important;
+  color:rgba(234,244,255,.86)!important;
+  font-size:clamp(1rem, 1.35vw, 1.24rem)!important;
+  line-height:1.78!important;
+  font-weight:750!important;
+}
+.authV5FeatureList{
+  display:grid!important;
+  grid-template-columns:repeat(2, minmax(0, 1fr))!important;
+  gap:12px 14px!important;
+  margin-top:clamp(34px, 5vh, 56px)!important;
+  max-width:620px!important;
+}
+.authV5FeatureList span{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-height:42px!important;
+  padding:10px 14px!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.075)!important;
+  border:1px solid rgba(210,228,255,.14)!important;
+  color:rgba(246,250,255,.92)!important;
+  font-weight:900!important;
+  font-size:.98rem!important;
+}
+.authV5FeatureList span::before{
+  content:"✓"!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  width:22px!important;
+  height:22px!important;
+  border-radius:999px!important;
+  background:rgba(70,132,255,.25)!important;
+  color:#dceaff!important;
+  font-size:.8rem!important;
+  font-weight:950!important;
+  flex:0 0 auto!important;
+}
+.authV5Stats{
+  display:grid!important;
+  grid-template-columns:repeat(3, minmax(0, 1fr))!important;
+  gap:12px!important;
+  margin-top:clamp(34px, 5vh, 52px)!important;
+  max-width:560px!important;
+}
+.authV5Stats div{
+  min-height:88px!important;
+  padding:16px!important;
+  border-radius:20px!important;
+  background:rgba(255,255,255,.08)!important;
+  border:1px solid rgba(210,228,255,.14)!important;
+}
+.authV5Stats strong{
+  display:block!important;
+  color:#fff!important;
+  font-size:1.8rem!important;
+  line-height:1!important;
+  font-weight:950!important;
+  letter-spacing:-.04em!important;
+}
+.authV5Stats span{
+  display:block!important;
+  margin-top:8px!important;
+  color:rgba(225,238,255,.72)!important;
+  font-weight:850!important;
+  font-size:.92rem!important;
+}
+.authV4Card{
+  justify-self:end!important;
+  max-width:460px!important;
+  border-radius:30px!important;
+  padding:32px 36px 28px!important;
+}
+.authV4Card h2{font-size:clamp(2.05rem, 3vw, 2.65rem)!important;}
+.authV4Header p{font-size:.96rem!important;line-height:1.62!important;}
+.authGoogleButton{
+  background:#fff!important;
+  color:#173357!important;
+  box-shadow:none!important;
+}
+.authV4Links button{color:#2d61ad!important;}
+@media (max-width:1180px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    grid-template-columns:1fr!important;
+    min-height:100vh!important;
+    height:auto!important;
+    overflow:auto!important;
+    padding:24px!important;
+  }
+  .authV5Hero{display:none!important;}
+  .authV4Card{justify-self:center!important;margin:auto!important;max-width:500px!important;max-height:none!important;}
+}
+@media (min-width:1181px) and (max-height:820px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    grid-template-columns:minmax(520px, 1fr) minmax(350px, 430px)!important;
+    padding:28px clamp(46px, 6vw, 90px)!important;
+    gap:clamp(36px, 6vw, 96px)!important;
+  }
+  .authV5Hero{min-height:calc(100vh - 56px)!important;padding:34px 42px!important;}
+  .authV5HeroText{margin-top:32px!important;}
+  .authV5Hero h1{font-size:clamp(2.7rem, 4.8vw, 4.8rem)!important;}
+  .authV5Lead{margin-top:16px!important;font-size:1rem!important;line-height:1.62!important;}
+  .authV5FeatureList{margin-top:28px!important;gap:9px!important;}
+  .authV5FeatureList span{min-height:38px!important;padding:8px 12px!important;font-size:.9rem!important;}
+  .authV5Stats{margin-top:28px!important;}
+  .authV5Stats div{min-height:74px!important;padding:12px!important;}
+  .authV5Stats strong{font-size:1.45rem!important;}
+  .authV4Card{max-width:430px!important;max-height:calc(100vh - 56px)!important;padding:24px 30px 22px!important;}
+}
+@media (max-width:560px){
+  .authV4Card{padding:26px 22px 22px!important;border-radius:24px!important;}
+  .authV4Card h2{font-size:2rem!important;}
+}
+
+/* === 2026-05-30 Auth landing soft-balance fix ===
+   Reduce left hero dominance and move guest mode into the text-link row. */
+.login.authPage.authV4Page,
+.authV4Page{
+  grid-template-columns:minmax(520px, .92fr) minmax(360px, 456px)!important;
+  gap:clamp(58px, 8vw, 136px)!important;
+}
+.authV5Hero{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  min-height:auto!important;
+  max-width:740px!important;
+  padding:clamp(28px, 4vw, 46px)!important;
+  justify-content:center!important;
+}
+.authV5BrandRow{
+  justify-content:flex-start!important;
+  gap:18px!important;
+  margin-bottom:clamp(28px, 5vh, 52px)!important;
+}
+.authV5BrandMark{
+  min-height:38px!important;
+  padding:0 16px!important;
+  font-size:1rem!important;
+  background:rgba(255,255,255,.11)!important;
+  border-color:rgba(255,255,255,.15)!important;
+}
+.authV5SchoolTag{
+  font-size:.78rem!important;
+  letter-spacing:.13em!important;
+  opacity:.72!important;
+}
+.authV5HeroText{
+  margin-top:0!important;
+}
+.authV5Kicker{
+  margin-bottom:14px!important;
+  padding:7px 12px!important;
+  font-size:.84rem!important;
+  color:#dbe8ff!important;
+  background:rgba(76,132,235,.13)!important;
+  border-color:rgba(170,199,255,.18)!important;
+}
+.authV5Hero h1{
+  max-width:660px!important;
+  font-size:clamp(2.75rem, 4.8vw, 4.8rem)!important;
+  line-height:1.04!important;
+  letter-spacing:-.06em!important;
+}
+.authV5Lead{
+  max-width:620px!important;
+  margin-top:18px!important;
+  font-size:clamp(.98rem, 1.18vw, 1.12rem)!important;
+  line-height:1.72!important;
+  opacity:.88!important;
+}
+.authV5FeatureList{
+  max-width:590px!important;
+  margin-top:clamp(28px, 4vh, 42px)!important;
+  gap:10px 12px!important;
+}
+.authV5FeatureList span{
+  min-height:38px!important;
+  padding:8px 13px!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.055)!important;
+  border-color:rgba(210,228,255,.10)!important;
+  color:rgba(246,250,255,.86)!important;
+  font-size:.92rem!important;
+}
+.authV5FeatureList span::before{
+  width:20px!important;
+  height:20px!important;
+  background:rgba(70,132,255,.20)!important;
+}
+.authV5Stats{
+  max-width:520px!important;
+  margin-top:clamp(30px, 4vh, 44px)!important;
+  gap:10px!important;
+}
+.authV5Stats div{
+  min-height:76px!important;
+  padding:13px 14px!important;
+  border-radius:18px!important;
+  background:rgba(255,255,255,.06)!important;
+  border-color:rgba(210,228,255,.10)!important;
+}
+.authV5Stats strong{
+  font-size:1.55rem!important;
+}
+.authV5Stats span{
+  margin-top:7px!important;
+  font-size:.84rem!important;
+}
+.authV4Card{
+  max-width:456px!important;
+}
+.authV4Links{
+  gap:18px!important;
+  margin:18px 0 0!important;
+}
+.authV4Links button{
+  font-size:.98rem!important;
+  padding:6px 4px!important;
+  color:#2f62aa!important;
+  text-decoration:none!important;
+}
+.authV4Links button:hover{
+  background:rgba(47,98,170,.08)!important;
+}
+.authV4Card .authGuest{
+  display:none!important;
+}
+.authV4Card small{
+  margin-top:14px!important;
+  text-align:center!important;
+}
+@media (min-width:1181px) and (max-height:820px){
+  .authV5Hero{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    min-height:auto!important;
+    padding:28px 36px!important;
+  }
+  .authV5BrandRow{margin-bottom:28px!important;}
+  .authV5Hero h1{font-size:clamp(2.55rem, 4.35vw, 4.25rem)!important;}
+  .authV5Lead{font-size:.96rem!important;line-height:1.62!important;}
+  .authV5FeatureList{margin-top:24px!important;}
+  .authV5Stats{margin-top:24px!important;}
+}
+
+/* === 2026-05-30 Auth landing left-top alignment final ===
+   Keep login card as main action and turn the left side into a quiet, upper-left product brief. */
+@media (min-width:1181px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    grid-template-columns:minmax(500px, .82fr) minmax(380px, 456px)!important;
+    align-items:center!important;
+    gap:clamp(72px, 9vw, 150px)!important;
+    padding:clamp(44px, 6vw, 82px) clamp(56px, 7vw, 112px)!important;
+  }
+  .authV5Hero{
+    align-self:stretch!important;
+    justify-content:flex-start!important;
+    align-items:flex-start!important;
+    padding:clamp(28px, 4vw, 52px) clamp(16px, 3vw, 42px)!important;
+    margin-top:clamp(8px, 2vh, 28px)!important;
+    max-width:680px!important;
+  }
+  .authV5BrandRow{
+    margin-bottom:clamp(34px, 6vh, 74px)!important;
+  }
+  .authV5HeroText{
+    max-width:640px!important;
+  }
+  .authV5Kicker{
+    margin-bottom:16px!important;
+  }
+  .authV5Hero h1{
+    font-size:clamp(2.7rem, 4.35vw, 4.65rem)!important;
+    max-width:640px!important;
+  }
+  .authV5Lead{
+    max-width:610px!important;
+  }
+  .authV5FeatureList{
+    max-width:560px!important;
+    margin-top:clamp(30px, 4.5vh, 48px)!important;
+  }
+  .authV5Stats{
+    max-width:500px!important;
+    margin-top:clamp(32px, 5vh, 56px)!important;
+  }
+}
+
+@media (min-width:1181px) and (max-height:820px){
+  .login.authPage.authV4Page,
+  .authV4Page{
+    align-items:center!important;
+    padding:28px clamp(46px, 6vw, 90px)!important;
+  }
+  .authV5Hero{
+    justify-content:flex-start!important;
+    margin-top:0!important;
+    padding:22px 30px!important;
+    max-width:620px!important;
+  }
+  .authV5BrandRow{margin-bottom:24px!important;}
+  .authV5FeatureList{margin-top:22px!important;}
+  .authV5Stats{margin-top:22px!important;}
+}
+
+/* UniPlan auth loading state */
+.authSubmit{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+}
+.authSubmit:disabled,
+.authSubmit.isLoading{
+  cursor:progress!important;
+  opacity:.88!important;
+  filter:saturate(.92)!important;
+}
+.authButtonSpinner{
+  width:18px!important;
+  height:18px!important;
+  border-radius:999px!important;
+  border:2px solid rgba(255,255,255,.48)!important;
+  border-top-color:#fff!important;
+  animation:uniplanAuthSpin .72s linear infinite!important;
+  flex:0 0 auto!important;
+}
+@keyframes uniplanAuthSpin{to{transform:rotate(360deg)}}
+
+/* Admin course import UI */
+.adminImportSection{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.adminImportHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:22px;
+  background:rgba(255,255,255,.76);
+  box-shadow:0 16px 38px rgba(15,23,42,.08);
+}
+.adminImportHead h3{
+  margin:0 0 6px;
+  font-size:1.35rem;
+  color:#10233f;
+}
+.adminImportControls{
+  min-width:260px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.adminImportControls label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-weight:800;
+  color:#1f3658;
+}
+.adminImportControls select,
+.adminImportControls input[type="text"],
+.adminImportControls input:not([type]){
+  min-height:42px;
+  border:1px solid rgba(37,99,235,.18);
+  border-radius:14px;
+  padding:0 12px;
+  background:#fff;
+  color:#12233f;
+  font-weight:800;
+}
+.adminImportCheckbox{
+  flex-direction:row!important;
+  align-items:center;
+  font-size:.9rem;
+}
+.adminImportCheckbox input{ width:16px; height:16px; }
+.adminImportDropzone{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:132px;
+  border:2px dashed rgba(37,99,235,.28);
+  border-radius:24px;
+  background:linear-gradient(135deg,rgba(239,246,255,.9),rgba(255,255,255,.78));
+  color:#365270;
+  text-align:center;
+  overflow:hidden;
+}
+.adminImportDropzone input{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.adminImportDropzone b{
+  color:#10233f;
+  font-size:1.05rem;
+}
+.adminImportDropzone span{
+  max-width:680px;
+  font-size:.9rem;
+}
+.adminImportSummary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.adminImportSummary article{
+  padding:15px 16px;
+  border-radius:18px;
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(148,163,184,.18);
+  box-shadow:0 12px 30px rgba(15,23,42,.06);
+}
+.adminImportSummary b{
+  display:block;
+  font-size:1.45rem;
+  color:#123f86;
+}
+.adminImportSummary span{
+  color:#5b6b80;
+  font-size:.86rem;
+  font-weight:800;
+}
+.adminImportErrors,
+.adminImportResult{
+  padding:14px 16px;
+  border-radius:18px;
+  background:#fff7ed;
+  border:1px solid rgba(249,115,22,.25);
+  color:#9a3412;
+  font-weight:750;
+}
+.adminImportErrors p,
+.adminImportResult p{ margin:6px 0 0; }
+.adminImportResult{
+  background:#ecfdf5;
+  border-color:rgba(16,185,129,.25);
+  color:#047857;
+}
+.adminImportResult.error{
+  background:#fef2f2;
+  border-color:rgba(239,68,68,.25);
+  color:#b91c1c;
+}
+.adminImportPreview{
+  overflow:auto;
+  max-height:360px;
+  border-radius:20px;
+  border:1px solid rgba(148,163,184,.2);
+  background:rgba(255,255,255,.82);
+}
+.adminImportPreview table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:760px;
+}
+.adminImportPreview th,
+.adminImportPreview td{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(148,163,184,.16);
+  text-align:left;
+  color:#1f3658;
+  font-size:.9rem;
+}
+.adminImportPreview th{
+  position:sticky;
+  top:0;
+  background:#f8fbff;
+  color:#0f2851;
+  font-weight:900;
+}
+.adminImportActions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+}
+.adminImportActions button{
+  border:0;
+  border-radius:14px;
+  min-height:42px;
+  padding:0 16px;
+  font-weight:900;
+  cursor:pointer;
+  background:#e8eef8;
+  color:#15345f;
+}
+.adminImportActions button:first-child{
+  background:#2563eb;
+  color:white;
+  box-shadow:0 12px 28px rgba(37,99,235,.22);
+}
+.adminImportActions button:disabled{
+  opacity:.48;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+.dark .adminImportHead,
+.dark .adminImportSummary article,
+.dark .adminImportPreview{
+  background:rgba(15,23,42,.72);
+  border-color:rgba(148,163,184,.22);
+}
+.dark .adminImportHead h3,
+.dark .adminImportDropzone b,
+.dark .adminImportPreview th,
+.dark .adminImportPreview td{
+  color:#eef5ff;
+}
+.dark .adminImportControls label,
+.dark .adminImportSummary span{ color:#cbd5e1; }
+.dark .adminImportControls select,
+.adminImportControls input[type="text"],
+.adminImportControls input:not([type]){ background:#111827; color:#eef5ff; border-color:rgba(148,163,184,.25); }
+.dark .adminImportDropzone{ background:rgba(15,23,42,.55); border-color:rgba(96,165,250,.3); color:#cbd5e1; }
+.dark .adminImportPreview th{ background:#111827; }
+
+@media (max-width: 860px){
+  .adminImportHead{ flex-direction:column; }
+  .adminImportControls{ width:100%; min-width:0; }
+  .adminImportSummary{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .adminImportActions{ justify-content:stretch; flex-direction:column; }
+}
+
+
+/* Auth password visibility control */
+.authV4Card .authPasswordControl{
+  position:relative!important;
+  width:100%!important;
+}
+.authV4Card .authPasswordControl input{
+  width:100%!important;
+  padding-right:78px!important;
+}
+.authV4Card .authPasswordToggle{
+  position:absolute!important;
+  right:10px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  height:34px!important;
+  min-width:54px!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:rgba(37,99,235,.10)!important;
+  color:#1d4ed8!important;
+  font-size:.82rem!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+  box-shadow:none!important;
+}
+.authV4Card .authPasswordToggle:hover{
+  background:rgba(37,99,235,.18)!important;
+}
+.dark .authV4Card .authPasswordToggle{
+  background:rgba(96,165,250,.16)!important;
+  color:#bfdbfe!important;
+}
+
+.adminImportControls input[type="text"],
+.adminImportControls input:not([type]){
+  width:100%!important;
+}
+
+/* Favorite state in planner course popover */
+.coursePopover .favoritePopoverAction.active{
+  color:#f8d96a !important;
+  border-color:rgba(248,217,106,.56) !important;
+  background:linear-gradient(180deg, rgba(248,217,106,.22), rgba(248,217,106,.08)) !important;
+  box-shadow:0 12px 24px rgba(248,217,106,.10) !important;
+}
+.coursePopover .favoritePopoverAction{
+  transition:transform .16s ease, background .16s ease, color .16s ease, border-color .16s ease;
+}
+.coursePopover .favoritePopoverAction:active{
+  transform:scale(.96);
+}
+
+/* V1.0 beta local timetable background upload */
+.backgroundUploadBox{
+  display:grid;
+  gap:10px;
+  padding:12px;
+  border:1px solid color-mix(in srgb,var(--border) 80%,transparent);
+  border-radius:16px;
+  background:color-mix(in srgb,var(--panel2) 58%,transparent);
+}
+.backgroundUploadControl{
+  display:grid;
+  gap:7px;
+  font-weight:800;
+}
+.backgroundUploadControl input[type="file"]{
+  width:100%;
+  padding:10px 12px;
+  border:1px dashed color-mix(in srgb,var(--border) 92%,var(--accent) 8%);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--panel) 88%,transparent);
+  color:var(--text);
+}
+.appearanceStatus{
+  margin:0;
+  font-size:13px;
+  font-weight:800;
+  color:color-mix(in srgb,#16a34a 82%,var(--text) 18%);
+}
+.appearanceError{
+  margin:0;
+  font-size:13px;
+  font-weight:800;
+  color:color-mix(in srgb,#dc2626 86%,var(--text) 14%);
+}
+.backgroundPreviewRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.backgroundPreview{
+  width:96px;
+  height:54px;
+  border-radius:12px;
+  background-size:cover;
+  background-position:center;
+  border:1px solid color-mix(in srgb,var(--border) 80%,transparent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+}
+.backgroundPreviewRow button{
+  min-height:38px;
+}
+
+
+/* UniPlan patch: force half-semester merged courses to render left/right, not vertical. */
+.semesterPanel.activeSemesterPanel .timetableCourseTile.mergedHalfTile{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-auto-flow:column!important;
+  grid-auto-rows:1fr!important;
+  align-items:stretch!important;
+  padding:0!important;
+  gap:1px!important;
+  overflow:hidden!important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile.mergedHalfTile .mergedHalfSegment{
+  width:100%!important;
+  min-width:0!important;
+  height:100%!important;
+  min-height:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  overflow:hidden!important;
+  border-radius:0!important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile.mergedHalfTile .mergedHalfSegment .tileMeta{
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  max-width:100%!important;
+}
+
+/* UniPlan final fix: half-semester courses inside the same slot are one left/right card. */
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile{
+  --frost:var(--course-card-alpha,.72);
+  position:absolute!important;
+  inset:5px!important;
+  z-index:18!important;
+  height:calc((var(--tile-span,1) * 100%) - 10px)!important;
+  min-height:34px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+  gap:1px!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border-radius:12px!important;
+  border:1px solid rgba(180,200,230,calc(.18 * var(--frost)))!important;
+  background:rgba(15,30,58,calc(.54 + .18 * var(--frost)))!important;
+  box-shadow:0 10px 24px rgba(0,0,0,calc(.22 * var(--frost))), inset 0 1px 0 rgba(255,255,255,calc(.14 * var(--frost)))!important;
+  backdrop-filter:blur(calc(18px * var(--frost))) saturate(calc(100% + 45% * var(--frost)))!important;
+  -webkit-backdrop-filter:blur(calc(18px * var(--frost))) saturate(calc(100% + 45% * var(--frost)))!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile.stackedTile{
+  top:calc(5px + (var(--stack-index,0) * (((var(--tile-span,1) * 56px) - 12px) / var(--stack-count,1))))!important;
+  height:calc((((var(--tile-span,1) * 56px) - 12px) / var(--stack-count,1)) - 4px)!important;
+  min-height:28px!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment{
+  appearance:none!important;
+  min-width:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  border:0!important;
+  border-radius:0!important;
+  color:rgba(255,255,255,.98)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:flex-start!important;
+  gap:3px!important;
+  padding:9px 7px 7px 8px!important;
+  overflow:hidden!important;
+  text-align:left!important;
+  cursor:pointer!important;
+  background:linear-gradient(160deg,rgba(71,119,226,.68),rgba(21,43,92,.58))!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment + .halfSemesterSegment{
+  border-left:1px solid rgba(255,255,255,.18)!important;
+  background:linear-gradient(160deg,rgba(219,67,162,.68),rgba(80,49,140,.58))!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment .courseTypeDot{
+  width:7px!important;
+  height:7px!important;
+  margin:0 0 2px 0!important;
+  flex:0 0 auto!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment .tileTitle{
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  font-size:11px!important;
+  line-height:1.14!important;
+  font-weight:900!important;
+  letter-spacing:-.03em!important;
+  color:#fff!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment .tileMeta{
+  display:block!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:9px!important;
+  line-height:1.1!important;
+  color:rgba(226,232,240,.86)!important;
+}
+
+/* UniPlan patch: half-semester split cards must follow appearance settings instead of fixed purple/blue. */
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile{
+  --frost:var(--course-card-alpha,.72)!important;
+  background:linear-gradient(160deg,
+    rgba(73,113,202,calc(.34 + var(--frost) * .42)),
+    rgba(27,44,90,calc(.30 + var(--frost) * .36)))!important;
+  border-color:rgba(180,200,230,calc(.16 + var(--frost) * .28))!important;
+  box-shadow:0 12px 30px rgba(0,0,0,calc(.14 + var(--frost) * .18)), inset 0 1px 0 rgba(255,255,255,calc(.08 + var(--frost) * .16))!important;
+  backdrop-filter:blur(calc(14px * var(--frost))) saturate(calc(100% + 40% * var(--frost)))!important;
+  -webkit-backdrop-filter:blur(calc(14px * var(--frost))) saturate(calc(100% + 40% * var(--frost)))!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment,
+.semesterPanel.activeSemesterPanel .halfSemesterSegment + .halfSemesterSegment{
+  background:linear-gradient(160deg,
+    rgba(255,255,255,calc(.10 * var(--course-card-alpha,.72))),
+    rgba(255,255,255,calc(.03 * var(--course-card-alpha,.72))))!important;
+  color:inherit!important;
+}
+body[data-ui-theme="graphite"] .semesterPanel.activeSemesterPanel .halfSemesterSplitTile,
+body[data-ui-theme="graphite"] .semesterPanel.activeSemesterPanel .halfSemesterSegment,
+body[data-ui-theme="graphite"] .semesterPanel.activeSemesterPanel .halfSemesterSegment + .halfSemesterSegment{
+  color:#0f172a!important;
+}
+html[style*="--course-card-alpha: 0"] .semesterPanel.activeSemesterPanel .halfSemesterSplitTile,
+html[style*="--course-card-alpha:0"] .semesterPanel.activeSemesterPanel .halfSemesterSplitTile{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+html[style*="--course-card-alpha: 0"] .semesterPanel.activeSemesterPanel .halfSemesterSegment,
+html[style*="--course-card-alpha:0"] .semesterPanel.activeSemesterPanel .halfSemesterSegment{
+  background:transparent!important;
+}
+
+/* UniPlan patch: clickable graduation progress modal. */
+.creditProgressButton{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  padding:0;
+  text-align:left;
+  cursor:pointer;
+}
+.creditProgressButton:hover{filter:brightness(1.12);}
+.creditStrip .creditMain.creditProgressButton{display:grid!important;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;}
+.creditStrip .creditMiniItem.creditProgressButton{display:flex!important;flex-direction:column;gap:6px;width:100%;}
+.creditProgressBackdrop{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  background:rgba(2,6,23,.58);
+  padding:20px;
+}
+.creditProgressModal{
+  width:min(720px,100%);
+  max-height:min(720px,86dvh);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  border:1px solid rgba(147,197,253,.38);
+  border-radius:22px;
+  background:rgba(10,28,56,.96);
+  color:#e5eefc;
+  box-shadow:0 28px 80px rgba(0,0,0,.42);
+}
+.creditProgressModal header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:18px 20px;border-bottom:1px solid rgba(148,163,184,.25);}
+.creditProgressModal h3{margin:0;font-size:20px;}
+.creditProgressModal p{margin:4px 0 0;color:rgba(226,232,240,.72);}
+.creditProgressModal header button{border:1px solid rgba(148,163,184,.35);border-radius:12px;background:rgba(15,23,42,.45);color:inherit;font-size:22px;width:38px;height:38px;cursor:pointer;}
+.creditProgressList{overflow:auto;padding:14px;display:grid;gap:10px;}
+.creditProgressList article{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(148,163,184,.22);border-radius:16px;background:rgba(15,23,42,.36);padding:12px 14px;}
+.creditProgressList strong{display:block;font-size:15px;}
+.creditProgressList span{display:block;margin-top:4px;color:rgba(226,232,240,.72);font-size:12px;}
+
+/* UniPlan patch: split half-semester cards must own all pointer events across every spanned period. */
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile{
+  z-index: 18 !important;
+  pointer-events: auto !important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterSegment{
+  position: relative !important;
+  z-index: 19 !important;
+  pointer-events: auto !important;
+}
+.semesterPanel.activeSemesterPanel .occupiedContinuation{
+  z-index: 3;
+}
+
+/* UniPlan patch: progress modal close alignment + planner side panels return to natural height. */
+.creditProgressModal header{
+  align-items:flex-start!important;
+}
+.creditProgressModal header button{
+  position:relative!important;
+  top:-2px!important;
+  right:0!important;
+  margin:0!important;
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  padding:0!important;
+  border-radius:999px!important;
+  display:grid!important;
+  place-items:center!important;
+  line-height:1!important;
+  font-size:24px!important;
+}
+
+/* Right-side planner panels should size to content, not match timetable height. */
+.plannerLayout{
+  align-items:start!important;
+}
+.plannerTools{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  align-self:start!important;
+  overflow:visible!important;
+  display:grid!important;
+  grid-template-columns:minmax(250px,1fr) 220px!important;
+  grid-template-rows:auto auto auto!important;
+  align-items:start!important;
+  gap:12px!important;
+}
+.sideCandidateRail{
+  grid-column:1!important;
+  grid-row:1 / 4!important;
+  height:auto!important;
+  min-height:220px!important;
+  max-height:420px!important;
+  align-self:start!important;
+  overflow:hidden!important;
+}
+.sideCandidateRail .candidateList,
+.sideCandidateRail .liveCandidateList{
+  max-height:300px!important;
+  overflow:auto!important;
+}
+.semesterPicker{
+  grid-column:2!important;
+  grid-row:1!important;
+  height:auto!important;
+  align-self:start!important;
+}
+.quickActions{
+  grid-column:2!important;
+  grid-row:2!important;
+  height:auto!important;
+  min-height:0!important;
+  align-self:start!important;
+}
+.quickActions .plannerActionGrid{
+  flex:0 0 auto!important;
+}
+.sideDelete{
+  grid-column:2!important;
+  grid-row:3!important;
+  height:auto!important;
+  align-self:start!important;
+}
+@media(max-width:1040px){
+  .plannerTools{
+    grid-template-columns:1fr 1fr!important;
+    grid-template-rows:auto auto auto!important;
+    height:auto!important;
+    min-height:0!important;
+    overflow:visible!important;
+  }
+  .sideCandidateRail{grid-column:1!important;grid-row:1 / 4!important;min-height:260px!important;max-height:420px!important;height:auto!important;}
+  .semesterPicker{grid-column:2!important;grid-row:1!important;}
+  .quickActions{grid-column:2!important;grid-row:2!important;height:auto!important;}
+  .sideDelete{grid-column:2!important;grid-row:3!important;}
+}
+
+/* UniPlan patch: make later rows of half-semester split cards clickable. */
+.semesterPanel.activeSemesterPanel .halfSemesterContinuationHitbox{
+  position:absolute!important;
+  inset:0!important;
+  z-index:70!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  pointer-events:auto!important;
+  background:transparent!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterContinuationHitbox .halfSemesterContinuationSegment{
+  opacity:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+}
+.semesterPanel.activeSemesterPanel .halfSemesterContinuationHitbox .halfSemesterContinuationSegment *{
+  pointer-events:none!important;
+}
+
+/* UniPlan appearance repair 2026-06: stable theme identity + continuous card matte.
+   Keep this last. It fixes old stored key `lavender` by supporting the new canonical `amber`. */
+body[data-ui-theme="amber"],
+body[data-ui-theme="lavender"]{
+  --bg:#21160f!important;
+  --panel:#302216!important;
+  --panel2:#432f1c!important;
+  --text:#fff7ed!important;
+  --muted:#d6b996!important;
+  --border:#6b4b2a!important;
+  --shadow:0 20px 52px rgba(0,0,0,.34)!important;
+  --table-cell-bg:rgba(48,34,22,.48)!important;
+  --table-head-bg:rgba(67,47,28,.72)!important;
+  --table-line:rgba(217,164,90,.30)!important;
+  --theme-glow:rgba(245,158,11,.18)!important;
+  --sidebar-start:#4a3019!important;
+  --sidebar-mid:#302216!important;
+  --sidebar-end:#1b120b!important;
+  --sidebar-text:#fff7ed!important;
+  --sidebar-muted:#d6b996!important;
+  --sidebar-border:rgba(245,158,11,.24)!important;
+  --sidebar-active-bg:rgba(245,158,11,.18)!important;
+  --sidebar-hover-bg:rgba(245,158,11,.10)!important;
+  --sidebar-glow:rgba(245,158,11,.16)!important;
+}
+body[data-ui-theme="mist"]{
+  --bg:#fff1f5!important;
+  --panel:#fffafd!important;
+  --panel2:#ffe8f0!important;
+  --text:#3a1c2b!important;
+  --muted:#8b5f72!important;
+  --border:#f5c9d8!important;
+  --shadow:0 16px 40px rgba(190,24,93,.10)!important;
+  --table-cell-bg:rgba(255,250,253,.43)!important;
+  --table-head-bg:rgba(255,234,242,.66)!important;
+  --table-line:rgba(244,114,182,.28)!important;
+  --theme-glow:rgba(219,39,119,.14)!important;
+}
+body[data-ui-theme="clean"]{
+  --bg:#f8fbff!important;
+  --panel:#ffffff!important;
+  --panel2:#eef6ff!important;
+  --text:#172033!important;
+  --muted:#64748b!important;
+  --border:#d7e4f5!important;
+  --theme-glow:rgba(37,99,235,.12)!important;
+}
+
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableCourseTile,
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableConflictTile{
+  --frost:clamp(0, var(--course-card-alpha,.72), 1);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,calc(var(--frost) * .18)), transparent 34%),
+    linear-gradient(180deg, rgba(54,70,105,calc(var(--frost) * .78)), rgba(18,30,58,calc(var(--frost) * .58)))!important;
+  border-color:rgba(180,200,230,calc(var(--frost) * .32))!important;
+  box-shadow:
+    0 8px 22px rgba(0,0,0,calc(var(--frost) * .26)),
+    inset 0 1px 0 rgba(255,255,255,calc(var(--frost) * .18)),
+    inset 0 -1px 0 rgba(15,23,42,calc(var(--frost) * .30))!important;
+  backdrop-filter:blur(calc(var(--frost) * 18px)) saturate(calc(100% + var(--frost) * 45%))!important;
+  -webkit-backdrop-filter:blur(calc(var(--frost) * 18px)) saturate(calc(100% + var(--frost) * 45%))!important;
+}
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableCourseTile::before,
+.semesterPanel.activeSemesterPanel .timetableGridClean .timetableConflictTile::before{
+  opacity:var(--frost)!important;
+}
+
+/* UniPlan real fix 2026-06-02: final half-semester tile height override. */
+.semesterPanel.activeSemesterPanel .timetableCourseTile.halfSemesterSplitTile,
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile{
+  top:5px!important;
+  right:5px!important;
+  bottom:auto!important;
+  left:5px!important;
+  height:calc((var(--tile-span,1) * 56px) - 12px)!important;
+  min-height:calc((var(--tile-span,1) * 56px) - 12px)!important;
+  max-height:none!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+.semesterPanel.activeSemesterPanel .timetableCourseTile.halfSemesterSplitTile.stackedTile,
+.semesterPanel.activeSemesterPanel .halfSemesterSplitTile.stackedTile{
+  height:calc((var(--tile-span,1) * 56px) - 12px)!important;
+  min-height:calc((var(--tile-span,1) * 56px) - 12px)!important;
+}
+
+/* v0.11.18 department code search + filter layout fix */
+.searchPage .courseFilters{
+  grid-template-columns:minmax(150px,.9fr) minmax(280px,1.65fr) repeat(5,minmax(104px,.72fr)) 96px!important;
+  overflow:visible!important;
+}
+.searchPage .courseFilters label{
+  min-width:0!important;
+  overflow:visible!important;
+}
+.searchPage .departmentFilterControl{
+  display:grid!important;
+  grid-template-columns:minmax(118px,.78fr) minmax(138px,1fr)!important;
+  gap:8px!important;
+  min-width:0!important;
+  width:100%!important;
+  overflow:visible!important;
+}
+.searchPage .departmentFilterControl select,
+.searchPage .departmentFilterControl input,
+.searchPage .courseFilters select,
+.searchPage .courseFilters input{
+  min-width:0!important;
+  max-width:100%!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+@media(max-width:1180px){
+  .searchPage .courseFilters{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:760px){
+  .searchPage .courseFilters{
+    grid-template-columns:1fr!important;
+  }
+  .searchPage .departmentFilterControl{
+    grid-template-columns:1fr!important;
+  }
+}
+
+/* v0.11.40 targeted crop fix applied in the last-loaded CSS file.
+   Do not change global page scrolling. Fix only the two clipped areas. */
+.feedbackSplitPage{
+  overflow:hidden!important;
+}
+.feedbackSplitPage .feedbackMainPane{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding-bottom:36px!important;
+  min-height:0!important;
+}
+.feedbackSplitPage .feedbackForm{
+  flex:0 0 auto!important;
+  min-height:auto!important;
+  padding-bottom:28px!important;
+}
+.feedbackSplitPage .missingCourseFields,
+.feedbackSplitPage .missingCourseFieldsSimple{
+  flex:0 0 auto!important;
+}
+.feedbackSplitPage .feedbackUpload{
+  min-height:56px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  overflow:visible!important;
+}
+.feedbackSplitPage .feedbackForm textarea{
+  flex:0 0 auto!important;
+  min-height:220px!important;
+  height:220px!important;
+  max-height:220px!important;
+  resize:vertical!important;
+  margin-bottom:10px!important;
+}
+.feedbackSplitPage .feedbackForm button[type="submit"],
+.feedbackSplitPage .feedbackForm > button{
+  flex:0 0 auto!important;
+}
+
+@media(min-width:1181px){
+  .plannerTools{
+    overflow:visible!important;
+    padding-bottom:18px!important;
+  }
+  .sideDelete{
+    min-height:58px!important;
+    padding:14px 10px!important;
+    margin-bottom:8px!important;
+    align-self:end!important;
+    overflow:visible!important;
+  }
+}
+@media(max-width:1180px){
+  .sideDelete{
+    min-height:58px!important;
+    margin-bottom:18px!important;
+    overflow:visible!important;
+  }
+}
+@media(max-width:980px){
+  .feedbackSplitPage .feedbackMainPane{
+    overflow:visible!important;
+    padding-bottom:24px!important;
+  }
+  .feedbackSplitPage .feedbackForm textarea{
+    min-height:180px!important;
+    height:180px!important;
+    max-height:none!important;
+  }
+}
+
+/* v0.11.41 real web crop fix
+   Feedback page may scroll internally; planner main page must not gain global scrollbars.
+   Keep this at the end because this file is imported last. */
+.main:has(.feedbackSplitPage){
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.feedbackPage.feedbackSplitPage{
+  height:calc(100dvh - 74px)!important;
+  max-height:calc(100dvh - 74px)!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding:18px 22px 120px!important;
+  align-items:start!important;
+}
+.feedbackPage.feedbackSplitPage .feedbackMainPane,
+.feedbackPage.feedbackSplitPage .feedbackRecentPane{
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+.feedbackPage.feedbackSplitPage .feedbackForm{
+  max-width:none!important;
+  padding-bottom:80px!important;
+}
+.feedbackPage.feedbackSplitPage .feedbackUpload{
+  overflow:visible!important;
+  min-height:64px!important;
+}
+.feedbackPage.feedbackSplitPage textarea{
+  min-height:220px!important;
+  height:auto!important;
+  max-height:none!important;
+  margin-bottom:24px!important;
+}
+.feedbackPage.feedbackSplitPage .feedbackNote{
+  margin-bottom:80px!important;
+}
+
+@media(min-width:1181px){
+  .plannerLayout{
+    overflow:hidden!important;
+  }
+  .plannerTools{
+    overflow:hidden!important;
+    padding-bottom:0!important;
+  }
+  .sideDelete,
+  .deleteZone.sideDelete{
+    min-height:38px!important;
+    height:38px!important;
+    max-height:38px!important;
+    padding:7px 10px!important;
+    line-height:1.05!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    align-self:start!important;
+    margin:0!important;
+    transform:translateY(-18px)!important;
+    overflow:hidden!important;
+  }
+}
+@media(max-width:1180px){
+  .sideDelete,
+  .deleteZone.sideDelete{
+    min-height:42px!important;
+    height:42px!important;
+    padding:8px 10px!important;
+    transform:translateY(-12px)!important;
+  }
+}
+
+
+/* v0.11.43 targeted planner/admin utilities refinements
+   Keep the delete drop zone inside the fixed planner sidebar and avoid taskbar clipping. */
+.sideDelete,
+.deleteZone.sideDelete{
+  transform: translateY(-6px) !important;
+  margin-bottom: 0 !important;
+}
+
+.adminAuditUtilityGrid{
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);
+  gap:16px;
+  margin-top:18px;
+}
+.adminAuditUtilityPanel{
+  border:1px solid var(--line);
+  background:color-mix(in srgb,var(--panel) 72%,transparent);
+  border-radius:18px;
+  padding:16px;
+  min-width:0;
+}
+.adminCourseAuditHead.compact{
+  align-items:start;
+  margin-bottom:12px;
+}
+.adminCourseAuditHead.compact input{
+  min-width:240px;
+}
+.adminMissingCheckSummary{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:color-mix(in srgb,var(--panel-2) 80%,transparent);
+  border:1px solid var(--line);
+  margin-bottom:12px;
+}
+.adminMissingCheckSummary b{
+  font-size:20px;
+}
+.adminMissingCheckList{
+  display:grid;
+  gap:8px;
+  max-height:360px;
+  overflow:auto;
+  padding-right:4px;
+}
+.adminMissingCheckList button{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px 12px;
+  background:color-mix(in srgb,var(--panel-2) 62%,transparent);
+  color:var(--text);
+}
+.adminMissingCheckList button span{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.adminMissingCheckList button small{
+  color:var(--muted);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.adminMissingCheckList button strong{
+  flex:0 0 auto;
+  min-width:34px;
+  text-align:center;
+  border-radius:999px;
+  padding:4px 8px;
+}
+.adminMissingCheckList button.ok strong{
+  background:rgba(34,197,94,.16);
+  color:#86efac;
+}
+.adminMissingCheckList button.missing{
+  border-color:rgba(248,113,113,.55);
+  background:rgba(127,29,29,.18);
+}
+.adminMissingCheckList button.missing strong{
+  background:rgba(248,113,113,.16);
+  color:#fecaca;
+}
+.adminAliasList{
+  display:grid;
+  gap:8px;
+  max-height:360px;
+  overflow:auto;
+}
+.adminAliasList article{
+  border:1px solid var(--line);
+  background:color-mix(in srgb,var(--panel-2) 58%,transparent);
+  border-radius:14px;
+  padding:10px 12px;
+}
+.adminAliasList article b{
+  display:block;
+  margin-bottom:4px;
+}
+.adminAliasList article span{
+  display:block;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+@media(max-width:1080px){
+  .adminAuditUtilityGrid{
+    grid-template-columns:1fr;
+  }
+  .adminCourseAuditHead.compact{
+    grid-template-columns:1fr;
+  }
+  .adminCourseAuditHead.compact input{
+    min-width:0;
+    width:100%;
+  }
+}
+
+/* v0.11.44 admin import visual unification + future data intake preparation */
+.adminConsolePage .adminImportSection{
+  color: var(--text, #eaf2ff);
+}
+.adminConsolePage .adminImportHead,
+.adminConsolePage .adminImportDropzone,
+.adminConsolePage .adminImportSummary article,
+.adminConsolePage .adminImportPreview,
+.adminConsolePage .adminImportResult,
+.adminConsolePage .adminPatchUnifiedControl{
+  background: linear-gradient(180deg, rgba(22,40,71,.96), rgba(15,31,58,.96)) !important;
+  color: #eaf2ff !important;
+  border: 1px solid rgba(96,165,250,.28) !important;
+  box-shadow: 0 18px 44px rgba(2,8,23,.22) !important;
+}
+.adminConsolePage .adminImportHead h3,
+.adminConsolePage .adminImportDropzone b,
+.adminConsolePage .adminImportSummary b,
+.adminConsolePage .adminImportPreview th,
+.adminConsolePage .adminImportPreview td,
+.adminConsolePage .adminPatchUnifiedControl b{
+  color: #f8fbff !important;
+}
+.adminConsolePage .adminImportHead .muted,
+.adminConsolePage .adminImportDropzone span,
+.adminConsolePage .adminImportSummary span,
+.adminConsolePage .adminImportPreviewHint,
+.adminConsolePage .adminPatchUnifiedControl p{
+  color: #aebfdb !important;
+}
+.adminConsolePage .adminImportControls label{
+  color: #cfe0fb !important;
+}
+.adminConsolePage .adminImportControls input,
+.adminConsolePage .adminImportControls select{
+  background: #0f1b31 !important;
+  color: #f8fbff !important;
+  border: 1px solid rgba(96,165,250,.48) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.02) !important;
+}
+.adminConsolePage .adminImportControls input:focus,
+.adminConsolePage .adminImportControls select:focus{
+  outline: none !important;
+  border-color: rgba(147,197,253,.78) !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.2) !important;
+}
+.adminConsolePage .adminImportCheckbox input{
+  accent-color: #3b82f6;
+}
+.adminConsolePage .adminImportDropzone{
+  border-style: dashed !important;
+  border-width: 2px !important;
+  border-color: rgba(96,165,250,.58) !important;
+  min-height: 136px !important;
+}
+.adminConsolePage .adminImportDropzone:hover,
+.adminConsolePage .adminImportDropzone:focus-within{
+  border-color: rgba(147,197,253,.92) !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.16), 0 20px 48px rgba(2,8,23,.32) !important;
+}
+.adminConsolePage .adminImportSummary article:nth-child(1) b{ color:#60a5fa !important; }
+.adminConsolePage .adminImportSummary article:nth-child(2) b{ color:#f87171 !important; }
+.adminConsolePage .adminImportSummary article:nth-child(3) b{ color:#34d399 !important; }
+.adminConsolePage .adminImportSummary article:nth-child(4) b{ color:#c084fc !important; }
+.adminConsolePage .adminImportPreview{
+  overflow:auto !important;
+  max-height: 360px !important;
+}
+.adminConsolePage .adminImportPreview table{
+  min-width: 980px !important;
+}
+.adminConsolePage .adminImportPreview th{
+  background: rgba(15,27,49,.98) !important;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.adminConsolePage .adminImportPreview th,
+.adminConsolePage .adminImportPreview td{
+  border-color: rgba(96,165,250,.18) !important;
+}
+.adminConsolePage .adminImportPreview tr:hover td{
+  background: rgba(59,130,246,.1) !important;
+}
+.adminConsolePage .adminImportErrors{
+  background: rgba(127,29,29,.28) !important;
+  color: #fecaca !important;
+  border: 1px solid rgba(248,113,113,.52) !important;
+}
+.adminConsolePage .adminImportResult{
+  border-color: rgba(52,211,153,.42) !important;
+}
+.adminConsolePage .adminImportResult.error{
+  border-color: rgba(248,113,113,.62) !important;
+  background: rgba(127,29,29,.28) !important;
+}
+.adminImportResultStats{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap:10px;
+  margin-bottom:10px;
+}
+.adminImportResultStats article{
+  border:1px solid rgba(96,165,250,.22);
+  background:rgba(15,27,49,.74);
+  border-radius:14px;
+  padding:10px 12px;
+}
+.adminImportResultStats b{
+  display:block;
+  font-size:1.35rem;
+  color:#93c5fd;
+}
+.adminImportResultStats span{
+  display:block;
+  color:#aebfdb;
+  font-size:.86rem;
+  margin-top:2px;
+}
+.adminImportPreviewHint{
+  margin:10px 2px 0 !important;
+  font-size:.9rem;
+}
+.adminConsolePage .adminImportActions button:first-child{
+  background:#2563eb !important;
+  border-color:#3b82f6 !important;
+  color:white !important;
+}
+.adminConsolePage .adminImportActions button{
+  color:#eaf2ff !important;
+  background:rgba(22,40,71,.86) !important;
+  border-color:rgba(96,165,250,.28) !important;
+}
+.adminConsolePage .adminImportActions button:hover:not(:disabled){
+  border-color:rgba(147,197,253,.82) !important;
+  box-shadow:0 0 0 3px rgba(59,130,246,.14) !important;
+}
+@media(max-width:960px){
+  .adminImportResultStats{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .adminConsolePage .adminImportPreview table{min-width:820px!important;}
+}
+
+/* v0.11.44 refine delete zone: keep visible without touching planner layout */
+.sideDelete,
+.deleteZone.sideDelete{
+  transform: translateY(-10px) !important;
+  margin-bottom: 0 !important;
+}
