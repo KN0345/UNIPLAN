@@ -1,2 +1,0 @@
-beautifulsoup4>=4.12
-libarchive-c>=5.1
